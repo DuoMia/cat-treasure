@@ -142,6 +142,11 @@ function startGame() {
     
     // 移动端触摸事件处理
     document.getElementById('game-play').addEventListener('touchend', function(e) {
+        // 如果触摸起源于笔筒热点，忽略（防止误关对话框）
+        if (e.target.closest('#pen-holder-hotspot')) {
+            return;
+        }
+
         // 如果对话框正在显示，优先处理对话框点击
         const dialogBox = document.getElementById('dialog-box');
         if (!dialogBox.classList.contains('hidden')) {
@@ -349,6 +354,13 @@ function setupPenHolderInteraction() {
         e.stopPropagation();
         const t = e.touches[0];
         onDragStart(t.clientX, t.clientY);
+        // 标记本次触摸起源于笔筒，防止 touchend 冒泡到 game-play 时误关对话框
+        e.currentTarget._penHolderTouch = true;
+    }, { passive: false });
+
+    penHolderHotspot.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
     }, { passive: false });
 
     document.addEventListener('touchmove', function(e) {
