@@ -235,10 +235,10 @@ body {
 
 #pen-holder-hotspot {
     position: absolute;
-    left: 61.5%;
-    top: 64%;
-    width: 9%;
-    height: 9%;
+    left: 60%;
+    top: 62%;
+    width: 13%;
+    height: 13%;
     z-index: 61;
     cursor: grab;
     user-select: none;
