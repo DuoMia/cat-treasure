@@ -404,7 +404,7 @@ function shakePenHolder() {
             showDialog('你用力摇晃笔筒，钢笔从里面掉了出来，落在了地上！');
         }, 600);
     } else {
-        showDialog(`笔筒晃动了一下... (${shakeCount}/3)`);
+        showDialog(`笔筒晃动了一下...`);
     }
 }
 
