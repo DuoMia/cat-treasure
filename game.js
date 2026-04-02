@@ -289,6 +289,9 @@ function setupPenHolderInteraction() {
         return true;
     }
 
+    let rafPending = false;
+    let pendingDelta = null;
+
     function onDragMove(clientX, clientY) {
         if (!isHolding) return;
         const screenDX = clientX - touchStartScreenX;
@@ -296,8 +299,7 @@ function setupPenHolderInteraction() {
         const delta = getContainerDelta(screenDX, screenDY);
         currentOffsetX = delta.x;
         currentOffsetY = delta.y;
-        penHolderImage.style.transform = `translate(${delta.x}px, ${delta.y}px)`;
-        penHolderHotspot.style.transform = `translate(${delta.x}px, ${delta.y}px)`;
+        pendingDelta = delta;
 
         const axisVal = getShakeAxisVal(clientX, clientY);
         totalAxisMove += Math.abs(axisVal - lastAxisPos);
@@ -309,6 +311,17 @@ function setupPenHolderInteraction() {
         if (hasDragged && shakeAxisDelta >= SHAKE_DIST) {
             lastShakeAxisVal = axisVal;
             shakePenHolder();
+        }
+
+        if (!rafPending) {
+            rafPending = true;
+            requestAnimationFrame(() => {
+                if (pendingDelta) {
+                    penHolderImage.style.transform = `translate(${pendingDelta.x}px, ${pendingDelta.y}px)`;
+                    penHolderHotspot.style.transform = `translate(${pendingDelta.x}px, ${pendingDelta.y}px)`;
+                }
+                rafPending = false;
+            });
         }
     }
 
