@@ -11,7 +11,9 @@ const gameState = {
         foundBump: false,
         hasBox: false,
         solvedPassword: false,
-        lookedAtClock: false
+        lookedAtClock: false,
+        exploringAfterBite: false,
+        exploreClickCount: 0
     }
 };
 
@@ -131,6 +133,34 @@ function startGame() {
             return;
         }
 
+        // 选择"继续探索房间"后，非沙发点击计数3次后给提示
+        if (gameState.flags.exploringAfterBite && !e.target.closest('.hotspot[data-id="sofa"]')) {
+            gameState.flags.exploreClickCount++;
+            if (gameState.flags.exploreClickCount >= 3) {
+                gameState.flags.exploringAfterBite = false;
+                showDialog('你在房间里转了一圈，却始终心神不宁，脑海中一直浮现着朵朵躲进沙发角落的画面……', () => {
+                    showChoices([
+                        {
+                            text: '🛋️ 回到沙发角落查看',
+                            callback: () => {
+                                gameState.flags.foundBump = true;
+                                showDialog('你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。',
+                                    () => createRoomHotspots());
+                            }
+                        },
+                        {
+                            text: '🔎 再探索一会儿',
+                            callback: () => {
+                                gameState.flags.exploringAfterBite = true;
+                                gameState.flags.exploreClickCount = 0;
+                                createRoomHotspots();
+                            }
+                        }
+                    ]);
+                });
+            }
+        }
+
         // 调试：显示点击位置（考虑滚动偏移）
         const roomScene = document.getElementById('room-scene');
         const rect = roomScene.getBoundingClientRect();
@@ -167,6 +197,34 @@ function startGame() {
             e.target.closest('#password-modal') ||
             e.target.closest('.hotspot')) {
             return;
+        }
+
+        // 选择"继续探索房间"后，非沙发点击计数3次后给提示
+        if (gameState.flags.exploringAfterBite) {
+            gameState.flags.exploreClickCount++;
+            if (gameState.flags.exploreClickCount >= 3) {
+                gameState.flags.exploringAfterBite = false;
+                showDialog('你在房间里转了一圈，却始终心神不宁，脑海中一直浮现着朵朵躲进沙发角落的画面……', () => {
+                    showChoices([
+                        {
+                            text: '🛋️ 回到沙发角落查看',
+                            callback: () => {
+                                gameState.flags.foundBump = true;
+                                showDialog('你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。',
+                                    () => createRoomHotspots());
+                            }
+                        },
+                        {
+                            text: '🔎 再探索一会儿',
+                            callback: () => {
+                                gameState.flags.exploringAfterBite = true;
+                                gameState.flags.exploreClickCount = 0;
+                                createRoomHotspots();
+                            }
+                        }
+                    ]);
+                });
+            }
         }
     });
 
@@ -624,7 +682,11 @@ function interactSofa() {
                                             },
                                             {
                                                 text: '🔎 先继续探索房间',
-                                                callback: () => createRoomHotspots()
+                                                callback: () => {
+                                                    gameState.flags.exploringAfterBite = true;
+                                                    gameState.flags.exploreClickCount = 0;
+                                                    createRoomHotspots();
+                                                }
                                             }
                                         ])
                                     );
