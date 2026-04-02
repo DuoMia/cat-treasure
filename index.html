@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>猫咪神藏 - 密室逃脱</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        (function() {
+            const ua = navigator.userAgent;
+            const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isMobile = isIOS || /Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
+                            (/Mobi/i.test(ua) && navigator.maxTouchPoints > 0);
+
+            if (isIOS) document.documentElement.classList.add('ios-device');
+            if (isMobile) document.documentElement.classList.add('mobile-device');
+        })();
+    </script>
+</head>
+<body>
+    <!-- 竖屏提示遮罩（仅在锁屏失败时显示） -->
+    <div id="rotate-tip">
+        <div id="rotate-icon">📱</div>
+        <div style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">请旋转手机到横屏</div>
+        <p style="font-size: 14px; opacity: 0.8;">本游戏需要横屏模式游玩</p>
+    </div>
+
+    <!-- 隐藏视频元素：借用 <video> 的系统级全屏权限触发横屏锁定 -->
+    <video id="orientation-helper" muted playsinline
+        style="position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;top:0;left:0;">
+        <source src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAA" type="video/mp4">
+    </video>
+
+    <div id="game-container">
+        <!-- 调试按钮 -->
+        <button id="debug-toggle" onclick="toggleDebugMode()">🔧 调试模式</button>
+        <!-- 开始画面 -->
+        <div id="title-screen">
+            <h1 class="title-text">🐱 猫咪神藏</h1>
+            <p class="subtitle">你被困在梦境世界，唯一的线索是"猫咪神藏"...</p>
+            <button class="start-btn" onclick="startGame()">开始游戏</button>
+        </div>
+
+        <!-- 游戏画面 -->
+        <div id="game-play" class="hidden">
+            <div id="room-scene">
+                <img id="room-image" src="room.jpg" alt="房间" onerror="this.style.display='none'; document.getElementById('fallback-scene').style.display='flex';">
+                <img id="pen-holder-image" src="pen_holder.png" alt="笔筒" class="hidden">
+                <div id="pen-holder-hotspot" class="hidden"></div>
+                <img id="pen-image" src="pen.png" alt="钢笔" class="hidden">
+                <div id="fallback-scene" class="hidden">
+                    <div class="fallback-content">
+                        <div class="instruction">请将图片文件命名为 room.jpg 放置在项目目录中</div>
+                        <div class="room-layout">
+                            <div class="room-object door" onclick="interactDoor()">门</div>
+                            <div class="room-object window" onclick="interactWindow()">窗户</div>
+                            <div class="room-object clock" onclick="interactClock()">时钟</div>
+                            <div class="room-object sofa" onclick="interactSofa()">沙发</div>
+                            <div class="room-object table" onclick="interactTable()">桌子</div>
+                            <div class="room-object drawer" onclick="interactDrawer()">抽屉</div>
+                        </div>
+                    </div>
+                </div>
+                <img id="cat-image" src="cat.jpg" alt="朵朵" class="hidden">
+                <div id="hotspots"></div>
+            </div>
+            
+            <!-- 对话框 -->
+            <div id="dialog-box" class="hidden">
+                <div id="dialog-text"></div>
+                <div id="dialog-continue" class="hidden">点击继续</div>
+            </div>
+
+            <!-- 选项框 -->
+            <div id="choice-box" class="hidden">
+                <div id="choice-buttons"></div>
+            </div>
+
+            <!-- 物品栏 -->
+            <button id="inventory-toggle">🎒</button>
+            <div id="inventory-panel" class="hidden">
+                <div class="inventory-header">物品栏</div>
+                <div id="inventory-items"></div>
+            </div>
+            
+            <!-- 密码输入框 -->
+            <div id="password-modal" class="hidden">
+                <div class="password-content">
+                    <h3>输入密码</h3>
+                    <input type="text" id="password-input" maxlength="5" placeholder="_____">
+                    <div class="password-buttons">
+                        <button onclick="submitPassword()">确认</button>
+                        <button onclick="closePasswordModal()">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结局画面 -->
+        <div id="ending-screen" class="hidden">
+            <h1 id="ending-title"></h1>
+            <p id="ending-text"></p>
+            <button class="start-btn" onclick="restartGame()">重新开始</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

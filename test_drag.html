@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拖动测试</title>
+    <style>
+        body { margin: 0; padding: 20px; background: #f0f0f0; }
+        #drag-area {
+            width: 300px;
+            height: 300px;
+            background: #fff;
+            border: 2px solid #333;
+            position: relative;
+            margin: 20px auto;
+        }
+        #drag-box {
+            width: 60px;
+            height: 60px;
+            background: #4CAF50;
+            position: absolute;
+            left: 120px;
+            top: 120px;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+        #drag-box:active { Claude Code: grabbing; }
+        #log {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ccc;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h2 style="text-align: center;">拖动测试 - 左右拖动绿色方块</h2>
+    <div id="drag-area">
+        <div id="drag-box"></div>
+    </div>
+    <div id="log"></div>
+    <script>
+        const dragBox = document.getElementById('drag-box');
+        const logDiv = document.getElementById('log');
+        let isHolding = false;
+        let lastX = 0;
+        let shakeCount = 0;
+        let moveCount = 0;
+
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML = `[${time}] ${msg}<br>` + logDiv.innerHTML;
+        }
+
+        dragBox.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isHolding = true;
+            lastX = e.clientX;
+            shakeCount = 0;
+            moveCount = 0;
+            log('按下 - 开始拖动');
+        });
+
+        dragBox.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isHolding = true;
+            lastX = e.touches[0].clientX;
+            shakeCount = 0;
+            moveCount = 0;
+            log('触摸开始 - 开始拖动');
+        }, { passive: false });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isHolding) return;
+            const deltaX = Math.abs(e.clientX - lastX);
+            if (deltaX > 20) {
+                moveCount++;
+                log(`移动检测: deltaX=${deltaX}, moveCount=${moveCount}`);
+                if (moveCount >= 3) {
+                    shakeCount++;
+                    moveCount = 0;
+                    dragBox.style.background = shakeCount >= 3 ? '#f44336' : '#FF9800';
+                    log(`✓ 摇晃 ${shakeCount}/3`);
+                }
+                lastX = e.clientX;
+            }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isHolding) return;
+            e.preventDefault();
+            const deltaX = Math.abs(e.touches[0].clientX - lastX);
+            if (deltaX > 20) {
+                moveCount++;
+                log(`触摸移动: deltaX=${deltaX}, moveCount=${moveCount}`);
+                if (moveCount >= 3) {
+                    shakeCount++;
+                    moveCount = 0;
+                    dragBox.style.background = shakeCount >= 3 ? '#f44336' : '#FF9800';
+                    log(`✓ 摇晃 ${shakeCount}/3`);
+                }
+                lastX = e.touches[0].clientX;
+            }
+        }, { passive: false });
+
+        document.addEventListener('mouseup', () => {
+            if (!isHolding) return;
+            isHolding = false;
+            log(`释放 - 总共摇晃 ${shakeCount} 次`);
+            setTimeout(() => {
+                dragBox.style.background = '#4CAF50';
+            }, 1000);
+        });
+
+        document.addEventListener('touchend', () => {
+            if (!isHolding) return;
+            isHolding = false;
+            log(`触摸结束 - 总共摇晃 ${shakeCount} 次`);
+            setTimeout(() => {
+                dragBox.style.background = '#4CAF50';
+            }, 1000);
+        });
+
+        log('页面加载完成 - 请拖动绿色方块');
+    </script>
+</body>
+</html>

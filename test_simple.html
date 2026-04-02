@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>拖动测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+        }
+        #info {
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        #drag-area {
+            width: 80vw;
+            max-width: 400px;
+            height: 300px;
+            background: white;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        #drag-box {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: #3498db;
+            border-radius: 10px;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+        }
+        #drag-box:active {
+            cursor: grabbing;
+            background: #2980b9;
+        }
+        #log {
+            color: white;
+            padding: 10px;
+            max-width: 80vw;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 12px;
+            font-family: monospace;
+        }
+        .success { color: #2ecc71; }
+        .error { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div>拖动测试 - 左右拖动蓝色方块</div>
+        <div style="font-size: 14px; margin-top: 10px;">摇晃次数: <span id="count">0</span>/3</div>
+    </div>
+    <div id="drag-area">
+        <div id="drag-box">拖我</div>
+    </div>
+    <div id="log"></div>
+
+    <script>
+        const dragBox = document.getElementById('drag-box');
+        const logDiv = document.getElementById('log');
+        const countSpan = document.getElementById('count');
+
+        let isHolding = false;
+        let startX = 0;
+        let shakeCount = 0;
+
+        function log(msg, type = '') {
+            const time = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            logDiv.innerHTML = `<div class="${className}">[${time}] ${msg}</div>` + logDiv.innerHTML;
+        }
+
+        // 鼠标事件
+        dragBox.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isHolding = true;
+            startX = e.clientX;
+            log('🖱️ 鼠标按下，开始拖动');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isHolding) return;
+            const distance = Math.abs(e.clientX - startX);
+            if (distance > 50) {
+                shakeCount++;
+                countSpan.textContent = shakeCount;
+                startX = e.clientX;
+                log(`✅ 摇晃 ${shakeCount}/3 (移动距离: ${distance}px)`, 'success');
+
+                if (shakeCount >= 3) {
+                    dragBox.style.background = '#27ae60';
+                    dragBox.textContent = '成功!';
+                    log('🎉 完成3次摇晃！', 'success');
+                }
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isHolding) return;
+            isHolding = false;
+            log(`🖱️ 鼠标释放 (总共 ${shakeCount} 次)`);
+        });
+
+        // 触摸事件
+        dragBox.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isHolding = true;
+            startX = e.touches[0].clientX;
+            log('👆 触摸开始，开始拖动');
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isHolding) return;
+            e.preventDefault();
+            const distance = Math.abs(e.touches[0].clientX - startX);
+            if (distance > 50) {
+                shakeCount++;
+                countSpan.textContent = shakeCount;
+                startX = e.touches[0].clientX;
+                log(`✅ 摇晃 ${shakeCount}/3 (移动距离: ${distance}px)`, 'success');
+
+                if (shakeCount >= 3) {
+                    dragBox.style.background = '#27ae60';
+                    dragBox.textContent = '成功!';
+                    log('🎉 完成3次摇晃！', 'success');
+                }
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            if (!isHolding) return;
+            isHolding = false;
+            log(`👆 触摸结束 (总共 ${shakeCount} 次)`);
+        });
+
+        log('✅ 页面加载完成，事件已绑定');
+    </script>
+</body>
+</html>
