@@ -285,7 +285,6 @@ function setupPenHolderInteraction() {
         lastAxisPos = lastShakeAxisVal;
         currentOffsetX = 0;
         currentOffsetY = 0;
-        showDialog('按住笔筒并左右拖动... (0/3)');
         return true;
     }
 
