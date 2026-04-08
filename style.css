@@ -298,7 +298,7 @@ body {
 #pen-holder-image {
     position: absolute;
     left: 63%;
-    top: 58%;
+    top: 62%;
     width: 5%;
     height: auto;
     z-index: 60;
@@ -310,7 +310,7 @@ body {
 #pen-holder-hotspot {
     position: absolute;
     left: 62%;
-    top: 56%;
+    top: 60%;
     width: 7%;
     height: 10%;
     z-index: 110;

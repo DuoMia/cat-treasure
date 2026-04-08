@@ -60,6 +60,32 @@ function isMobileDevice() {
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
 }
 
+// 移动端触摸点击绑定：手指抬起且未滑动才触发，阻止冒泡到 game-play
+// el: 元素，handler: 回调，once: 是否只触发一次（默认 false）
+function setTapHandler(el, handler, once) {
+    let _tx = 0, _ty = 0;
+    const opts = once ? { passive: true, once: true } : { passive: true };
+    el.addEventListener('touchstart', function(e) {
+        _tx = e.touches[0].clientX;
+        _ty = e.touches[0].clientY;
+    }, opts);
+    el.addEventListener('touchend', function(e) {
+        e.stopPropagation();
+        const dx = e.changedTouches[0].clientX - _tx;
+        const dy = e.changedTouches[0].clientY - _ty;
+        if (Math.sqrt(dx * dx + dy * dy) > 8) return;
+        handler(e);
+    }, once ? { once: true } : {});
+    if (once) {
+        el.addEventListener('click', function fn(e) {
+            el.removeEventListener('click', fn);
+            handler(e);
+        });
+    } else {
+        el.onclick = handler;
+    }
+}
+
 // 竖屏拖动支持：让玩家拖动 game-container 查看画面两侧
 function setupPortraitDrag() {
     const container = document.getElementById('game-container');
@@ -662,7 +688,7 @@ function openSofaCornerScene() {
         bump.onclick = null;
         catImg.onclick = null;
         showDialog('你走近沙发角落，发现朵朵正蜷缩在那里，她懒洋洋地翻了个身，露出了肚皮……', () => {
-            catImg.onclick = function() {
+            setTapHandler(catImg, function() {
                 catImg.onclick = null;
                 gameState.flags.foundCat = true;
                 gameState.flags.wasBitten = true;
@@ -671,7 +697,7 @@ function openSofaCornerScene() {
                     '你蹲下来想摸摸朵朵，没想到朵朵突然抱住你的手，对你又咬又挠！你赶紧把手抽了回来，看了看手上的爪子印以及牙印，再看向沙发时，朵朵早已不见踪影。',
                     () => setupBumpInteraction()
                 );
-            };
+            }, true);
         });
     } else {
         // 猫咪已离开，直接显示凸起
@@ -685,25 +711,25 @@ function setupBumpInteraction() {
     const bump = document.getElementById('sofa-corner-bump');
 
     if (gameState.flags.hasBox) {
-        bump.onclick = function() {
+        setTapHandler(bump, function() {
             showDialog('沙发角落已经被你打开过了，没有什么新的发现了。');
-        };
+        });
         return;
     }
 
     if (!gameState.flags.foundBump) {
-        bump.onclick = function() {
+        setTapHandler(bump, function() {
             gameState.flags.foundBump = true;
             showDialog(
                 '你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。',
                 () => setupBumpInteraction()
             );
-        };
+        });
         return;
     }
 
     if (gameState.inventory.includes('钢笔')) {
-        bump.onclick = function() {
+        setTapHandler(bump, function() {
             showDialog(
                 '你看着这个凸起，手中的钢笔似乎可以派上用场……',
                 () => showChoices([
@@ -736,11 +762,11 @@ function setupBumpInteraction() {
                     }
                 ])
             );
-        };
+        });
     } else {
-        bump.onclick = function() {
+        setTapHandler(bump, function() {
             showDialog('这里有个奇怪的凸起……得找个工具才能打开它。');
-        };
+        });
     }
 }
 
@@ -877,19 +903,7 @@ function openPhotoWallScene() {
     const photo3 = document.getElementById('photo-wall-photo3');
 
     function bindPhotoClick(el, text) {
-        let _tx = 0, _ty = 0;
-        el.addEventListener('touchstart', function(e) {
-            _tx = e.touches[0].clientX;
-            _ty = e.touches[0].clientY;
-        }, { passive: true });
-        el.addEventListener('touchend', function(e) {
-            e.stopPropagation();
-            const dx = e.changedTouches[0].clientX - _tx;
-            const dy = e.changedTouches[0].clientY - _ty;
-            if (Math.sqrt(dx * dx + dy * dy) > 8) return;
-            showDialog(text);
-        });
-        el.onclick = function() { showDialog(text); };
+        setTapHandler(el, function() { showDialog(text); });
     }
 
     bindPhotoClick(photo1, '2022年，朵朵刚来，还是个小猫咪。');
