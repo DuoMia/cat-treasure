@@ -399,7 +399,7 @@ function setupPenHolderInteraction() {
             penHolderHotspot.style.transition = '';
         }, 300);
         if (!gameState.penFallen && shakeCount < 3 && wasDragged) {
-            showDialog('松手了，钢笔还在笔筒里。再试一次吧！');
+            showDialog('还差一点，再用力摇一摇！');
         }
     }
 
