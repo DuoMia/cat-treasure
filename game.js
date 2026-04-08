@@ -536,7 +536,19 @@ function createHotspot(id, label, x, y, width, height, onClick) {
         onClick();
     };
     hotspot.addEventListener('click', handler, true);
-    hotspot.addEventListener('touchstart', handler, true);
+
+    // 移动端：touchstart 记录起点，touchend 判断是否为点击（未滑动）
+    let _touchStartX = 0, _touchStartY = 0;
+    hotspot.addEventListener('touchstart', function(e) {
+        _touchStartX = e.touches[0].clientX;
+        _touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    hotspot.addEventListener('touchend', function(e) {
+        const dx = e.changedTouches[0].clientX - _touchStartX;
+        const dy = e.changedTouches[0].clientY - _touchStartY;
+        if (Math.sqrt(dx * dx + dy * dy) > 8) return; // 滑动，忽略
+        handler(e);
+    }, true);
     document.getElementById('hotspots').appendChild(hotspot);
 }
 
