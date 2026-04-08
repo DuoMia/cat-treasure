@@ -21,19 +21,6 @@
     </script>
 </head>
 <body>
-    <!-- 竖屏提示遮罩（仅在锁屏失败时显示） -->
-    <div id="rotate-tip">
-        <div id="rotate-icon">📱</div>
-        <div style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">请旋转手机到横屏</div>
-        <p style="font-size: 14px; opacity: 0.8;">本游戏需要横屏模式游玩</p>
-    </div>
-
-    <!-- 隐藏视频元素：借用 <video> 的系统级全屏权限触发横屏锁定 -->
-    <video id="orientation-helper" muted playsinline
-        style="position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;top:0;left:0;">
-        <source src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAA" type="video/mp4">
-    </video>
-
     <div id="game-container">
         <!-- 调试按钮 -->
         <button id="debug-toggle" onclick="toggleDebugMode()">🔧 调试模式</button>

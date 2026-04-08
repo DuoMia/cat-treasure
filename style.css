@@ -10,24 +10,9 @@
 body {
     font-family: 'Microsoft YaHei', sans-serif;
     background: #000;
-    min-height: 100vh;
     margin: 0;
     padding: 0;
     overflow: hidden;
-    touch-action: pan-x pan-y;
-    -webkit-writing-mode: horizontal-tb;
-    writing-mode: horizontal-tb;
-}
-
-/* 微信浏览器强制横向文字 */
-html.wechat-browser body,
-html.wechat-browser *,
-html.wechat-browser *::before,
-html.wechat-browser *::after {
-    -webkit-writing-mode: horizontal-tb !important;
-    writing-mode: horizontal-tb !important;
-    text-orientation: mixed !important;
-    -webkit-text-orientation: mixed !important;
 }
 
 #game-container {
@@ -40,242 +25,152 @@ html.wechat-browser *::after {
     overflow: hidden;
 }
 
-/* iOS 移动端竖屏：旋转画面模拟横屏 */
-@media (orientation: portrait) {
-    html.ios-device.mobile-device #game-container {
-        width: 100vh;
-        height: 100vw;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(90deg);
-        transform-origin: center center;
-        visibility: visible;
-    }
-
-    html.ios-device.mobile-device #rotate-tip {
-        display: none !important;
-    }
-
-    /*
-     * 旋转90度后坐标系变换：
-     * 视觉"底部" = CSS right
-     * 视觉"右侧" = CSS top
-     * 视觉"左侧" = CSS bottom
-     * 视觉"顶部" = CSS left
-     * 用 --rotated class 标记，JS 在旋转时添加
-     */
-    html.ios-device.mobile-device .game-panel {
-        bottom: auto;
-        left: auto;
-        transform: none;
-        right: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 42%;
-        max-width: none;
-    }
-
-    html.ios-device.mobile-device #choice-box {
-        bottom: auto;
-        left: auto;
-        transform: none;
-        right: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 42%;
-        max-width: none;
-    }
-
-    html.ios-device.mobile-device #inventory-toggle {
-        top: auto;
-        right: auto;
-        bottom: 20px;
-        left: 20px;
-        width: 44px;
-        height: 44px;
-        font-size: 20px;
-    }
-
-    html.ios-device.mobile-device #inventory-panel {
-        top: auto;
-        right: auto;
-        bottom: 74px;
-        left: 10px;
-        width: 160px;
-        font-size: 12px;
-    }
-
-    html.ios-device.mobile-device #debug-toggle {
-        top: auto;
-        left: auto;
-        bottom: 20px;
-        right: 20px;
-        height: 32px;
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-
-    html.ios-device.mobile-device #sofa-corner-back,
-    html.ios-device.mobile-device #drawer-scene-back,
-    html.ios-device.mobile-device #window-scene-back,
-    html.ios-device.mobile-device #photo-wall-back {
-        top: auto;
-        left: auto;
-        bottom: 16px;
-        right: 16px;
-    }
+/* 旋转提示：永久隐藏，不再使用 */
+#rotate-tip {
+    display: none !important;
 }
 
-/* 微信浏览器竖屏：旋转画面模拟横屏 */
-@media (orientation: portrait) {
-    html.wechat-browser.mobile-device #game-container {
-        width: 100vh;
-        height: 100vw;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(90deg);
-        transform-origin: center center;
-        visibility: visible;
-    }
-
-    html.wechat-browser.mobile-device #rotate-tip {
-        display: none !important;
-    }
-
-    /* 强制文字横向排列 */
-    html.wechat-browser.mobile-device #game-container *,
-    html.wechat-browser.mobile-device #game-container {
-        -webkit-writing-mode: horizontal-tb !important;
-        writing-mode: horizontal-tb !important;
-        text-orientation: mixed !important;
-        -webkit-text-orientation: mixed !important;
-    }
-
-    /* 对话框位置调整 - 旋转后视觉底部 = CSS right */
-    html.wechat-browser.mobile-device .game-panel {
-        bottom: auto;
-        left: auto;
-        transform: none;
-        right: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 42%;
-        max-width: none;
-    }
-
-    html.wechat-browser.mobile-device #choice-box {
-        bottom: auto;
-        left: auto;
-        transform: none;
-        right: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 42%;
-        max-width: none;
-    }
-
-    html.wechat-browser.mobile-device #inventory-toggle {
-        top: auto;
-        right: auto;
-        bottom: 20px;
-        left: 20px;
-        width: 44px;
-        height: 44px;
-        font-size: 20px;
-    }
-
-    html.wechat-browser.mobile-device #inventory-panel {
-        top: auto;
-        right: auto;
-        bottom: 74px;
-        left: 10px;
-        width: 160px;
-        font-size: 12px;
-    }
-
-    html.wechat-browser.mobile-device #debug-toggle {
-        top: auto;
-        left: auto;
-        bottom: 20px;
-        right: 20px;
-        height: 32px;
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-
-    html.wechat-browser.mobile-device #sofa-corner-back,
-    html.wechat-browser.mobile-device #drawer-scene-back,
-    html.wechat-browser.mobile-device #window-scene-back,
-    html.wechat-browser.mobile-device #photo-wall-back {
-        top: auto;
-        left: auto;
-        bottom: 16px;
-        right: 16px;
-    }
-}
-
-/* 非 iOS 移动端竖屏：显示旋转提示（Android 锁屏 API 失败时的兜底） */
-@media (orientation: portrait) {
-    html.mobile-device:not(.ios-device) #rotate-tip {
-        display: flex !important;
-    }
-
-    html.mobile-device:not(.ios-device) #game-container {
-        visibility: hidden;
-    }
-}
-
-/* 横屏或 PC 端：正常显示游戏 */
+/* 横屏或 PC 端：正常显示 */
 @media (orientation: landscape) {
-    #rotate-tip {
-        display: none !important;
+    #game-container {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+}
+
+/* 移动端竖屏：画面按 16:9 铺满高度，超出部分可左右拖动 */
+@media (orientation: portrait) and (max-width: 768px) {
+    body {
+        overflow: hidden;
     }
 
     #game-container {
-        visibility: visible;
-        width: 100vw;
+        /* 高度铺满屏幕，宽度按 16:9 撑开（比屏幕宽，可左右拖动） */
+        width: calc(100vh * 16 / 9);
         height: 100vh;
-        transform: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        touch-action: pan-x;
     }
-}
 
-/* 旋转提示遮罩 */
-#rotate-tip {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(180deg, #1a1a2e 0%, #4a1a6b 50%, #1a1a2e 100%);
-    z-index: 9999;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    color: white;
-    font-size: 18px;
-    font-family: 'Microsoft YaHei', sans-serif;
-    text-align: center;
-    gap: 20px;
-}
+    /* 对话框固定在视口底部 */
+    .game-panel {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 92%;
+        max-width: none;
+        font-size: 13px;
+        padding: 10px 14px 20px;
+        z-index: 400;
+    }
 
-#rotate-icon {
-    font-size: 72px;
-    animation: rotateHint 1.5s ease-in-out infinite;
-    display: block;
-}
+    #choice-box {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 92%;
+        max-width: none;
+        font-size: 13px;
+        padding: 10px 14px;
+        z-index: 400;
+    }
 
-#rotate-tip p {
-    font-size: 16px;
-    color: rgba(255, 255, 255, 0.8);
-    margin-top: 8px;
-}
+    .choice-btn {
+        padding: 9px 12px;
+        font-size: 13px;
+    }
 
-@keyframes rotateHint {
-    0%   { transform: rotate(0deg); }
-    40%  { transform: rotate(90deg); }
-    60%  { transform: rotate(90deg); }
-    100% { transform: rotate(0deg); }
+    /* 背包按钮固定在视口右上角 */
+    #inventory-toggle {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        z-index: 400;
+    }
+
+    #inventory-panel {
+        position: fixed;
+        top: 60px;
+        right: 10px;
+        width: 170px;
+        font-size: 12px;
+        max-height: 60vh;
+        overflow-y: auto;
+        z-index: 400;
+    }
+
+    #debug-toggle {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        height: 30px;
+        padding: 5px 10px;
+        font-size: 11px;
+        z-index: 400;
+    }
+
+    /* 场景返回按钮保持在场景内左上角 */
+    #sofa-corner-back,
+    #drawer-scene-back,
+    #window-scene-back,
+    #photo-wall-back {
+        top: 10px;
+        left: 10px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    /* 密码弹窗固定在视口中央 */
+    #password-modal,
+    #drawer-modal {
+        position: fixed;
+    }
+
+    .password-content {
+        padding: 18px;
+        max-width: 280px;
+    }
+
+    .password-content h3 {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+
+    #password-input,
+    #drawer-input {
+        font-size: 20px;
+        padding: 10px;
+        margin-bottom: 12px;
+    }
+
+    .password-buttons button {
+        padding: 8px 20px;
+        font-size: 14px;
+    }
+
+    /* 标题页 */
+    .title-text {
+        font-size: 30px;
+    }
+
+    .subtitle {
+        font-size: 14px;
+        margin-bottom: 28px;
+    }
+
+    .start-btn {
+        padding: 14px 36px;
+        font-size: 17px;
+    }
 }
 
 /* 横屏模式优化 */
@@ -884,7 +779,7 @@ body {
 
 /* 密码输入框 */
 #password-modal {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -893,7 +788,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 300;
+    z-index: 500;
     animation: fadeIn 0.3s ease;
     touch-action: none;
     user-select: none;
@@ -1342,7 +1237,7 @@ body {
 
 /* 抽屉密码弹窗 */
 #drawer-modal {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;

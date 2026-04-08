@@ -54,59 +54,55 @@ const roomObjects = [
 let typewriterTimeout = null;
 let currentFullText = '';
 
-// 开始游戏
 // 检测是否是移动端
 function isMobileDevice() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
 }
 
-// 请求全屏并锁定横屏方向（仅在移动端调用）
-function requestLandscape() {
-    if (!isMobileDevice()) return;
+// 竖屏拖动支持：让玩家拖动 game-container 查看画面两侧
+function setupPortraitDrag() {
+    const container = document.getElementById('game-container');
+    let startX = 0, startLeft = 0, isDragging = false;
 
-    function lockOrientation() {
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(e => console.log('锁定横屏失败:', e));
-        }
+    function getLeft() {
+        return parseFloat(container.style.left) || 0;
     }
 
-    const el = document.documentElement;
-    const requestFS = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-
-    if (requestFS) {
-        // 先尝试全屏，然后锁屏
-        try {
-            const promise = requestFS.call(el);
-            if (promise) {
-                promise.then(lockOrientation).catch(e => {
-                    console.log('全屏失败:', e);
-                    lockOrientation();
-                });
-            } else {
-                // 有些老浏览器 requestFullscreen 不返回 promise
-                setTimeout(lockOrientation, 100);
-            }
-        } catch(e) {
-            console.log('全屏报错:', e);
-            lockOrientation();
-        }
-    } else {
-        lockOrientation();
+    function clampLeft(val) {
+        // 容器宽度 = 100vw * 16/9，屏幕宽度 = 100vw
+        const containerW = window.innerHeight * 16 / 9;
+        const screenW = window.innerWidth;
+        const maxOffset = 0;
+        const minOffset = -(containerW - screenW);
+        return Math.min(maxOffset, Math.max(minOffset, val));
     }
+
+    container.addEventListener('touchstart', function(e) {
+        if (window.innerWidth >= window.innerHeight) return; // 横屏不处理
+        startX = e.touches[0].clientX;
+        startLeft = getLeft();
+        isDragging = true;
+    }, { passive: true });
+
+    container.addEventListener('touchmove', function(e) {
+        if (!isDragging || window.innerWidth >= window.innerHeight) return;
+        const dx = e.touches[0].clientX - startX;
+        container.style.left = clampLeft(startLeft + dx) + 'px';
+    }, { passive: true });
+
+    container.addEventListener('touchend', function() {
+        isDragging = false;
+    }, { passive: true });
 }
 
 function startGame() {
-    // 立即切换界面，不要被全屏逻辑阻塞
     document.getElementById('title-screen').classList.add('hidden');
     document.getElementById('game-play').classList.remove('hidden');
 
-    // 尝试在移动端全屏并锁定横屏
-    requestLandscape();
-
-    // 移动端适配
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
+    if (isMobileDevice()) {
+        setupPortraitDrag();
+    }
 
     // 显示桌子上的笔筒和热点
     const penHolderImage = document.getElementById('pen-holder-image');
