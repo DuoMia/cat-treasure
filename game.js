@@ -70,16 +70,14 @@ function setupPortraitDrag() {
     }
 
     function clampLeft(val) {
-        // 容器宽度 = 100vw * 16/9，屏幕宽度 = 100vw
-        const containerW = window.innerHeight * 16 / 9;
+        const containerW = window.innerHeight * 14 / 9;
         const screenW = window.innerWidth;
-        const maxOffset = 0;
         const minOffset = -(containerW - screenW);
-        return Math.min(maxOffset, Math.max(minOffset, val));
+        return Math.min(0, Math.max(minOffset, val));
     }
 
     container.addEventListener('touchstart', function(e) {
-        if (window.innerWidth >= window.innerHeight) return; // 横屏不处理
+        if (window.innerWidth >= window.innerHeight) return;
         startX = e.touches[0].clientX;
         startLeft = getLeft();
         isDragging = true;
@@ -96,12 +94,35 @@ function setupPortraitDrag() {
     }, { passive: true });
 }
 
+// 竖屏时将容器滚动到水平居中位置
+function centerViewport() {
+    if (window.innerWidth >= window.innerHeight) return;
+    const container = document.getElementById('game-container');
+    const containerW = window.innerHeight * 14 / 9;
+    const screenW = window.innerWidth;
+    container.style.left = -((containerW - screenW) / 2) + 'px';
+}
+
+// 显示拖动提示（竖屏时）
+function showDragHint() {
+    if (window.innerWidth >= window.innerHeight) return;
+    const existing = document.getElementById('drag-hint');
+    if (existing) existing.remove();
+    const hint = document.createElement('div');
+    hint.id = 'drag-hint';
+    hint.textContent = '← 左右滑动查看完整画面 →';
+    document.body.appendChild(hint);
+    setTimeout(() => hint.remove(), 3000);
+}
+
 function startGame() {
     document.getElementById('title-screen').classList.add('hidden');
     document.getElementById('game-play').classList.remove('hidden');
 
     if (isMobileDevice()) {
         setupPortraitDrag();
+        centerViewport();
+        showDragHint();
     }
 
     // 显示桌子上的笔筒和热点
@@ -609,6 +630,8 @@ function openSofaCornerScene() {
     document.getElementById('choice-box').classList.add('hidden');
     closeCornerUI();
     document.getElementById('sofa-corner-scene').classList.remove('hidden');
+    centerViewport();
+    showDragHint();
 
     const catImg = document.getElementById('sofa-corner-cat');
     const bump = document.getElementById('sofa-corner-bump');
@@ -712,6 +735,7 @@ function closeSofaCornerScene() {
     closeCornerUI();
     document.getElementById('sofa-corner-scene').classList.add('hidden');
     document.getElementById('sofa-corner-cat').onclick = null;
+    centerViewport();
     createRoomHotspots();
 }
 
@@ -824,6 +848,8 @@ function openPhotoWallScene() {
     document.getElementById('dialog-box').classList.add('hidden');
     document.getElementById('choice-box').classList.add('hidden');
     document.getElementById('photo-wall-scene').classList.remove('hidden');
+    centerViewport();
+    showDragHint();
 
     gameState.flags.photoWallSeen = true;
 
@@ -844,6 +870,7 @@ function openPhotoWallScene() {
 
 function closePhotoWallScene() {
     document.getElementById('photo-wall-scene').classList.add('hidden');
+    centerViewport();
     const hint = _pendingPhotoWallHint;
     _pendingPhotoWallHint = null;
     if (hint) {
@@ -1025,6 +1052,8 @@ function openDrawerScene() {
     document.getElementById('dialog-box').classList.add('hidden');
     document.getElementById('choice-box').classList.add('hidden');
     document.getElementById('drawer-scene').classList.remove('hidden');
+    centerViewport();
+    showDragHint();
 
     const hotspot = document.getElementById('drawer-diary-hotspot');
     if (!gameState.flags.hasDiary) {
@@ -1047,6 +1076,7 @@ function openDrawerScene() {
 
 function closeDrawerScene() {
     document.getElementById('drawer-scene').classList.add('hidden');
+    centerViewport();
     createRoomHotspots();
 }
 
@@ -1056,6 +1086,8 @@ function openWindowScene() {
     document.getElementById('dialog-box').classList.add('hidden');
     document.getElementById('choice-box').classList.add('hidden');
     document.getElementById('window-scene').classList.remove('hidden');
+    centerViewport();
+    showDragHint();
 
     showDialog('窗台上有朵朵留下的毛发和爪印。你想起日记里写的：她总是从这里凝视着某个方向……顺着她的视线望去，那个方向是……', () => {
         function showWindowChoices() {
@@ -1083,6 +1115,7 @@ function openWindowScene() {
 
 function closeWindowScene() {
     document.getElementById('window-scene').classList.add('hidden');
+    centerViewport();
     createRoomHotspots();
 }
 
