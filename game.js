@@ -307,25 +307,13 @@ let totalAxisMove = 0;
 let hasDragged = false;
 let penHolderInteractionSetup = false;
 
-// 竖屏旋转模式检测（iOS 移动端在竖屏下使用 CSS 旋转）
-function isPortraitRotated() {
-    const html = document.documentElement;
-    return html.classList.contains('ios-device') &&
-           html.classList.contains('mobile-device') &&
-           window.matchMedia('(orientation: portrait)').matches;
-}
-
-// 获取摇晃检测轴的值：竖屏旋转时用Y轴，横屏用X轴
+// 获取摇晃检测轴的值（水平轴）
 function getShakeAxisVal(clientX, clientY) {
-    return isPortraitRotated() ? clientY : clientX;
+    return clientX;
 }
 
-// 将屏幕位移转换为容器坐标系位移（用于视觉跟随）
-// 容器旋转90度时：容器X = 屏幕Y，容器Y = -屏幕X
+// 屏幕位移直接映射到容器坐标系（无旋转）
 function getContainerDelta(screenDX, screenDY) {
-    if (isPortraitRotated()) {
-        return { x: screenDY, y: -screenDX };
-    }
     return { x: screenDX, y: screenDY };
 }
 
