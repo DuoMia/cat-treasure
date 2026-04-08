@@ -113,6 +113,94 @@ body {
     }
 }
 
+/* 微信浏览器竖屏：旋转画面模拟横屏 */
+@media (orientation: portrait) {
+    html.wechat-browser.mobile-device #game-container {
+        width: 100vh;
+        height: 100vw;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(90deg);
+        transform-origin: center center;
+        visibility: visible;
+    }
+
+    html.wechat-browser.mobile-device #rotate-tip {
+        display: none !important;
+    }
+
+    /* 强制文字横向排列 */
+    html.wechat-browser.mobile-device #game-container *,
+    html.wechat-browser.mobile-device #game-container {
+        -webkit-writing-mode: horizontal-tb !important;
+        writing-mode: horizontal-tb !important;
+        text-orientation: mixed !important;
+        -webkit-text-orientation: mixed !important;
+    }
+
+    /* 对话框位置调整 - 旋转后视觉底部 = CSS right */
+    html.wechat-browser.mobile-device .game-panel {
+        bottom: auto;
+        left: auto;
+        transform: none;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 42%;
+        max-width: none;
+    }
+
+    html.wechat-browser.mobile-device #choice-box {
+        bottom: auto;
+        left: auto;
+        transform: none;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 42%;
+        max-width: none;
+    }
+
+    html.wechat-browser.mobile-device #inventory-toggle {
+        top: auto;
+        right: auto;
+        bottom: 20px;
+        left: 20px;
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+
+    html.wechat-browser.mobile-device #inventory-panel {
+        top: auto;
+        right: auto;
+        bottom: 74px;
+        left: 10px;
+        width: 160px;
+        font-size: 12px;
+    }
+
+    html.wechat-browser.mobile-device #debug-toggle {
+        top: auto;
+        left: auto;
+        bottom: 20px;
+        right: 20px;
+        height: 32px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    html.wechat-browser.mobile-device #sofa-corner-back,
+    html.wechat-browser.mobile-device #drawer-scene-back,
+    html.wechat-browser.mobile-device #window-scene-back,
+    html.wechat-browser.mobile-device #photo-wall-back {
+        top: auto;
+        left: auto;
+        bottom: 16px;
+        right: 16px;
+    }
+}
+
 /* 非 iOS 移动端竖屏：显示旋转提示（Android 锁屏 API 失败时的兜底） */
 @media (orientation: portrait) {
     html.mobile-device:not(.ios-device) #rotate-tip {

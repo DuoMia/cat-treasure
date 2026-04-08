@@ -12,9 +12,11 @@
                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
             const isMobile = isIOS || /Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
                             (/Mobi/i.test(ua) && navigator.maxTouchPoints > 0);
+            const isWeChat = /MicroMessenger/i.test(ua);
 
             if (isIOS) document.documentElement.classList.add('ios-device');
             if (isMobile) document.documentElement.classList.add('mobile-device');
+            if (isWeChat) document.documentElement.classList.add('wechat-browser');
         })();
     </script>
 </head>
