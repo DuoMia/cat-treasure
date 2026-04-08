@@ -42,6 +42,75 @@ body {
     html.ios-device.mobile-device #rotate-tip {
         display: none !important;
     }
+
+    /*
+     * 旋转90度后坐标系变换：
+     * 视觉"底部" = CSS right
+     * 视觉"右侧" = CSS top
+     * 视觉"左侧" = CSS bottom
+     * 视觉"顶部" = CSS left
+     * 用 --rotated class 标记，JS 在旋转时添加
+     */
+    html.ios-device.mobile-device .game-panel {
+        bottom: auto;
+        left: auto;
+        transform: none;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 42%;
+        max-width: none;
+    }
+
+    html.ios-device.mobile-device #choice-box {
+        bottom: auto;
+        left: auto;
+        transform: none;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 42%;
+        max-width: none;
+    }
+
+    html.ios-device.mobile-device #inventory-toggle {
+        top: auto;
+        right: auto;
+        bottom: 20px;
+        left: 20px;
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+
+    html.ios-device.mobile-device #inventory-panel {
+        top: auto;
+        right: auto;
+        bottom: 74px;
+        left: 10px;
+        width: 160px;
+        font-size: 12px;
+    }
+
+    html.ios-device.mobile-device #debug-toggle {
+        top: auto;
+        left: auto;
+        bottom: 20px;
+        right: 20px;
+        height: 32px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    html.ios-device.mobile-device #sofa-corner-back,
+    html.ios-device.mobile-device #drawer-scene-back,
+    html.ios-device.mobile-device #window-scene-back,
+    html.ios-device.mobile-device #photo-wall-back {
+        top: auto;
+        left: auto;
+        bottom: 16px;
+        right: 16px;
+    }
 }
 
 /* 非 iOS 移动端竖屏：显示旋转提示（Android 锁屏 API 失败时的兜底） */
@@ -476,6 +545,113 @@ body {
     overscroll-behavior: none;
 }
 
+/* 移动端横屏：字体和间距缩小，适配小屏幕高度 */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .game-panel {
+        font-size: 13px;
+        padding: 10px 14px 20px;
+        bottom: 8px;
+        max-width: 55%;
+    }
+
+    #choice-box {
+        font-size: 13px;
+        padding: 10px 14px;
+        bottom: 8px;
+        max-width: 55%;
+    }
+
+    .choice-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    #inventory-toggle {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+        top: 10px;
+        right: 10px;
+    }
+
+    #inventory-panel {
+        top: 64px;
+        right: 10px;
+        width: 180px;
+        font-size: 12px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .inventory-header {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .inventory-item {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .item-icon {
+        font-size: 18px;
+    }
+
+    #debug-toggle {
+        top: 10px;
+        left: 10px;
+        height: 32px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    #sofa-corner-back,
+    #drawer-scene-back,
+    #window-scene-back,
+    #photo-wall-back {
+        top: 10px;
+        left: 10px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .password-content {
+        padding: 16px;
+        max-width: 280px;
+    }
+
+    .password-content h3 {
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+
+    #password-input,
+    #drawer-input {
+        font-size: 18px;
+        padding: 10px;
+        margin-bottom: 12px;
+    }
+
+    .password-buttons button {
+        padding: 8px 20px;
+        font-size: 14px;
+    }
+
+    .title-text {
+        font-size: 28px;
+    }
+
+    .subtitle {
+        font-size: 13px;
+        margin-bottom: 24px;
+    }
+
+    .start-btn {
+        padding: 12px 32px;
+        font-size: 16px;
+    }
+}
+
 /* 确保游戏元素不会覆盖对话框 */
 #pen-holder-image,
 #pen-image,
@@ -607,7 +783,7 @@ body {
 
 /* 密码输入框 */
 #password-modal {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -1065,7 +1241,7 @@ body {
 
 /* 抽屉密码弹窗 */
 #drawer-modal {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
