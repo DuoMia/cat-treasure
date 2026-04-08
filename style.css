@@ -46,7 +46,6 @@ body {
     }
 
     #game-container {
-        /* 高度铺满屏幕，宽度按 16:9 撑开（比屏幕宽，可左右拖动） */
         width: calc(100vh * 16 / 9);
         height: 100vh;
         position: fixed;
@@ -54,6 +53,16 @@ body {
         left: 0;
         overflow: hidden;
         touch-action: pan-x;
+    }
+
+    /* 标题页单独铺满视口，不跟着容器拉宽 */
+    #title-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 500;
     }
 
     /* 对话框固定在视口底部 */
