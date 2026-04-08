@@ -235,11 +235,11 @@ body {
 
 #pen-holder-hotspot {
     position: absolute;
-    left: 60%;
-    top: 62%;
-    width: 13%;
-    height: 13%;
-    z-index: 61;
+    left: 62%;
+    top: 63%;
+    width: 7%;
+    height: 10%;
+    z-index: 110;
     cursor: grab;
     user-select: none;
     touch-action: none;
@@ -334,26 +334,30 @@ body {
 }
 
 /* 对话框 */
-#dialog-box {
+/* ── 统一弹窗基础样式 ── */
+.game-panel {
     position: absolute;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
-    max-width: 400px;
-    background: rgba(0, 0, 0, 0.85);
-    border: 2px solid rgba(255, 215, 0, 0.5);
-    border-radius: 15px;
-    padding: 20px;
-    padding-bottom: 35px;
-    color: #fff;
-    font-size: 16px;
-    line-height: 1.8;
-    z-index: 200;
-    animation: slideUp 0.3s ease;
-    cursor: default;
+    max-width: 420px;
+    background: rgba(10, 8, 6, 0.92);
+    border: 1px solid rgba(200, 160, 80, 0.45);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #f0e8d8;
+    font-size: 15px;
+    line-height: 1.7;
+    z-index: 310;
+    animation: slideUp 0.25s ease;
     touch-action: none;
     user-select: none;
+}
+
+#dialog-box {
+    padding-bottom: 26px;
+    cursor: pointer;
 }
 
 @keyframes slideUp {
@@ -369,9 +373,9 @@ body {
 
 #dialog-continue {
     position: absolute;
-    bottom: 8px;
-    right: 15px;
-    color: rgba(255, 255, 255, 0.4);
+    bottom: 10px;
+    right: 16px;
+    color: rgba(200, 160, 80, 0.5);
     font-size: 11px;
     pointer-events: none;
     animation: fadeInOut 2s ease-in-out infinite;
@@ -421,8 +425,25 @@ body {
     
     #dialog-box {
         font-size: 14px;
-        padding: 15px;
-        padding-bottom: 30px;
+        padding: 12px 14px 22px;
+        bottom: 10px;
+    }
+
+    #choice-box {
+        font-size: 14px;
+        padding: 12px 14px;
+        bottom: 10px;
+    }
+
+    .choice-btn {
+        padding: 11px 14px;
+        font-size: 14px;
+    }
+
+    #sofa-corner-dialog,
+    #sofa-corner-choices {
+        font-size: 14px;
+        padding: 15px 16px 28px;
         bottom: 10px;
     }
     
@@ -473,40 +494,41 @@ body {
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
-    max-width: 400px;
-    background: rgba(0, 0, 0, 0.85);
-    border: 2px solid rgba(255, 215, 0, 0.5);
-    border-radius: 15px;
-    padding: 20px;
+    max-width: 420px;
+    background: rgba(10, 8, 6, 0.92);
+    border: 1px solid rgba(200, 160, 80, 0.45);
+    border-radius: 12px;
+    padding: 20px 22px;
     z-index: 200;
-    animation: slideUp 0.3s ease;
+    animation: slideUp 0.25s ease;
 }
 
 #choice-buttons {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .choice-btn {
-    padding: 15px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    border-radius: 10px;
-    color: white;
-    font-size: 16px;
+    padding: 13px 18px;
+    background: rgba(200, 160, 80, 0.12);
+    border: 1px solid rgba(200, 160, 80, 0.3);
+    border-radius: 8px;
+    color: #f0e8d8;
+    font-size: 15px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: background 0.2s, border-color 0.2s;
+    text-align: left;
+    font-family: 'Microsoft YaHei', sans-serif;
 }
 
 .choice-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    background: rgba(200, 160, 80, 0.22);
+    border-color: rgba(200, 160, 80, 0.55);
 }
 
 .choice-btn:active {
-    transform: translateY(0);
+    background: rgba(200, 160, 80, 0.3);
 }
 
 /* 物品栏 */
@@ -523,7 +545,7 @@ body {
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(240, 147, 251, 0.5);
     transition: all 0.3s ease;
-    z-index: 50;
+    z-index: 300;
     touch-action: none;
     user-select: none;
 }
@@ -541,7 +563,7 @@ body {
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 15px;
     padding: 15px;
-    z-index: 50;
+    z-index: 300;
     animation: fadeInRight 0.3s ease;
     touch-action: none;
     user-select: none;
@@ -793,6 +815,280 @@ body {
 
 .hidden {
     display: none !important;
+}
+
+/* 沙发角落场景 */
+#sofa-corner-scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    background: #000;
+    animation: fadeIn 0.4s ease;
+}
+
+#sofa-corner-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+#sofa-corner-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 24px 20px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.75));
+    color: #fff;
+    pointer-events: none;
+}
+
+#sofa-corner-title {
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 4px;
+}
+
+#sofa-corner-desc {
+    font-size: 15px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.5;
+}
+
+#sofa-corner-back {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+    z-index: 201;
+}
+
+#sofa-corner-back:hover {
+    background: rgba(0,0,0,0.75);
+}
+
+#sofa-corner-cat {
+    position: absolute;
+    right: 28%;
+    top: 50%;
+    width: 14%;
+    height: auto;
+    z-index: 205;
+    pointer-events: auto;
+    cursor: pointer;
+    animation: fadeIn 0.6s ease;
+    transform: rotate(8deg);
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+}
+
+#sofa-corner-bump {
+    position: absolute;
+    right: 26%;
+    top: 58%;
+    width: 9%;
+    height: 12%;
+    z-index: 203;
+    cursor: pointer;
+}
+
+/* 抽屉特写场景 */
+#drawer-scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    background: #000;
+    animation: fadeIn 0.4s ease;
+}
+
+#drawer-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+#drawer-scene-back {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+    z-index: 201;
+}
+
+#drawer-scene-back:hover {
+    background: rgba(0,0,0,0.75);
+}
+
+#drawer-diary-hotspot {
+    position: absolute;
+    left: 38%;
+    top: 45%;
+    width: 20%;
+    height: 30%;
+    z-index: 203;
+    cursor: pointer;
+}
+
+/* 窗户特写场景 */
+#window-scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    background: #000;
+    animation: fadeIn 0.4s ease;
+}
+
+#window-close-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+#window-scene-back {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+    z-index: 201;
+}
+
+#window-scene-back:hover {
+    background: rgba(0,0,0,0.75);
+}
+
+/* 照片墙特写场景 */
+#photo-wall-scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    background: #000;
+    animation: fadeIn 0.4s ease;
+}
+
+#photo-wall-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+#photo-wall-back {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+    z-index: 201;
+}
+
+#photo-wall-back:hover {
+    background: rgba(0,0,0,0.75);
+}
+
+.photo-hotspot {
+    position: absolute;
+    cursor: pointer;
+    z-index: 205;
+}
+
+#photo-wall-photo1 {
+    left: 10%;
+    top: 15%;
+    width: 22%;
+    height: 55%;
+}
+
+#photo-wall-photo2 {
+    left: 38%;
+    top: 15%;
+    width: 22%;
+    height: 55%;
+}
+
+#photo-wall-photo3 {
+    left: 66%;
+    top: 15%;
+    width: 22%;
+    height: 55%;
+}
+
+/* 抽屉密码弹窗 */
+#drawer-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 300;
+    animation: fadeIn 0.3s ease;
+    touch-action: none;
+    user-select: none;
+}
+
+#drawer-input {
+    width: 100%;
+    padding: 15px;
+    font-size: 24px;
+    text-align: center;
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    letter-spacing: 10px;
 }
 
 @keyframes fadeIn {

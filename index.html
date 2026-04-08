@@ -65,34 +65,77 @@
                 <img id="cat-image" src="cat.jpg" alt="朵朵" class="hidden">
                 <div id="hotspots"></div>
             </div>
-            
-            <!-- 对话框 -->
-            <div id="dialog-box" class="hidden">
-                <div id="dialog-text"></div>
-                <div id="dialog-continue" class="hidden">点击继续</div>
+
+            <!-- 沙发角落场景（全屏覆盖，在 room-scene 外） -->
+            <div id="sofa-corner-scene" class="hidden">
+                <img id="sofa-corner-image" src="sofa_corner.jpg" alt="沙发角落">
+                <img id="sofa-corner-cat" src="cat.jpg" alt="朵朵">
+                <div id="sofa-corner-bump"></div>
+                <button id="sofa-corner-back" onclick="closeSofaCornerScene()">← 返回</button>
             </div>
 
-            <!-- 选项框 -->
-            <div id="choice-box" class="hidden">
-                <div id="choice-buttons"></div>
+            <!-- 抽屉特写场景 -->
+            <div id="drawer-scene" class="hidden">
+                <img id="drawer-image" src="drawer.jpg" alt="抽屉内部">
+                <div id="drawer-diary-hotspot"></div>
+                <button id="drawer-scene-back" onclick="closeDrawerScene()">← 返回</button>
             </div>
 
-            <!-- 物品栏 -->
-            <button id="inventory-toggle">🎒</button>
-            <div id="inventory-panel" class="hidden">
-                <div class="inventory-header">物品栏</div>
-                <div id="inventory-items"></div>
+            <!-- 窗户特写场景 -->
+            <div id="window-scene" class="hidden">
+                <img id="window-close-image" src="window_close.jpg" alt="窗户特写">
+                <button id="window-scene-back" onclick="closeWindowScene()">← 返回</button>
             </div>
-            
-            <!-- 密码输入框 -->
-            <div id="password-modal" class="hidden">
-                <div class="password-content">
-                    <h3>输入密码</h3>
-                    <input type="text" id="password-input" maxlength="5" placeholder="_____">
-                    <div class="password-buttons">
-                        <button onclick="submitPassword()">确认</button>
-                        <button onclick="closePasswordModal()">取消</button>
-                    </div>
+
+            <!-- 照片墙特写场景 -->
+            <div id="photo-wall-scene" class="hidden">
+                <img id="photo-wall-image" src="photo_wall.jpg" alt="照片墙">
+                <div id="photo-wall-photo1" class="photo-hotspot"></div>
+                <div id="photo-wall-photo2" class="photo-hotspot"></div>
+                <div id="photo-wall-photo3" class="photo-hotspot"></div>
+                <button id="photo-wall-back" onclick="closePhotoWallScene()">← 返回</button>
+            </div>
+            </div>
+        </div>
+
+        <!-- 对话框（全局，所有场景共用） -->
+        <div id="dialog-box" class="game-panel hidden">
+            <div id="dialog-text"></div>
+            <div id="dialog-continue" class="hidden">点击继续</div>
+        </div>
+
+        <!-- 选项框（全局，所有场景共用） -->
+        <div id="choice-box" class="game-panel hidden">
+            <div id="choice-buttons"></div>
+        </div>
+
+        <!-- 物品栏（全局，所有场景可见） -->
+        <button id="inventory-toggle">🎒</button>
+        <div id="inventory-panel" class="hidden">
+            <div class="inventory-header">物品栏</div>
+            <div id="inventory-items"></div>
+        </div>
+
+        <!-- 密码输入框 -->
+        <div id="password-modal" class="hidden">
+            <div class="password-content">
+                <h3>输入密码</h3>
+                <input type="text" id="password-input" maxlength="5" placeholder="_____">
+                <div class="password-buttons">
+                    <button onclick="submitPassword()">确认</button>
+                    <button onclick="closePasswordModal()">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 抽屉密码输入框 -->
+        <div id="drawer-modal" class="hidden">
+            <div class="password-content">
+                <h3>输入抽屉密码</h3>
+                <input type="text" id="drawer-input" maxlength="3" placeholder="___">
+                <div class="password-buttons">
+                    <button onclick="submitDrawerPassword()">确认</button>
+                    <button onclick="closeDrawerModal()">取消</button>
                 </div>
             </div>
         </div>

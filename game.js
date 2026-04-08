@@ -4,6 +4,7 @@ const gameState = {
     debugMode: false,
     searchCount: 0,
     penFallen: false,
+    clickedObjects: new Set(), // 追踪已点击过的可交互对象
     flags: {
         foundCat: false,
         wasBitten: false,
@@ -13,7 +14,16 @@ const gameState = {
         solvedPassword: false,
         lookedAtClock: false,
         exploringAfterBite: false,
-        exploreClickCount: 0
+        exploreClickCount: 0,
+        shownSofaCornerHint: false, // 是否已触发过沙发角落提示
+        lookAroundCount: 0,
+        hasNote: false,
+        hasDiary: false,
+        drawerOpened: false,
+        seenWindowClue: false,
+        photoWallSeen: false,
+        sofaScratchSeen: false,
+        toyCountSeen: false
     }
 };
 
@@ -30,12 +40,14 @@ window.toggleDebugMode = function() {
 
 // 房间中的可交互对象
 const roomObjects = [
-    { id: 'door',   x: '3%',  y: '45%', width: '10%', height: '30%', label: '门',   onClick: interactDoor },
-    { id: 'window', x: '35%', y: '20%', width: '25%', height: '35%', label: '窗户', onClick: interactWindow },
-    { id: 'sofa',   x: '15%', y: '65%', width: '30%', height: '20%', label: '沙发', onClick: interactSofa },
-    { id: 'table',  x: '55%', y: '75%', width: '25%', height: '11%', label: '桌子', onClick: interactTable },
-    { id: 'clock',  x: '88%', y: '25%', width: '10%', height: '15%', label: '时钟', onClick: interactClock },
-    { id: 'drawer', x: '52%', y: '50%', width: '8%',  height: '10%', label: '抽屉', onClick: interactDrawer }
+    { id: 'door',       x: '3%',  y: '45%', width: '10%', height: '30%', label: '门',   onClick: interactDoor },
+    { id: 'window',     x: '35%', y: '20%', width: '25%', height: '35%', label: '窗户', onClick: interactWindow },
+    { id: 'sofa',       x: '15%', y: '65%', width: '30%', height: '20%', label: '沙发', onClick: interactSofa },
+    { id: 'table',      x: '55%', y: '68%', width: '25%', height: '18%', label: '桌子', onClick: interactTable },
+    { id: 'clock',      x: '88%', y: '25%', width: '10%', height: '15%', label: '时钟', onClick: interactClock },
+    { id: 'drawer',     x: '52%', y: '50%', width: '8%',  height: '10%', label: '抽屉', onClick: interactDrawer },
+    { id: 'photo-wall', x: '14%', y: '20%', width: '18%', height: '30%', label: '照片墙', onClick: interactPhotoWall },
+    { id: 'toys',       x: '60%', y: '82%', width: '15%', height: '10%', label: '猫玩具', onClick: interactToys }
 ];
 
 // 打字机效果变量
@@ -129,36 +141,9 @@ function startGame() {
         // 排除物品栏和密码框的点击
         if (e.target.closest('#inventory-toggle') ||
             e.target.closest('#inventory-panel') ||
-            e.target.closest('#password-modal')) {
+            e.target.closest('#password-modal') ||
+            e.target.closest('#drawer-modal')) {
             return;
-        }
-
-        // 选择"继续探索房间"后，非沙发点击计数3次后给提示
-        if (gameState.flags.exploringAfterBite && !e.target.closest('.hotspot[data-id="sofa"]')) {
-            gameState.flags.exploreClickCount++;
-            if (gameState.flags.exploreClickCount >= 3) {
-                gameState.flags.exploringAfterBite = false;
-                showDialog('你在房间里转了一圈，却始终心神不宁，脑海中一直浮现着朵朵躲进沙发角落的画面……', () => {
-                    showChoices([
-                        {
-                            text: '🛋️ 回到沙发角落查看',
-                            callback: () => {
-                                gameState.flags.foundBump = true;
-                                showDialog('你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。',
-                                    () => createRoomHotspots());
-                            }
-                        },
-                        {
-                            text: '🔎 再探索一会儿',
-                            callback: () => {
-                                gameState.flags.exploringAfterBite = true;
-                                gameState.flags.exploreClickCount = 0;
-                                createRoomHotspots();
-                            }
-                        }
-                    ]);
-                });
-            }
         }
 
         // 调试：显示点击位置（考虑滚动偏移）
@@ -195,6 +180,7 @@ function startGame() {
         if (e.target.closest('#inventory-toggle') ||
             e.target.closest('#inventory-panel') ||
             e.target.closest('#password-modal') ||
+            e.target.closest('#drawer-modal') ||
             e.target.closest('.hotspot')) {
             return;
         }
@@ -208,11 +194,7 @@ function startGame() {
                     showChoices([
                         {
                             text: '🛋️ 回到沙发角落查看',
-                            callback: () => {
-                                gameState.flags.foundBump = true;
-                                showDialog('你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。',
-                                    () => createRoomHotspots());
-                            }
+                            callback: () => openSofaCornerScene()
                         },
                         {
                             text: '🔎 再探索一会儿',
@@ -544,8 +526,202 @@ function countSearch() {
     }
 }
 
+// 被咬后继续探索时，非沙发点击计数，超过3次给提示
+// 返回 true 表示已触发提示，调用方应 return
+function tickExploreAfterBite() {
+    if (!gameState.flags.exploringAfterBite) return false;
+    gameState.flags.exploreClickCount++;
+    if (gameState.flags.exploreClickCount >= 3) {
+        gameState.flags.exploringAfterBite = false;
+        showDialog('你在房间里转了一圈，却始终心神不宁，脑海中一直浮现着朵朵躲进沙发角落的画面……那里好像有什么东西。', () => createRoomHotspots());
+        return true;
+    }
+    return false;
+}
+
+// 记录对象被点击，检查是否所有对象都被点击过（用于触发沙发角落提示）
+// 只计入初始探索阶段的6个对象，照片墙和玩具不参与
+const ALL_INTERACTIVE_OBJECTS = ['door', 'window', 'sofa', 'table', 'clock', 'drawer', 'photo-wall', 'toys'];
+const INITIAL_EXPLORE_OBJECTS = ['door', 'window', 'sofa', 'table', 'clock', 'drawer'];
+
+function trackObjectClick(id, afterCallback) {
+    // 只在游戏初始阶段（未发现猫咪前）追踪
+    if (gameState.flags.foundCat) {
+        if (afterCallback) afterCallback();
+        return;
+    }
+
+    // 已触发过提示后，进入 lookAround 模式
+    if (gameState.flags.shownSofaCornerHint) {
+        // 点沙发：由 interactSofa 单独处理，这里不计数
+        if (id === 'sofa') {
+            if (afterCallback) afterCallback();
+            return;
+        }
+        // 点其他地方：计数，满3次触发提示
+        gameState.flags.lookAroundCount = (gameState.flags.lookAroundCount || 0) + 1;
+        if (gameState.flags.lookAroundCount >= 3) {
+            gameState.flags.lookAroundCount = 0;
+            if (afterCallback) {
+                afterCallback(() => triggerSofaCornerHint());
+            } else {
+                triggerSofaCornerHint();
+            }
+        } else {
+            if (afterCallback) afterCallback();
+        }
+        return;
+    }
+
+    gameState.clickedObjects.add(id);
+    const allClicked = INITIAL_EXPLORE_OBJECTS.every(obj => gameState.clickedObjects.has(obj));
+    if (allClicked) {
+        gameState.flags.shownSofaCornerHint = true;
+        gameState.flags.lookAroundCount = 0;
+        if (afterCallback) {
+            afterCallback(() => triggerSofaCornerHint());
+        } else {
+            triggerSofaCornerHint();
+        }
+    } else {
+        if (afterCallback) afterCallback();
+    }
+}
+
+function triggerSofaCornerHint() {
+    showDialog('你把房间里能看的地方都看了一遍，却始终没有头绪……忽然，你注意到沙发的角落似乎有什么东西，要不要去看看？', () => {
+        showChoices([
+            {
+                text: '🛋️ 去沙发角落看看',
+                callback: () => openSofaCornerScene()
+            },
+            {
+                text: '🔎 再仔细找找',
+                callback: () => {
+                    gameState.flags.lookAroundCount = 0;
+                    createRoomHotspots();
+                }
+            }
+        ]);
+    });
+}
+
+// 打开沙发角落场景
+function openSofaCornerScene() {
+    clearHotspots();
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    closeCornerUI();
+    document.getElementById('sofa-corner-scene').classList.remove('hidden');
+
+    const catImg = document.getElementById('sofa-corner-cat');
+    const bump = document.getElementById('sofa-corner-bump');
+
+    // 根据状态决定场景内可交互元素
+    if (!gameState.flags.foundCat) {
+        // 猫咪还在，先展示发现文案，再设置点击
+        catImg.classList.remove('hidden');
+        bump.onclick = null;
+        catImg.onclick = null;
+        showDialog('你走近沙发角落，发现朵朵正蜷缩在那里，她懒洋洋地翻了个身，露出了肚皮……', () => {
+            catImg.onclick = function() {
+                catImg.onclick = null;
+                gameState.flags.foundCat = true;
+                gameState.flags.wasBitten = true;
+                catImg.classList.add('hidden');
+                showDialog(
+                    '你蹲下来想摸摸朵朵，没想到朵朵突然抱住你的手，对你又咬又挠！你赶紧把手抽了回来，看了看手上的爪子印以及牙印，再看向沙发时，朵朵早已不见踪影。',
+                    () => setupBumpInteraction()
+                );
+            };
+        });
+    } else {
+        // 猫咪已离开，直接显示凸起
+        catImg.classList.add('hidden');
+        setupBumpInteraction();
+    }
+}
+
+function setupBumpInteraction() {
+    closeCornerUI();
+    const bump = document.getElementById('sofa-corner-bump');
+
+    if (gameState.flags.hasBox) {
+        bump.onclick = function() {
+            showDialog('沙发角落已经被你打开过了，没有什么新的发现了。');
+        };
+        return;
+    }
+
+    if (!gameState.flags.foundBump) {
+        bump.onclick = function() {
+            gameState.flags.foundBump = true;
+            showDialog(
+                '你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。',
+                () => setupBumpInteraction()
+            );
+        };
+        return;
+    }
+
+    if (gameState.inventory.includes('钢笔')) {
+        bump.onclick = function() {
+            showDialog(
+                '你看着这个凸起，手中的钢笔似乎可以派上用场……',
+                () => showChoices([
+                    {
+                        text: '✂️ 用钢笔划开沙发',
+                        callback: () => {
+                            gameState.inventory.push('铁盒');
+                            gameState.flags.hasBox = true;
+                            updateInventory();
+                            showDialog(
+                                '你用钢笔把沙发划开一个洞，露出藏在里面的铁盒。你很奇怪怎么会有一个铁盒在沙发里，但也想不了这么多了。\n\n铁盒旁边，沙发内衬上有4道深深的抓痕，那是朵朵的杰作——她把这里当成了自己的秘密基地。',
+                                () => {
+                                    gameState.flags.sofaScratchSeen = true;
+                                    showDialog(
+                                        '你把铁盒拿了出来，发现铁盒被一个五位字母密码的锁锁住了，你觉得出去的钥匙可能就在这个盒子里面，于是便开始调查盒子的四周，看看有什么线索。',
+                                        () => {
+                                            bump.onclick = null;
+                                            showDialog('就在这时，你听到抽屉那边好像有动静……', () => createRoomHotspots());
+                                        }
+                                    );
+                                }
+                            );
+                        }
+                    },
+                    {
+                        text: '🤔 再想想其他办法',
+                        callback: () => {
+                            showDialog('你犹豫了一下，决定先不破坏沙发，也许还有其他办法。');
+                        }
+                    }
+                ])
+            );
+        };
+    } else {
+        bump.onclick = function() {
+            showDialog('这里有个奇怪的凸起……得找个工具才能打开它。');
+        };
+    }
+}
+
+function closeCornerUI() {
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+}
+
+// 关闭沙发角落场景，返回主场景
+function closeSofaCornerScene() {
+    closeCornerUI();
+    document.getElementById('sofa-corner-scene').classList.add('hidden');
+    document.getElementById('sofa-corner-cat').onclick = null;
+    createRoomHotspots();
+}
+
 // 交互函数
 function interactDoor() {
+    if (tickExploreAfterBite()) return;
     if (gameState.inventory.includes('钥匙')) {
         showDialog(
             '你手握钥匙站在门前，这把钥匙来之不易。你回想起整个过程，脑海中"watch"这个词又浮现出来……要直接出去，还是再查看一下那个时钟？',
@@ -569,36 +745,123 @@ function interactDoor() {
         );
     } else if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
         countSearch();
+        trackObjectClick('door');
         showHelpless();
     } else {
         countSearch();
-        showDialog('你尝试打开门，但是门被锁住了。需要找到钥匙才能打开。');
+        trackObjectClick('door', (next) => {
+            showDialog('你尝试打开门，但是门被锁住了。需要找到钥匙才能打开。', next);
+        });
     }
 }
 
 function interactWindow() {
-    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
+    if (tickExploreAfterBite()) return;
+    if (gameState.flags.hasDiary) {
+        openWindowScene();
+    } else if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
         countSearch();
+        trackObjectClick('window');
         showHelpless();
     } else {
         countSearch();
-        showDialog('你尝试打开窗户，但是窗户是锁死的，怎么也打不开。');
+        trackObjectClick('window', (next) => {
+            showDialog('你尝试打开窗户，但是窗户是锁死的，怎么也打不开。', next);
+        });
     }
 }
 
 function interactDrawer() {
+    if (tickExploreAfterBite()) return;
     if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
         countSearch();
+        trackObjectClick('drawer');
         showHelpless();
+    } else if (gameState.flags.hasNote && !gameState.flags.drawerOpened) {
+        openDrawerModal();
+    } else if (gameState.flags.drawerOpened) {
+        openDrawerScene();
+    } else if (gameState.flags.hasBox) {
+        showDialog('抽屉不知什么时候多了一把密码锁。');
     } else {
         countSearch();
-        showDialog('抽屉是锁住的，怎么也打不开。');
+        trackObjectClick('drawer', (next) => {
+            showDialog('抽屉是锁住的，怎么也打不开。', next);
+        });
+    }
+}
+
+let _pendingPhotoWallHint = null;
+
+function interactPhotoWall() {
+    if (tickExploreAfterBite()) return;
+    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
+        countSearch();
+        trackObjectClick('photo-wall');
+        showHelpless();
+        return;
+    }
+    countSearch();
+    trackObjectClick('photo-wall', (next) => {
+        _pendingPhotoWallHint = next || null;
+        openPhotoWallScene();
+    });
+}
+
+function interactToys() {
+    if (tickExploreAfterBite()) return;
+    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
+        countSearch();
+        trackObjectClick('toys');
+        showHelpless();
+        return;
+    }
+    countSearch();
+    trackObjectClick('toys', (next) => {
+        gameState.flags.toyCountSeen = true;
+        showDialog('地板上散落着朵朵的玩具：一个毛线球、一个铃铛球、还有一条小鱼。主人把她最爱的3个玩具都留在这里了。', next);
+    });
+}
+
+function openPhotoWallScene() {
+    clearHotspots();
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    document.getElementById('photo-wall-scene').classList.remove('hidden');
+
+    gameState.flags.photoWallSeen = true;
+
+    const photo1 = document.getElementById('photo-wall-photo1');
+    const photo2 = document.getElementById('photo-wall-photo2');
+    const photo3 = document.getElementById('photo-wall-photo3');
+
+    photo1.onclick = function() {
+        showDialog('2022年，朵朵刚来，还是个小猫咪。');
+    };
+    photo2.onclick = function() {
+        showDialog('2024年，朵朵2岁了，越来越懒了。');
+    };
+    photo3.onclick = function() {
+        showDialog('2026年，朵朵4岁了，还是那么爱赖在沙发角落。');
+    };
+}
+
+function closePhotoWallScene() {
+    document.getElementById('photo-wall-scene').classList.add('hidden');
+    const hint = _pendingPhotoWallHint;
+    _pendingPhotoWallHint = null;
+    if (hint) {
+        hint();
+    } else {
+        createRoomHotspots();
     }
 }
 
 function interactTable() {
+    if (tickExploreAfterBite()) return;
     if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
         countSearch();
+        trackObjectClick('table');
         showHelpless();
         return;
     }
@@ -606,180 +869,91 @@ function interactTable() {
     // 如果钢笔还没掉落，提示玩家查看笔筒
     if (!gameState.penFallen && !gameState.inventory.includes('钢笔')) {
         countSearch();
-        showDialog('桌子上放着一些书本、一个杯子，还有一个笔筒。笔筒里似乎有支钢笔。');
+        trackObjectClick('table', (next) => {
+            showDialog('桌子上放着一些书本、一个杯子，还有一个笔筒。笔筒里似乎有支钢笔。', next);
+        });
         return;
     }
 
     // 钢笔已经掉落，可以拾取
     if (gameState.penFallen && !gameState.inventory.includes('钢笔')) {
+        trackObjectClick('table');
         showDialog('你从地上捡起了钢笔。这应该可以作为工具使用。');
         document.getElementById('pen-image').classList.add('hidden');
         gameState.inventory.push('钢笔');
         updateInventory();
     } else if (gameState.inventory.includes('钢笔')) {
+        trackObjectClick('table');
         showDialog('桌子上已经没有什么有用的东西了。');
     } else {
-        showDialog('桌子上放着一些书本和杯子，没有什么特别的。');
+        trackObjectClick('table', (next) => {
+            showDialog('桌子上放着一些书本和杯子，没有什么特别的。', next);
+        });
     }
 }
 
 function interactClock() {
-    if (gameState.flags.solvedPassword && !gameState.flags.lookedAtClock) {
+    if (tickExploreAfterBite()) return;
+    if (gameState.flags.solvedPassword && gameState.flags.seenWindowClue && !gameState.flags.lookedAtClock) {
         gameState.flags.lookedAtClock = true;
         showDialog(
-            '你看着钥匙陷入沉思，刚刚的密码总觉得有点奇怪，watch不就是表的意思吗？你环顾四周，目光停留在墙上挂的时钟上，家里与表有关的也就只有它了。\n\n你把时钟从墙上拿了下来，时钟奇怪的重量让你觉得肯定有东西，你把时钟打开，一道金光顿时把你包围……',
+            '朵朵的目光终点……你把时钟从墙上拿了下来，时钟奇怪的重量让你觉得肯定有东西，你把时钟打开，一道金光顿时把你包围……',
             () => showEnding('treasure')
         );
+    } else if (gameState.flags.solvedPassword && !gameState.flags.seenWindowClue) {
+        trackObjectClick('clock');
+        showDialog('墙上挂着一个时钟，指针正在走动……你总觉得它和什么有关，但还没想清楚。');
     } else if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
         countSearch();
+        trackObjectClick('clock');
         showHelpless();
     } else {
         countSearch();
-        showDialog('墙上挂着一个时钟，指针正在走动……');
+        trackObjectClick('clock', (next) => {
+            showDialog('墙上挂着一个时钟，指针正在走动……', next);
+        });
     }
 }
 
 function interactSofa() {
-    // 情节片段一：搜索足够多地方后，沙发传出声音
-    if (!gameState.flags.foundCat && gameState.searchCount < 3) {
-        showDialog('你调查了一下沙发，没有发现什么特别的东西。');
-        gameState.searchCount++;
+    // 被咬后或已知凸起，点沙发直接进角落场景
+    if (gameState.flags.wasBitten || gameState.flags.foundBump) {
+        openSofaCornerScene();
         return;
     }
 
-    if (!gameState.flags.foundCat) {
-        // 情节片段一：犹豫是否去查看
-        showDialog(
-            '你调查了好几个地方，但是都一无所获，你一头雾水，不知道下一步该怎么办，突然沙发的角落传出了悉悉索索的声音，你一下子紧张起来，什么东西？你犹豫到底要不要去沙发一探究竟。',
-            () => showChoices([
+    // 已触发提示后，点沙发再次弹出选项
+    if (gameState.flags.shownSofaCornerHint) {
+        showDialog('你又看了看沙发，总觉得角落那里有什么东西……要不还是去看看？', () => {
+            showChoices([
                 {
-                    text: '🔍 鼓起勇气，去查看沙发角落',
-                    callback: () => {
-                        gameState.flags.foundCat = true;
-                        document.getElementById('cat-image').classList.remove('hidden');
-                        // 情节片段二：发现猫咪，直接显示对话并创建抚摸热点
-                        showDialog(
-                            '你慢慢靠近沙发，才发现在沙发的角落的沙发垫后面，一个小猫咪正惬意地睡着觉，看到你过来，她摆出招牌动作，翻出肚皮。\n\n你满脸问号，朵朵？就你一只猫在家里吗？',
-                            () => {
-                                // 恢复所有房间热点，并添加猫咪热点
-                                createRoomHotspots();
-                                // 创建独立的猫咪热点（不与沙发重叠）
-                                createHotspot('pet_cat', '抚摸猫咪', '18%', '70%', '15%', '15%', () => {
-                                    gameState.flags.wasBitten = true;
-                                    document.getElementById('cat-image').classList.add('hidden');
-                                    clearHotspots();
-                                    // 情节片段三：被咬后的抉择
-                                    showDialog(
-                                        '你坐在沙发上摸着朵朵的肚子，突然，朵朵抱住你的手，对你又咬又挠！你赶紧把手抽了回来，看了看手上的爪子印以及牙印，再看向沙发时，朵朵早已不见踪影。\n\n你摇了摇头，在犹豫接下去该怎么办。',
-                                        () => showChoices([
-                                            {
-                                                text: '🛋️ 回到沙发角落查看',
-                                                callback: () => {
-                                                    gameState.flags.foundBump = true;
-                                                    showDialog('你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。',
-                                                        () => createRoomHotspots());
-                                                }
-                                            },
-                                            {
-                                                text: '🔎 先继续探索房间',
-                                                callback: () => {
-                                                    gameState.flags.exploringAfterBite = true;
-                                                    gameState.flags.exploreClickCount = 0;
-                                                    createRoomHotspots();
-                                                }
-                                            }
-                                        ])
-                                    );
-                                });
-                            }
-                        );
-                    }
+                    text: '🛋️ 去沙发角落看看',
+                    callback: () => openSofaCornerScene()
                 },
                 {
-                    text: '😨 太危险了，先去别处看看',
+                    text: '🔎 再找找其他地方',
                     callback: () => {
-                        showDialog('你犹豫再三，决定先去别处看看，或许还有其他线索。', () => createRoomHotspots());
-                        gameState.searchCount = 2; // 下次点击沙发就会触发
+                        gameState.flags.lookAroundCount = 0;
+                        createRoomHotspots();
                     }
                 }
-            ])
-        );
+            ]);
+        });
         return;
     }
 
-    if (gameState.flags.foundCat && !gameState.flags.wasBitten) {
-        showDialog('沙发上空空如也，朵朵正在角落里睡觉。');
-        return;
-    }
-
-    // 情节片段五：被咬后回到沙发，发现凸起
-    if (gameState.flags.wasBitten && !gameState.flags.foundBump) {
-        gameState.flags.foundBump = true;
-        showDialog('你决定去朵朵刚刚睡觉的地方再看看，你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。');
-        return;
-    }
-
-    // 情节片段六：有钢笔，撬开沙发取出铁盒
-    if (gameState.flags.foundBump && gameState.inventory.includes('钢笔') && !gameState.flags.hasBox) {
-        showDialog(
-            '你来到沙发角落，看着这个凸起，手中的钢笔似乎可以派上用场……',
-            () => showChoices([
-                {
-                    text: '✂️ 用钢笔划开沙发',
-                    callback: () => {
-                        showDialog(
-                            '你在桌上找到了钢笔，把沙发弄出来一个洞，露出藏在里面的铁盒，你很奇怪怎么会有一个铁盒在沙发里，但是也想不了这么多了。\n\n你把铁盒拿了出来，发现铁盒被一个五位字母密码的锁锁住了，你觉得出去的钥匙可能就在这个盒子里面，于是便开始调查盒子的四周，看看有什么线索。'
-                        );
-                        gameState.inventory.push('铁盒');
-                        gameState.flags.hasBox = true;
-                        updateInventory();
-                    }
-                },
-                {
-                    text: '🤔 再想想其他办法',
-                    callback: () => {
-                        showDialog('你犹豫了一下，决定先不破坏沙发，也许还有其他办法。');
-                    }
-                }
-            ])
-        );
-        return;
-    }
-
-    if (gameState.flags.hasBox) {
-        showDialog('沙发角落已经被你打开过了，没有什么新的发现了。');
-        return;
-    }
-
-    if (gameState.flags.foundBump && !gameState.inventory.includes('钢笔')) {
-        showDialog('沙发角落有一个凸起，但是你还没有找到合适的工具，去桌子上找找看。');
-        return;
-    }
-
-    showDialog('沙发很舒适，你可以坐下来休息。');
+    // 普通交互，追踪点击
+    trackObjectClick('sofa', (next) => {
+        showDialog('你调查了一下沙发，没有发现什么特别的东西。', next);
+    });
 }
 
 // 情节片段四：无助
 function showHelpless() {
     gameState.flags.shownHelpless = true;
     showDialog(
-        '你决定继续翻找逃出去的线索，但是两个小时过去了，没一个抽屉能打开的，能翻的地方都翻过了，什么线索也没有，窗户也打不开，也找不到任何可以用的工具，空无一人的密闭房间让你紧张起来，这可怎么办？\n\n你下意识地把手伸进口袋想找手机，但是口袋里也什么都没有。你在想接下来该怎么办。',
-        () => showChoices([
-            {
-                text: '🛋️ 回到沙发附近再仔细看看',
-                callback: () => {
-                    gameState.flags.foundBump = true;
-                    showDialog('你决定去朵朵刚刚睡觉的地方再看看，你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。',
-                        () => createRoomHotspots());
-                }
-            },
-            {
-                text: '🔎 继续检查其他地方',
-                callback: () => {
-                    showDialog('你深吸一口气，决定再仔细检查一遍，也许遗漏了什么……', () => createRoomHotspots());
-                }
-            }
-        ])
+        '你决定继续翻找逃出去的线索，但是两个小时过去了，没一个抽屉能打开的，能翻的地方都翻过了，什么线索也没有，窗户也打不开，也找不到任何可以用的工具，空无一人的密闭房间让你紧张起来，这可怎么办？\n\n你下意识地把手伸进口袋想找手机，但是口袋里也什么都没有。',
+        () => createRoomHotspots()
     );
 }
 
@@ -807,6 +981,10 @@ function updateInventory() {
                 showDialog('你有一把钥匙，可以用来开门。');
             } else if (item === '铁盒') {
                 showDialog('盒子已经打开了，里面的钥匙已经取出来了。');
+            } else if (item === '纸条') {
+                showDialog('纸条上写着：\n"朵朵的秘密\n\n她陪我走过的岁月，是第一把钥匙。\n她留在这里的印记，是第二把钥匙。\n她最爱的那些小东西，是第三把钥匙。\n\n三把钥匙，从大到小。"');
+            } else if (item === '日记') {
+                showDialog('日记封面上写着"献给朵朵"。\n\n"朵朵来的那天，我买了一个新时钟挂在墙上，想着以后每天看着时间流逝，也有她陪着。\n\n她最喜欢的时刻是下午三点，那时候阳光从窗户斜射进来，她会从沙发角落走到窗台，然后回头看我一眼，再看向那个方向。\n\n我把最重要的东西，藏在了她目光的终点。那里，时间从不停歇。"');
             } else {
                 showDialog(`这是${item}。`);
             }
@@ -818,6 +996,98 @@ function updateInventory() {
 // 切换物品栏
 function toggleInventory() {
     document.getElementById('inventory-panel').classList.toggle('hidden');
+}
+
+// 抽屉密码弹窗
+function openDrawerModal() {
+    document.getElementById('drawer-modal').classList.remove('hidden');
+    document.getElementById('drawer-input').value = '';
+    document.getElementById('drawer-input').focus();
+}
+
+function closeDrawerModal() {
+    document.getElementById('drawer-modal').classList.add('hidden');
+}
+
+function submitDrawerPassword() {
+    const input = document.getElementById('drawer-input');
+    const password = input.value.trim();
+    if (password === '443') {
+        closeDrawerModal();
+        gameState.flags.drawerOpened = true;
+        showDialog('你输入了密码443，抽屉缓缓打开了……', () => openDrawerScene());
+    } else {
+        alert('密码错误，请再试一次');
+        input.value = '';
+        input.focus();
+    }
+}
+
+// 抽屉特写场景
+function openDrawerScene() {
+    clearHotspots();
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    document.getElementById('drawer-scene').classList.remove('hidden');
+
+    const hotspot = document.getElementById('drawer-diary-hotspot');
+    if (!gameState.flags.hasDiary) {
+        hotspot.onclick = function() {
+                showDialog('这是一本旧日记，封面上写着"献给朵朵"……', () => {
+                gameState.flags.hasDiary = true;
+                if (!gameState.inventory.includes('日记')) {
+                    gameState.inventory.push('日记');
+                    updateInventory();
+                }
+                showDialog('你获得了日记。');
+            });
+        };
+    } else {
+        hotspot.onclick = function() {
+            showDialog('日记已经拿走了。');
+        };
+    }
+}
+
+function closeDrawerScene() {
+    document.getElementById('drawer-scene').classList.add('hidden');
+    createRoomHotspots();
+}
+
+// 窗户特写场景
+function openWindowScene() {
+    clearHotspots();
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    document.getElementById('window-scene').classList.remove('hidden');
+
+    showDialog('窗台上有朵朵留下的毛发和爪印。你想起日记里写的：她总是从这里凝视着某个方向……顺着她的视线望去，那个方向是……', () => {
+        function showWindowChoices() {
+            showChoices([
+                {
+                    text: '🚪 门',
+                    callback: () => showDialog('不对，朵朵的视线不在那里……', () => showWindowChoices())
+                },
+                {
+                    text: '🕐 时钟',
+                    callback: () => {
+                        gameState.flags.seenWindowClue = true;
+                        showDialog('对了！朵朵每天下午都从这里凝视着那个时钟……', () => closeWindowScene());
+                    }
+                },
+                {
+                    text: '🪑 桌子',
+                    callback: () => showDialog('不对，朵朵的视线不在那里……', () => showWindowChoices())
+                }
+            ]);
+        }
+        showWindowChoices();
+    });
+}
+
+function closeWindowScene() {
+    document.getElementById('window-scene').classList.add('hidden');
+    createRoomHotspots();
 }
 
 // 打开密码输入框
@@ -840,12 +1110,16 @@ function submitPassword() {
     if (password === 'watch') {
         closePasswordModal();
         gameState.flags.solvedPassword = true;
-        // 情节片段八：钥匙
-        showDialog('你在密码锁上输入了正确密码：watch。噶哒一声，盒子打开了，里面有一把钥匙。');
+        // 情节片段八：钥匙 + 纸条
+        showDialog('你在密码锁上输入了正确密码：watch。噶哒一声，盒子打开了，里面有一把钥匙，还有一张折叠的纸条。');
         if (!gameState.inventory.includes('钥匙')) {
             gameState.inventory.push('钥匙');
-            updateInventory();
         }
+        if (!gameState.inventory.includes('纸条')) {
+            gameState.flags.hasNote = true;
+            gameState.inventory.push('纸条');
+        }
+        updateInventory();
     } else {
         alert('密码错误，请再试一次');
         input.value = '';
@@ -875,6 +1149,7 @@ function restartGame() {
     gameState.inventory = [];
     gameState.searchCount = 0;
     gameState.penFallen = false;
+    gameState.clickedObjects = new Set();
     gameState.flags = {
         foundCat: false,
         wasBitten: false,
@@ -882,7 +1157,18 @@ function restartGame() {
         foundBump: false,
         hasBox: false,
         solvedPassword: false,
-        lookedAtClock: false
+        lookedAtClock: false,
+        exploringAfterBite: false,
+        exploreClickCount: 0,
+        shownSofaCornerHint: false,
+        lookAroundCount: 0,
+        hasNote: false,
+        hasDiary: false,
+        drawerOpened: false,
+        seenWindowClue: false,
+        photoWallSeen: false,
+        sofaScratchSeen: false,
+        toyCountSeen: false
     };
 
     document.getElementById('cat-image').classList.add('hidden');
@@ -894,5 +1180,9 @@ function restartGame() {
     document.getElementById('title-screen').classList.remove('hidden');
     document.getElementById('game-play').classList.add('hidden');
     document.getElementById('inventory-panel').classList.add('hidden');
+    document.getElementById('sofa-corner-scene').classList.add('hidden');
+    document.getElementById('drawer-scene').classList.add('hidden');
+    document.getElementById('window-scene').classList.add('hidden');
+    document.getElementById('photo-wall-scene').classList.add('hidden');
     updateInventory();
 }
