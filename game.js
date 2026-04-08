@@ -86,6 +86,7 @@ function setupPortraitDrag() {
 
     container.addEventListener('touchmove', function(e) {
         if (window.innerWidth >= window.innerHeight) return;
+        if (isHolding) return; // 笔筒拖动中，不移动页面
         const dx = e.touches[0].clientX - startX;
         if (!moved && Math.abs(dx) < DRAG_THRESHOLD) return;
         moved = true;

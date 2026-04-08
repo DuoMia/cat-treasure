@@ -52,7 +52,7 @@ body {
         top: 0;
         left: 0;
         overflow: hidden;
-        touch-action: pan-x;
+        touch-action: none;
     }
 
     /* 标题页单独铺满视口，不跟着容器拉宽 */
