@@ -63,7 +63,8 @@ function isMobileDevice() {
 // 竖屏拖动支持：让玩家拖动 game-container 查看画面两侧
 function setupPortraitDrag() {
     const container = document.getElementById('game-container');
-    let startX = 0, startLeft = 0, isDragging = false;
+    let startX = 0, startLeft = 0, moved = false;
+    const DRAG_THRESHOLD = 8; // px，超过才算拖动
 
     function getLeft() {
         return parseFloat(container.style.left) || 0;
@@ -80,18 +81,29 @@ function setupPortraitDrag() {
         if (window.innerWidth >= window.innerHeight) return;
         startX = e.touches[0].clientX;
         startLeft = getLeft();
-        isDragging = true;
+        moved = false;
     }, { passive: true });
 
     container.addEventListener('touchmove', function(e) {
-        if (!isDragging || window.innerWidth >= window.innerHeight) return;
+        if (window.innerWidth >= window.innerHeight) return;
         const dx = e.touches[0].clientX - startX;
+        if (!moved && Math.abs(dx) < DRAG_THRESHOLD) return;
+        moved = true;
         container.style.left = clampLeft(startLeft + dx) + 'px';
     }, { passive: true });
 
+    // 拖动结束后，若确实移动过，拦截紧随的 click 事件一次
     container.addEventListener('touchend', function() {
-        isDragging = false;
+        if (moved) {
+            container.addEventListener('click', stopClick, { capture: true, once: true });
+        }
+        moved = false;
     }, { passive: true });
+
+    function stopClick(e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
 }
 
 // 竖屏时将容器滚动到水平居中位置
