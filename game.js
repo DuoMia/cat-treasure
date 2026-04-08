@@ -680,6 +680,12 @@ function openSofaCornerScene() {
 
     const catImg = document.getElementById('sofa-corner-cat');
     const bump = document.getElementById('sofa-corner-bump');
+    const scratch = document.getElementById('sofa-corner-scratch');
+
+    scratch.classList.remove('hidden');
+    setTapHandler(scratch, function() {
+        showDialog('坏朵朵，又挠沙发！');
+    });
 
     // 根据状态决定场景内可交互元素
     if (!gameState.flags.foundCat) {
@@ -780,6 +786,7 @@ function closeSofaCornerScene() {
     closeCornerUI();
     document.getElementById('sofa-corner-scene').classList.add('hidden');
     document.getElementById('sofa-corner-cat').onclick = null;
+    document.getElementById('sofa-corner-scratch').classList.add('hidden');
     centerViewport();
     createRoomHotspots();
 }
