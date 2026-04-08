@@ -63,8 +63,8 @@ function isMobileDevice() {
 // 竖屏拖动支持：让玩家拖动 game-container 查看画面两侧
 function setupPortraitDrag() {
     const container = document.getElementById('game-container');
-    let startX = 0, startLeft = 0, moved = false;
-    const DRAG_THRESHOLD = 8; // px，超过才算拖动
+    let startX = 0, startLeft = 0, moved = false, active = false;
+    const DRAG_THRESHOLD = 8;
 
     function getLeft() {
         return parseFloat(container.style.left) || 0;
@@ -82,23 +82,24 @@ function setupPortraitDrag() {
         startX = e.touches[0].clientX;
         startLeft = getLeft();
         moved = false;
+        active = true;
     }, { passive: true });
 
     container.addEventListener('touchmove', function(e) {
-        if (window.innerWidth >= window.innerHeight) return;
-        if (isHolding) return; // 笔筒拖动中，不移动页面
+        if (!active || window.innerWidth >= window.innerHeight) return;
+        if (isHolding) { active = false; return; } // 笔筒拖动中，放弃本次页面拖动
         const dx = e.touches[0].clientX - startX;
         if (!moved && Math.abs(dx) < DRAG_THRESHOLD) return;
         moved = true;
         container.style.left = clampLeft(startLeft + dx) + 'px';
     }, { passive: true });
 
-    // 拖动结束后，若确实移动过，拦截紧随的 click 事件一次
     container.addEventListener('touchend', function() {
         if (moved) {
             container.addEventListener('click', stopClick, { capture: true, once: true });
         }
         moved = false;
+        active = false;
     }, { passive: true });
 
     function stopClick(e) {
@@ -882,15 +883,25 @@ function openPhotoWallScene() {
     const photo2 = document.getElementById('photo-wall-photo2');
     const photo3 = document.getElementById('photo-wall-photo3');
 
-    photo1.onclick = function() {
-        showDialog('2022年，朵朵刚来，还是个小猫咪。');
-    };
-    photo2.onclick = function() {
-        showDialog('2024年，朵朵2岁了，越来越懒了。');
-    };
-    photo3.onclick = function() {
-        showDialog('2026年，朵朵4岁了，还是那么爱赖在沙发角落。');
-    };
+    function bindPhotoClick(el, text) {
+        let _tx = 0, _ty = 0;
+        el.addEventListener('touchstart', function(e) {
+            _tx = e.touches[0].clientX;
+            _ty = e.touches[0].clientY;
+        }, { passive: true });
+        el.addEventListener('touchend', function(e) {
+            e.stopPropagation();
+            const dx = e.changedTouches[0].clientX - _tx;
+            const dy = e.changedTouches[0].clientY - _ty;
+            if (Math.sqrt(dx * dx + dy * dy) > 8) return;
+            showDialog(text);
+        });
+        el.onclick = function() { showDialog(text); };
+    }
+
+    bindPhotoClick(photo1, '2022年，朵朵刚来，还是个小猫咪。');
+    bindPhotoClick(photo2, '2024年，朵朵2岁了，越来越懒了。');
+    bindPhotoClick(photo3, '2026年，朵朵4岁了，还是那么爱赖在沙发角落。');
 }
 
 function closePhotoWallScene() {
