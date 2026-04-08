@@ -446,12 +446,17 @@ function setupPenHolderInteraction() {
         e.stopPropagation();
     }, { passive: false });
 
-    document.addEventListener('touchmove', function(e) {
+    const gameContainer = document.getElementById('game-container');
+    gameContainer.addEventListener('touchmove', function(e) {
         if (!isHolding) return;
         e.preventDefault();
         const t = e.touches[0];
         onDragMove(t.clientX, t.clientY);
     }, { passive: false });
+
+    gameContainer.addEventListener('touchend', function() {
+        onDragEnd();
+    });
 
     document.addEventListener('touchend', function() {
         onDragEnd();
