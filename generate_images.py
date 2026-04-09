@@ -206,8 +206,8 @@ def create_room_background():
     draw.ellipse([(fb_cx-fb_w//2-4, fb_cy-fb_h//2-4), (fb_cx+fb_w//2+4, fb_cy-fb_h//4+4)],
                  fill='#d8d8d8', outline='#909090', width=2)
 
-    # 画框 (书架左侧墙面 68%, 18%, 8%x20%)
-    pf_x = int(width * 0.68)
+    # 画框 (书架左侧墙面 60%, 18%, 8%x20%)
+    pf_x = int(width * 0.60)
     pf_y = int(height * 0.18)
     pf_w = int(width * 0.08)
     pf_h = int(height * 0.20)

@@ -74,7 +74,7 @@ const roomObjects = [
     { id: 'toys',        x: '60%', y: '82%', width: '15%', height: '10%', label: '猫玩具',  onClick: interactToys },
     { id: 'bookshelf',   x: '75%', y: '35%', width: '12%', height: '30%', label: '书架',    onClick: interactBookshelf },
     { id: 'food-bowl',   x: '3%',  y: '78%', width: '8%',  height: '8%',  label: '食盆',    onClick: interactFoodBowl },
-    { id: 'painting',    x: '68%', y: '18%', width: '8%',  height: '20%', label: '画',      onClick: interactPainting },
+    { id: 'painting',    x: '60%', y: '18%', width: '8%',  height: '20%', label: '画',      onClick: interactPainting },
     { id: 'toy-box',     x: '82%', y: '76%', width: '10%', height: '8%',  label: '玩具箱',  onClick: interactToyBox }
 ];
 
@@ -186,6 +186,7 @@ function showDragHint() {
 function startGame() {
     document.getElementById('title-screen').classList.add('hidden');
     document.getElementById('game-play').classList.remove('hidden');
+    document.getElementById('inventory-toggle').classList.remove('hidden');
 
     if (isMobileDevice()) {
         setupPortraitDrag();
@@ -2024,6 +2025,7 @@ function restartGame() {
     document.getElementById('ending-screen').classList.add('hidden');
     document.getElementById('title-screen').classList.remove('hidden');
     document.getElementById('game-play').classList.add('hidden');
+    document.getElementById('inventory-toggle').classList.add('hidden');
     document.getElementById('inventory-panel').classList.add('hidden');
     document.getElementById('sofa-corner-scene').classList.add('hidden');
     document.getElementById('drawer-scene').classList.add('hidden');
