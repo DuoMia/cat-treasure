@@ -20,7 +20,8 @@ const gameState = {
         hasNote: false,
         hasDiary: false,
         drawerOpened: false,
-        seenWindowClue: false,
+        shownDrawerLockHint: false,
+        memoryFragments: [],   // 记忆碎片，集齐5块触发真结局
         photoWallSeen: false,
         sofaScratchSeen: false,
         toyCountSeen: false,
@@ -45,6 +46,12 @@ const gameState = {
         // 阳台
         balconySeen: false,
         hasLetter: false,
+        // 阳台影子谜题
+        clockTime: null,
+        balconyClue1: false,
+        balconyClue2: false,
+        balconyBrickStep: 0,
+        balconyBrickSolved: false,
         // 便利贴
         stickyNotes: [],
         albumUnlocked: false
@@ -224,10 +231,14 @@ function startGame() {
     }, { passive: false });
 
     document.getElementById('game-play').addEventListener('click', function(e) {
-        // 如果对话框正在显示，优先处理对话框点击
+        // 如果对话框正在显示，无论点哪里都关闭（子场景内也生效）
         const dialogBox = document.getElementById('dialog-box');
         if (!dialogBox.classList.contains('hidden')) {
             handleDialogClick();
+            return;
+        }
+        // 如果点击起源于子场景内部（非主房间），忽略
+        if (!e.target.closest('#room-scene') && !e.target.closest('#dialog-box') && !e.target.closest('#choice-box') && !e.target.closest('#inventory-toggle') && !e.target.closest('#inventory-panel')) {
             return;
         }
 
@@ -261,11 +272,16 @@ function startGame() {
             return;
         }
 
-        // 如果对话框正在显示，优先处理对话框点击
+        // 如果对话框正在显示，无论点哪里都关闭（子场景内也生效）
         const dialogBox = document.getElementById('dialog-box');
         if (!dialogBox.classList.contains('hidden')) {
             e.preventDefault();
             handleDialogClick();
+            return;
+        }
+
+        // 如果触摸起源于子场景内部（非主房间），忽略
+        if (!e.target.closest('#room-scene') && !e.target.closest('#dialog-box') && !e.target.closest('#choice-box') && !e.target.closest('#inventory-toggle') && !e.target.closest('#inventory-panel')) {
             return;
         }
 
@@ -563,6 +579,15 @@ function showChoices(choices) {
     const choiceBox = document.getElementById('choice-box');
     const choiceButtons = document.getElementById('choice-buttons');
 
+    // 遮罩：阻止选项框以外的所有交互
+    let overlay = document.getElementById('choice-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'choice-overlay';
+        document.getElementById('game-container').appendChild(overlay);
+    }
+    overlay.style.display = 'block';
+
     choiceButtons.innerHTML = '';
     choices.forEach(choice => {
         const btn = document.createElement('button');
@@ -570,6 +595,7 @@ function showChoices(choices) {
         btn.textContent = choice.text;
         btn.onclick = () => {
             choiceBox.classList.add('hidden');
+            overlay.style.display = 'none';
             choice.callback();
         };
         choiceButtons.appendChild(btn);
@@ -687,7 +713,7 @@ function trackObjectClick(id, afterCallback) {
 }
 
 function triggerSofaCornerHint() {
-    showDialog('你把房间里能看的地方都看了一遍，却始终没有头绪……忽然，你注意到沙发的角落似乎有什么东西，要不要去看看？', () => {
+    showDialog('你把房间里能看的地方都看了一遍，却始终没有头绪……忽然，你注意到沙发的角落似乎有什么东西。', () => {
         showChoices([
             { text: '🛋️ 去沙发角落看看', callback: () => openSofaCornerScene() },
             { text: '🔎 再仔细找找', callback: () => {
@@ -769,25 +795,34 @@ function setupBumpInteraction() {
     if (!gameState.flags.foundBump) {
         setTapHandler(bump, function() {
             gameState.flags.foundBump = true;
-            showDialog(
-                '你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。',
-                () => setupBumpInteraction()
-            );
+            if (gameState.inventory.includes('钢笔')) {
+                showDialog(
+                    '沙发角落有一个凸起，不仔细看还真看不出来。\n\n手里正好有钢笔，要试一下吗？',
+                    () => setupBumpInteraction()
+                );
+            } else {
+                showDialog(
+                    '你来到朵朵刚刚躲藏的沙发角落，突然发现有一个凸起，不仔细看还真看不出来。\n\n你充满疑惑，得想办法把它打开看看里面是什么，但是你没有工具，得在桌子上找找有没有可以用的东西。',
+                    () => setupBumpInteraction()
+                );
+            }
         });
         return;
     }
 
     if (gameState.inventory.includes('钢笔')) {
         setTapHandler(bump, function() {
-            showDialog(
-                '你看着这个凸起，手中的钢笔似乎可以派上用场……',
-                () => showChoices([
-                    {
-                        text: '✂️ 用钢笔划开沙发',
+            showChoices([
+                {
+                    text: '✂️ 用钢笔划开沙发',
                         callback: () => {
                             gameState.inventory.push('铁盒');
                             gameState.flags.hasBox = true;
                             updateInventory();
+                            // 立即重绑定，防止重复拾取
+                            setTapHandler(bump, function() {
+                                showDialog('沙发角落已经被你打开过了，没有什么新的发现了。');
+                            });
                             showDialog(
                                 '你用钢笔把沙发划开一个洞，露出藏在里面的铁盒。你很奇怪怎么会有一个铁盒在沙发里，但也想不了这么多了。\n\n铁盒旁边，沙发内衬上有4道深深的抓痕，那是朵朵的杰作——她把这里当成了自己的秘密基地。',
                                 () => {
@@ -809,8 +844,7 @@ function setupBumpInteraction() {
                             showDialog('你犹豫了一下，决定先不破坏沙发，也许还有其他办法。');
                         }
                     }
-                ])
-            );
+                ]);
         });
     } else {
         setTapHandler(bump, function() {
@@ -839,10 +873,10 @@ function interactDoor() {
     if (tickExploreAfterBite()) return;
     if (gameState.inventory.includes('钥匙')) {
         showDialog(
-            '你手握钥匙站在门前，这把钥匙来之不易。你回想起整个过程，脑海中"watch"这个词又浮现出来……要直接出去，还是再查看一下那个时钟？',
+            '你手握钥匙站在门前。\n\n但你停下来了——这个房间里，还有很多东西没搞清楚。朵朵为什么躲在沙发角落？那张纸条说的三把钥匙是什么意思？主人去哪里了？\n\n要就这样离开，还是把一切都弄明白？',
             () => showChoices([
                 {
-                    text: '🚪 直接开门出去！',
+                    text: '🚪 直接开门出去',
                     callback: () => {
                         showDialog(
                             '你拿着钥匙，赶紧到门口试了试，果然是房门钥匙，你按耐不住兴奋的心情，赶紧走出大门，却只觉得一阵头晕目眩，昏了过去。\n\n昏迷时，你做了一个梦，梦里朵朵一直在说"猫咪神藏"，你不知道什么时候才能醒来。',
@@ -851,9 +885,9 @@ function interactDoor() {
                     }
                 },
                 {
-                    text: '🕐 先去查看一下那个时钟',
+                    text: '🔍 还有些事没搞清楚，再看看',
                     callback: () => {
-                        showDialog('你决定先查看时钟，感觉还有什么没搞清楚……', () => createRoomHotspots());
+                        showDialog('你把钥匙收好，转身回到房间。\n\n答案就在这里，你能感觉到。', () => createRoomHotspots());
                     }
                 }
             ])
@@ -897,7 +931,12 @@ function interactDrawer() {
     } else if (gameState.flags.drawerOpened) {
         openDrawerScene();
     } else if (gameState.flags.hasBox) {
-        showDialog('抽屉不知什么时候多了一把密码锁。');
+        if (!gameState.flags.shownDrawerLockHint) {
+            gameState.flags.shownDrawerLockHint = true;
+            showDialog('抽屉不知什么时候多了一把密码锁。');
+        } else {
+            openDrawerModal();
+        }
     } else {
         countSearch();
         trackObjectClick('drawer', (next) => {
@@ -960,9 +999,9 @@ function openPhotoWallScene() {
         setTapHandler(el, function() { showDialog(text); });
     }
 
-    bindPhotoClick(photo1, '2022年，朵朵刚来，还是个小猫咪。');
-    bindPhotoClick(photo2, '2024年，朵朵2岁了，越来越懒了。');
-    bindPhotoClick(photo3, '2026年，朵朵4岁了，还是那么爱赖在沙发角落。');
+    bindPhotoClick(photo1, '2022年，朵朵刚来，还是个小猫咪，躲在沙发角落不肯出来。\n\n照片背面写着："初来乍到"。');
+    bindPhotoClick(photo2, '2024年，朵朵2岁了，越来越懒，整天趴着不动。\n\n照片背面写着："慵懒少女"。');
+    bindPhotoClick(photo3, '2026年，朵朵4岁了，最爱在下午趴在阳台那盆开黄花的植物旁边打盹。\n\n照片背面写着："老猫时光"。');
 
     // 便利贴3：照片墙背面
     const scene = document.getElementById('photo-wall-scene');
@@ -1020,16 +1059,14 @@ function interactBookshelf() {
     }
     countSearch();
     trackObjectClick('bookshelf', (next) => {
-        if (!gameState.flags.hasNote) {
+        if (!gameState.flags.hasDiary) {
             showDialog('书架上摆满了书，还有一些小摆件。角落里有个精致的音乐盒，盒盖上落了一层薄薄的灰尘，好像很久没人碰过了。', next);
         } else if (!gameState.flags.bookPuzzleSolved) {
-            showDialog('纸条上说"她陪我走过的岁月，是第一把钥匙"……书架上这5本书，厚薄各不相同。也许要按照某种顺序？', () => {
+            showDialog('日记里提到过书架……5本书，按厚薄排好。', () => {
                 openBookshelfScene();
             });
-        } else if (!gameState.flags.toyBoxSolved) {
-            showDialog('书架上的隐藏格子已经打开了，项圈已经拿走了。\n\n音乐盒还在那里，但现在还不是时候……', next);
         } else if (!gameState.flags.musicBoxSolved) {
-            showDialog('你想起日记里的话：朵朵来的那天、她两岁的时候、她四岁的时候……\n\n音乐盒上有三个按钮，分别刻着不同的年份。也许要按照朵朵成长的顺序来？', () => {
+            showDialog('隐藏格子还开着，音乐盒还没解开。', () => {
                 openBookshelfScene();
             });
         } else {
@@ -1078,12 +1115,13 @@ function setupBookPuzzleHotspots() {
     const scene = document.getElementById('bookshelf-scene');
     scene.querySelectorAll('.book-btn').forEach(el => el.remove());
 
+    // 书本按打乱后的位置排列（正确顺序是 book1>2>3>4>5，这里打乱显示位置）
     const books = [
-        { id: 'book1', label: '厚书①', width: '10%', left: '10%', color: '#c0392b' },
-        { id: 'book2', label: '厚书②', width: '8.5%', left: '22%', color: '#2980b9' },
-        { id: 'book3', label: '中书',   width: '7%',   left: '33%', color: '#27ae60' },
-        { id: 'book4', label: '薄书①', width: '5.5%', left: '43%', color: '#f39c12' },
-        { id: 'book5', label: '薄书②', width: '4%',   left: '51%', color: '#8e44ad' },
+        { id: 'book3', label: '中书',   width: '7%',   left: '10%', color: '#27ae60' },
+        { id: 'book5', label: '薄书②', width: '4%',   left: '20%', color: '#8e44ad' },
+        { id: 'book1', label: '厚书①', width: '10%',  left: '28%', color: '#c0392b' },
+        { id: 'book4', label: '薄书①', width: '5.5%', left: '41%', color: '#f39c12' },
+        { id: 'book2', label: '厚书②', width: '8.5%', left: '50%', color: '#2980b9' },
     ];
 
     books.forEach(b => {
@@ -1097,7 +1135,6 @@ function setupBookPuzzleHotspots() {
         scene.appendChild(btn);
     });
 
-    // 便利贴4（书架谜题完成后出现，但先注册热点占位）
     updateBookPuzzleHint();
 }
 
@@ -1117,19 +1154,28 @@ function handleBookClick(bookId) {
     if (bookId === expected) {
         gameState.flags.bookPuzzleStep++;
         const btn = document.getElementById(bookId);
-        if (btn) btn.classList.add('book-selected');
+        if (btn) btn.remove();
         updateBookPuzzleHint();
 
         if (gameState.flags.bookPuzzleStep >= 5) {
             gameState.flags.bookPuzzleSolved = true;
-            showDialog('咔哒——书架背板弹开了一个小格子！\n\n格子里静静躺着一条猫咪项圈，项圈上刻着"朵朵"，旁边还有一行小字：2022.03.15。', () => {
+            showDialog('咔哒——书架背板弹开了一个小格子！\n\n格子里静静躺着一条猫咪项圈，项圈上刻着"朵朵"，旁边还有一行小字：2022.03.15。\n\n项圈旁边，还有一个小小的音乐盒。', () => {
                 if (!gameState.inventory.includes('项圈')) {
                     gameState.flags.hasCollar = true;
                     gameState.inventory.push('项圈');
                     updateInventory();
                 }
-                showDialog('你获得了朵朵的项圈。\n\n2022.03.15……那是朵朵来家的日子。照片墙上第一张照片的年份，和这个日期对上了。', () => {
+                showDialog('你获得了朵朵的项圈。\n\n2022.03.15……那是朵朵来家的日子。', () => {
                     collectStickyNote('note4');
+                    collectMemoryFragment(0);
+                    // 直接切换到音乐盒阶段
+                    document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
+                    document.getElementById('music-box-display').classList.remove('hidden');
+                    scene.querySelectorAll('.book-btn').forEach(el => el.remove());
+                    gameState.flags.musicBoxStep = 0;
+                    showDialog('音乐盒盖子上刻着三个年份。日记里说过朵朵的故事……也许要按照她成长的顺序来？', () => {
+                        setupMusicBoxHotspots();
+                    });
                 });
             });
         } else {
@@ -1138,9 +1184,8 @@ function handleBookClick(bookId) {
         }
     } else {
         gameState.flags.bookPuzzleStep = 0;
-        document.querySelectorAll('.book-btn').forEach(b => b.classList.remove('book-selected'));
-        updateBookPuzzleHint();
-        showDialog('书本滑回了原位，发出轻微的碰撞声。\n\n也许顺序不对……纸条上说"从大到小"。');
+        setupBookPuzzleHotspots();
+        showDialog('书本滑回了原位，发出轻微的碰撞声。\n\n也许顺序不对……日记里说"5本书按厚薄排好"。');
     }
 }
 
@@ -1149,52 +1194,54 @@ function setupMusicBoxHotspots() {
     // 清除旧热点
     scene.querySelectorAll('.bookshelf-hotspot').forEach(el => el.remove());
 
-    const years = [
-        { id: 'btn-2022', label: '2022', x: '28%', y: '62%' },
-        { id: 'btn-2024', label: '2024', x: '48%', y: '62%' },
-        { id: 'btn-2026', label: '2026', x: '68%', y: '62%' }
+    // 音乐盒盖上刻着3个词，顺序打乱，玩家需对照照片墙判断朵朵的成长顺序
+    const phases = [
+        { id: 'btn-phase-b', label: '慵懒少女', key: 'B', x: '28%', y: '62%' },
+        { id: 'btn-phase-c', label: '老猫时光', key: 'C', x: '48%', y: '62%' },
+        { id: 'btn-phase-a', label: '初来乍到', key: 'A', x: '68%', y: '62%' },
     ];
 
-    years.forEach(y => {
+    phases.forEach(p => {
         const btn = document.createElement('div');
         btn.className = 'bookshelf-hotspot music-btn';
-        btn.id = y.id;
-        btn.dataset.year = y.label;
-        btn.style.cssText = `left:${y.x};top:${y.y};`;
-        btn.textContent = y.label;
-        btn.addEventListener('click', () => handleMusicBoxBtn(y.label));
+        btn.id = p.id;
+        btn.dataset.phase = p.key;
+        btn.style.cssText = `left:${p.x};top:${p.y};`;
+        btn.textContent = p.label;
+        btn.addEventListener('click', () => handleMusicBoxBtn(p.key));
         scene.appendChild(btn);
     });
 }
 
-const MUSIC_BOX_ORDER = ['2022', '2024', '2026'];
+// 正确顺序：初来乍到(A) → 慵懒少女(B) → 老猫时光(C)
+const MUSIC_BOX_ORDER = ['A', 'B', 'C'];
 
-function handleMusicBoxBtn(year) {
+function handleMusicBoxBtn(key) {
     if (gameState.flags.musicBoxSolved) {
         showDialog('音乐盒已经打开过了。');
         return;
     }
 
     const expected = MUSIC_BOX_ORDER[gameState.flags.musicBoxStep];
-    if (year === expected) {
+    if (key === expected) {
         gameState.flags.musicBoxStep++;
-        const btn = document.querySelector(`[data-year="${year}"]`);
+        const btn = document.querySelector(`[data-phase="${key}"]`);
         if (btn) btn.classList.add('pressed');
 
         if (gameState.flags.musicBoxStep >= 3) {
-            // 全部按对，音乐盒打开
             gameState.flags.musicBoxSolved = true;
-            showDialog('叮——音乐盒发出一声清脆的响声，缓缓打开了。\n\n里面躺着一张小纸片，上面写着：\n"朵朵最爱的时刻是下午三点，那时候阳光从窗户斜射进来，她会从沙发角落走到窗台，然后回头看我一眼，再看向那个方向。\n\n我把最重要的东西，藏在了她目光的终点。那里，时间从不停歇。"\n\n——这正是日记里的那段话，但这里还多了一句：\n"抽屉里的密码，是她陪我的年数。"', () => {
-                showDialog('朵朵陪了主人4年（2022-2026），加上她最爱的3个玩具……443？\n\n你记下了这个数字。');
+            showDialog('叮——音乐盒发出一声清脆的响声，缓缓打开了。\n\n里面躺着一张小纸片，上面写着：\n"抽屉里的密码，是她陪我的年数。"', () => {
+                showDialog('朵朵2022年来，2026年……她陪了主人4年。\n\n你记下了这个数字。', () => {
+                    collectMemoryFragment(1);
+                });
             });
         } else {
-            showDialog(`按钮亮起，发出轻柔的音符……还差${3 - gameState.flags.musicBoxStep}个。`);
+            showDialog(`轻柔的音符响起……还差${3 - gameState.flags.musicBoxStep}个。`);
         }
     } else {
-        // 按错，重置
         gameState.flags.musicBoxStep = 0;
         document.querySelectorAll('.music-btn').forEach(b => b.classList.remove('pressed'));
-        showDialog('音乐盒发出一声沉闷的声响，按钮全部熄灭了。\n\n也许顺序不对……想想朵朵的故事。');
+        showDialog('音乐盒发出一声沉闷的声响，按钮全部熄灭了。\n\n也许顺序不对……照片墙上记录了朵朵的每个阶段。');
     }
 }
 
@@ -1216,16 +1263,10 @@ function interactFoodBowl() {
     }
     countSearch();
     trackObjectClick('food-bowl', (next) => {
-        if (!gameState.flags.bookPuzzleSolved) {
+        if (!gameState.flags.hasDiary) {
             showDialog('沙发旁边放着朵朵的食盆，盆边贴着一张喂食记录卡。', next);
-        } else if (!gameState.flags.foodBowlSeen) {
-            showDialog('朵朵的食盆……盆边贴着一张喂食记录卡，上面写着每天的喂食时间。', () => {
-                openFoodBowlScene();
-            });
-        } else if (!gameState.flags.paintingPuzzleSolved) {
-            showDialog('喂食记录上写着四个时间。对照墙上的时钟，时针方向就是顺序……', next);
         } else {
-            showDialog('食盆已经看过了，喂食记录的秘密已经解开了。', next);
+            openFoodBowlScene();
         }
     });
 }
@@ -1240,14 +1281,7 @@ function openFoodBowlScene() {
 
     gameState.flags.foodBowlSeen = true;
 
-    showDialog('你蹲下来仔细看食盆旁边的记录卡……', () => {
-        const hotspot = document.getElementById('food-bowl-record-hotspot');
-        hotspot.onclick = function() {
-            showDialog('喂食记录：\n\n早 7点 / 午 12点 / 晚 6点 / 夜 10点\n\n对照墙上的时钟，时针方向就是顺序。\n\n（7点时针朝上，12点时针朝右，6点时针朝左，10点时针朝下）', () => {
-                showDialog('上→右→左→下……这个顺序好像可以用在什么地方。\n\n墙上那幅画……');
-            });
-        };
-    });
+    showDialog('你蹲下来仔细看食盆旁边的记录卡……\n\n喂食记录：\n\n早 7点 / 午 12点 / 晚 6点 / 夜 10点');
 }
 
 function closeFoodBowlScene() {
@@ -1270,10 +1304,10 @@ function interactPainting() {
     trackObjectClick('painting', (next) => {
         if (gameState.flags.paintingPuzzleSolved) {
             showDialog('画框已经打开过了，里面的信已经取走了。', next);
-        } else if (!gameState.flags.foodBowlSeen) {
+        } else if (!gameState.flags.hasDiary) {
             showDialog('墙上挂着一幅画，画里是一片草地，朵朵最喜欢趴在这里晒太阳。\n\n画框四周有四个小小的方向标记……', next);
         } else {
-            showDialog('喂食时间对应的时针方向：上→右→左→下。\n\n按这个顺序点击画框四周的方向标记……', () => {
+            showDialog('墙上挂着一幅画，画里是一片草地，朵朵最喜欢趴在这里晒太阳。\n\n画框四周有四个方向标记……', () => {
                 openPaintingPuzzle();
             });
         }
@@ -1290,6 +1324,22 @@ function openPaintingPuzzle() {
 
     gameState.flags.paintingStep = 0;
     setupPaintingHotspots();
+
+    // 便条A：藏在画框旁边的墙缝里，给阳台谜题的第一条线索
+    const scene = document.getElementById('painting-scene');
+    if (!gameState.flags.balconyClue1) {
+        const noteA = document.createElement('div');
+        noteA.id = 'balcony-note-a';
+        noteA.style.cssText = 'position:absolute;right:4%;top:12%;width:6%;height:8%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;';
+        noteA.title = '墙缝里的纸条';
+        noteA.textContent = '📄';
+        noteA.addEventListener('click', () => {
+            gameState.flags.balconyClue1 = true;
+            noteA.remove();
+            showDialog('你从画框旁边的墙缝里抽出一张折叠的纸条。\n\n"她总是等黑暗散尽，才去追那道光，最后蜷在星星落下的地方睡着。"');
+        });
+        scene.appendChild(noteA);
+    }
 }
 
 const PAINTING_ORDER = ['up', 'right', 'left', 'down'];
@@ -1334,7 +1384,9 @@ function handlePaintingClick(dir) {
                 gameState.inventory.push('主人的信');
                 updateInventory();
                 showDialog('你获得了主人写给朵朵的信。\n\n"朵朵，\n\n你最爱的顺序，永远是先闻味道，再用爪子确认，最后才肯吃。\n\n鱼的香气→爪子轻触→铃铛一响→球滚过来。\n\n这是你的仪式，也是我最爱看的画面。\n\n——主人"', () => {
-                    showDialog('先闻味道（鱼）→爪子确认（爪印）→铃铛→球……\n\n这个顺序……好像可以用在什么地方。');
+                    showDialog('先闻味道（鱼）→爪子确认（爪印）→铃铛→球……\n\n这个顺序……好像可以用在什么地方。', () => {
+                        collectMemoryFragment(2);
+                    });
                 });
             });
         } else {
@@ -1344,7 +1396,7 @@ function handlePaintingClick(dir) {
     } else {
         gameState.flags.paintingStep = 0;
         document.querySelectorAll('.painting-btn').forEach(b => b.classList.remove('painting-pressed'));
-        showDialog('画框没有反应。\n\n也许顺序不对……回想一下喂食记录上的时间。');
+        showDialog('画框没有反应。\n\n也许顺序不对……食盆旁边的记录卡上写着什么？');
     }
 }
 
@@ -1366,12 +1418,12 @@ function interactToyBox() {
     }
     countSearch();
     trackObjectClick('toy-box', (next) => {
-        if (!gameState.flags.hasOwnerLetter || !gameState.flags.photoWallSeen) {
+        if (!gameState.flags.hasDiary) {
             showDialog('桌子下面好像有个小木箱，但上面有个图案锁，暂时打不开。', next);
         } else if (gameState.flags.toyBoxSolved) {
             showDialog('玩具箱已经打开了，朵朵的信已经取走了。', next);
         } else {
-            showDialog('小木箱上有四个图案按钮：🐟 🐾 🔔 ⚽\n\n主人的信里说：先闻味道，再用爪子确认，最后才肯吃……', () => {
+            showDialog('小木箱上有四个图案按钮：🐟 🐾 🔔 ⚽\n\n日记里写过：先闻了闻小鱼，用爪子确认了铃铛，然后把球推给我……', () => {
                 openToyBoxScene();
             });
         }
@@ -1389,6 +1441,22 @@ function openToyBoxScene() {
     gameState.flags.toyBoxSeen = true;
     gameState.flags.toyBoxStep = 0;
     setupToyBoxHotspots();
+
+    // 便条B：藏在玩具箱底部，给阳台谜题的第二条线索
+    const scene = document.getElementById('toy-box-scene');
+    if (!gameState.flags.balconyClue2) {
+        const noteB = document.createElement('div');
+        noteB.id = 'balcony-note-b';
+        noteB.style.cssText = 'position:absolute;left:4%;bottom:8%;width:6%;height:8%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;';
+        noteB.title = '玩具箱底部的纸条';
+        noteB.textContent = '📄';
+        noteB.addEventListener('click', () => {
+            gameState.flags.balconyClue2 = true;
+            noteB.remove();
+            showDialog('你在玩具箱底部发现了一张夹着的纸条。\n\n"光跑得比她快，一头扎进了海里。"');
+        });
+        scene.appendChild(noteB);
+    }
 }
 
 const TOY_BOX_ORDER = ['fish', 'paw', 'bell', 'ball'];
@@ -1435,7 +1503,9 @@ function handleToyBoxClick(toyId) {
                 updateInventory();
                 showDialog('你获得了朵朵的信。\n\n爪印排列成文字：\n\n"喵——\n\n你找到这里了。我知道你会来的。\n\n主人把最重要的东西藏在了时钟里，那是我们在一起的每一天。\n\n猫咪神藏，不是宝贝，是时光。\n\n——朵朵 🐾"', () => {
                     collectStickyNote('note5');
-                    showDialog('你握着这封信，眼眶有些湿润。\n\n时钟……一切线索都指向那里。');
+                    showDialog('你握着这封信，眼眶有些湿润。\n\n时钟……一切线索都指向那里。', () => {
+                        collectMemoryFragment(3);
+                    });
                 });
             });
         } else {
@@ -1464,6 +1534,31 @@ const STICKY_NOTE_TEXTS = {
     note4: '你的项圈我一直留着，那是你来的第一天戴上的。',
     note5: '如果有一天你找到了这里，希望你知道，我永远爱你。'
 };
+
+// ===================== 记忆碎片系统 =====================
+
+const MEMORY_FRAGMENT_TEXTS = [
+    '2022年3月15日，朵朵第一次来家。她躲在角落里，用那双琥珀色的眼睛打量着这个陌生的地方。我把项圈轻轻套上，她没有挣扎，只是回头看了我一眼。',
+    '有一个下午，阳光从窗户斜射进来，朵朵第一次跳上窗台。她坐在那里，望着远处，尾巴轻轻摇摆。我没有打扰她，只是静静地看着。',
+    '每天喂食的时候，她都有自己的仪式。先闻一闻，再用爪子轻轻碰一下，铃铛响了，才肯低头吃。我不知道这是从哪里学来的，但我每次都会等她完成。',
+    '最后一次玩玩具是一个傍晚。她把毛线球、铃铛球和小鱼都推到了我脚边，然后坐下来看着我。我想，也许她知道我要离开了。',
+    '我离开的那天，朵朵坐在窗台上，一直看着我。我没有回头，但我知道她在。这个房间里的每一件东西，都是我们在一起的证明。'
+];
+
+function collectMemoryFragment(index) {
+    if (gameState.flags.memoryFragments.includes(index)) return;
+    gameState.flags.memoryFragments.push(index);
+    const count = gameState.flags.memoryFragments.length;
+    showDialog(`✨ 记忆碎片（${count}/5）：\n\n"${MEMORY_FRAGMENT_TEXTS[index]}"`, () => {
+        if (count >= 5) {
+            showDialog('五块记忆碎片全部拼合……\n\n你感到房间里有什么东西悄悄变了。\n\n墙上的时钟，指针停了。');
+        }
+    });
+}
+
+function allFragmentsCollected() {
+    return gameState.flags.memoryFragments.length >= 5;
+}
 
 function collectStickyNote(id) {
     if (gameState.flags.stickyNotes.includes(id)) return;
@@ -1518,10 +1613,6 @@ function closeAlbumScene() {
 // ===================== 阳台场景 =====================
 
 function tryOpenBalcony() {
-    if (!gameState.flags.musicBoxSolved) {
-        showDialog('窗户虽然能打开，但外面是阳台，你有些犹豫……也许先把房间里的东西都弄清楚再说？');
-        return;
-    }
     openBalconyScene();
 }
 
@@ -1535,13 +1626,25 @@ function openBalconyScene() {
 
     gameState.flags.balconySeen = true;
 
-    if (!gameState.flags.hasLetter) {
-        showDialog('你推开窗户，踏上阳台。\n\n阳台上摆着几盆绿植，地板上有一串细小的爪印，从窗边一直延伸到角落的花盆旁。\n\n朵朵曾经在这里留下了她的痕迹。', () => {
-            setupBalconyHotspots();
-        });
-    } else {
+    if (gameState.flags.hasLetter) {
         showDialog('阳台上静悄悄的，信已经拿走了。');
         setupBalconyHotspots();
+        return;
+    }
+
+    const clockTime = gameState.flags.clockTime;
+    if (!clockTime) {
+        showDialog('你踏上阳台。\n\n阳台上摆着三盆植物，地板上有一串细小的爪印。\n\n此刻阳光平淡，什么都看不出来。', () => {
+            setupBalconyHotspots();
+        });
+    } else if (clockTime === '10') {
+        showDialog('上午的阳光从左侧斜射进来，光线柔和。\n\n仙人掌的影子被拉得很长，影子末端压着地板上的一条砖缝……', () => {
+            setupBalconyHotspots();
+        });
+    } else if (clockTime === '15') {
+        showDialog('下午的阳光从右侧低低地照进来，光线橙红。\n\n绿植的影子斜斜地落在地板上，影子末端也压着一条砖缝……', () => {
+            setupBalconyHotspots();
+        });
     }
 }
 
@@ -1549,36 +1652,147 @@ function setupBalconyHotspots() {
     const scene = document.getElementById('balcony-scene');
     scene.querySelectorAll('.balcony-hotspot').forEach(el => el.remove());
 
-    // 爪印热点
+    const clockTime = gameState.flags.clockTime;
+
+    // 爪印
     const pawprint = document.createElement('div');
     pawprint.className = 'balcony-hotspot paw-trail';
-    pawprint.style.cssText = 'left:20%;top:55%;width:55%;height:15%;';
+    pawprint.style.cssText = 'left:20%;top:55%;width:55%;height:12%;';
     pawprint.title = '爪印';
     pawprint.addEventListener('click', () => {
-        showDialog('一串小小的爪印，从窗边一直通向那个最大的花盆……朵朵好像在指引你。');
+        showDialog('一串小小的爪印，从窗边延伸出去，好像去过好几个地方……');
     });
     scene.appendChild(pawprint);
 
-    // 花盆热点
-    const pot = document.createElement('div');
-    pot.className = 'balcony-hotspot flower-pot';
-    pot.style.cssText = 'left:65%;top:60%;width:20%;height:25%;';
-    pot.title = '花盆';
-    pot.addEventListener('click', () => {
-        if (!gameState.flags.hasLetter) {
-            showDialog('你蹲下来，轻轻移开花盆……花盆下面压着一个防水袋，里面有一封信。', () => {
+    // 10点影子：仙人掌影子末端的砖缝
+    if (clockTime === '10' && gameState.flags.balconyClue1) {
+        const crack1 = document.createElement('div');
+        crack1.className = 'balcony-hotspot';
+        crack1.style.cssText = 'left:8%;top:78%;width:18%;height:8%;cursor:pointer;border:2px dashed rgba(255,200,50,0.6);border-radius:4px;';
+        crack1.title = '仙人掌影子末端的砖缝';
+        crack1.addEventListener('click', () => {
+            showDialog('你蹲下来，从砖缝里抽出一张卷起的纸条。\n\n"她总是等黑暗散尽，才去追那道光，最后蜷在星星落下的地方睡着。"');
+        });
+        scene.appendChild(crack1);
+    } else if (clockTime === '10' && !gameState.flags.balconyClue1) {
+        const crack1 = document.createElement('div');
+        crack1.className = 'balcony-hotspot';
+        crack1.style.cssText = 'left:8%;top:78%;width:18%;height:8%;cursor:pointer;border:2px dashed rgba(255,200,50,0.6);border-radius:4px;';
+        crack1.title = '仙人掌影子末端的砖缝';
+        crack1.addEventListener('click', () => {
+            showDialog('影子末端压着一条砖缝，但光线还不够，什么都看不清。\n\n也许还需要什么线索……');
+        });
+        scene.appendChild(crack1);
+    }
+
+    // 15点影子：绿植影子末端的砖缝
+    if (clockTime === '15' && gameState.flags.balconyClue2) {
+        const crack2 = document.createElement('div');
+        crack2.className = 'balcony-hotspot';
+        crack2.style.cssText = 'left:74%;top:78%;width:18%;height:8%;cursor:pointer;border:2px dashed rgba(255,150,50,0.6);border-radius:4px;';
+        crack2.title = '绿植影子末端的砖缝';
+        crack2.addEventListener('click', () => {
+            showDialog('你蹲下来，从砖缝里抽出一张卷起的纸条。\n\n"光跑得比她快，一头扎进了海里。"');
+        });
+        scene.appendChild(crack2);
+    } else if (clockTime === '15' && !gameState.flags.balconyClue2) {
+        const crack2 = document.createElement('div');
+        crack2.className = 'balcony-hotspot';
+        crack2.style.cssText = 'left:74%;top:78%;width:18%;height:8%;cursor:pointer;border:2px dashed rgba(255,150,50,0.6);border-radius:4px;';
+        crack2.title = '绿植影子末端的砖缝';
+        crack2.addEventListener('click', () => {
+            showDialog('影子末端压着一条砖缝，但光线还不够，什么都看不清。\n\n也许还需要什么线索……');
+        });
+        scene.appendChild(crack2);
+    }
+
+    // 两条线索都拿到后，地板中央出现4块砖
+    if (gameState.flags.balconyClue1 && gameState.flags.balconyClue2 && !gameState.flags.balconyBrickSolved) {
+        showBalconyBricks(scene);
+    } else if (gameState.flags.balconyBrickSolved && !gameState.flags.hasLetter) {
+        // 砖块已解，向日葵花盆底座可以打开
+        const base = document.createElement('div');
+        base.className = 'balcony-hotspot';
+        base.style.cssText = 'left:48%;top:68%;width:14%;height:8%;cursor:pointer;background:rgba(255,220,100,0.3);border:2px solid rgba(255,200,50,0.8);border-radius:4px;';
+        base.title = '地板上弹开的底座';
+        base.addEventListener('click', () => {
+            showDialog('地板上有一道弹开的缝隙，里面压着一个防水袋，里面有一封信。', () => {
                 gameState.flags.hasLetter = true;
                 gameState.inventory.push('信');
                 updateInventory();
-                showDialog('你获得了一封信。\n\n信封上写着：\n"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我四年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"', () => {
-                    showDialog('你握着这封信，心里涌起一股说不清的情绪。\n\n时钟……一切线索都指向那里。');
+                showDialog('你获得了一封信。\n\n"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我四年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"', () => {
+                    showDialog('你握着这封信，心里涌起一股说不清的情绪。\n\n时钟……一切线索都指向那里。', () => {
+                        collectMemoryFragment(4);
+                    });
                 });
             });
-        } else {
-            showDialog('花盆下面已经空了，信已经拿走了。');
-        }
+        });
+        scene.appendChild(base);
+    }
+}
+
+// 4块砖谜题：正确顺序 🌙→☀️→🌊→⭐
+const BRICK_ORDER = ['moon', 'sun', 'wave', 'star'];
+const BRICK_LABELS = { moon: '🌙', sun: '☀️', wave: '🌊', star: '⭐' };
+
+function showBalconyBricks(scene) {
+    scene.querySelectorAll('.balcony-brick').forEach(el => el.remove());
+
+    // 提示语
+    if (!scene.querySelector('.brick-hint')) {
+        const hint = document.createElement('div');
+        hint.className = 'brick-hint';
+        hint.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);top:68%;font-size:13px;color:rgba(255,255,255,0.8);text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap;';
+        hint.textContent = '地板上有四块刻着符号的砖……';
+        scene.appendChild(hint);
+    }
+
+    const bricks = [
+        { key: 'star',  left: '18%', top: '76%' },
+        { key: 'sun',   left: '34%', top: '76%' },
+        { key: 'moon',  left: '50%', top: '76%' },
+        { key: 'wave',  left: '66%', top: '76%' },
+    ];
+
+    bricks.forEach(b => {
+        const brick = document.createElement('div');
+        brick.className = 'balcony-brick balcony-hotspot';
+        brick.dataset.brickKey = b.key;
+        brick.style.cssText = `left:${b.left};top:${b.top};width:10%;height:10%;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(0,0,0,0.25);border:2px solid rgba(255,255,255,0.3);border-radius:4px;`;
+        brick.textContent = BRICK_LABELS[b.key];
+        brick.addEventListener('click', () => handleBrickClick(b.key));
+        scene.appendChild(brick);
     });
-    scene.appendChild(pot);
+}
+
+function handleBrickClick(key) {
+    if (gameState.flags.balconyBrickSolved) return;
+
+    const expected = BRICK_ORDER[gameState.flags.balconyBrickStep];
+    if (key === expected) {
+        gameState.flags.balconyBrickStep++;
+        const brick = document.querySelector(`.balcony-brick[data-brick-key="${key}"]`);
+        if (brick) brick.style.background = 'rgba(255,200,50,0.5)';
+
+        if (gameState.flags.balconyBrickStep >= 4) {
+            gameState.flags.balconyBrickSolved = true;
+            const scene = document.getElementById('balcony-scene');
+            scene.querySelectorAll('.balcony-brick').forEach(el => el.remove());
+            const hint = scene.querySelector('.brick-hint');
+            if (hint) hint.remove();
+            showDialog('四块砖依次亮起，地板发出轻微的震动声……\n\n向日葵花盆的底座弹开了一道缝。', () => {
+                setupBalconyHotspots();
+            });
+        } else {
+            showDialog(`砖块亮起……还差${4 - gameState.flags.balconyBrickStep}块。`);
+        }
+    } else {
+        gameState.flags.balconyBrickStep = 0;
+        document.querySelectorAll('.balcony-brick').forEach(b => {
+            b.style.background = 'rgba(0,0,0,0.25)';
+        });
+        showDialog('地板发出一声沉闷的响声，砖块全部熄灭了。\n\n也许顺序不对……再想想那两张纸条。');
+    }
 }
 
 function closeBalconyScene() {
@@ -1625,23 +1839,46 @@ function interactTable() {
 
 function interactClock() {
     if (tickExploreAfterBite()) return;
-    if (gameState.flags.solvedPassword && gameState.flags.seenWindowClue && !gameState.flags.lookedAtClock) {
+    if (allFragmentsCollected() && !gameState.flags.lookedAtClock) {
         gameState.flags.lookedAtClock = true;
         showDialog(
-            '朵朵的目光终点……你把时钟从墙上拿了下来，时钟奇怪的重量让你觉得肯定有东西，你把时钟打开，一道金光顿时把你包围……',
+            '时钟的指针停了。\n\n你把它从墙上取下来，它比想象中重得多……',
             () => showEnding('treasure')
         );
-    } else if (gameState.flags.solvedPassword && !gameState.flags.seenWindowClue) {
-        trackObjectClick('clock');
-        showDialog('墙上挂着一个时钟，指针正在走动……你总觉得它和什么有关，但还没想清楚。');
     } else if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
         countSearch();
         trackObjectClick('clock');
         showHelpless();
-    } else {
+    } else if (!gameState.flags.hasDiary) {
         countSearch();
         trackObjectClick('clock', (next) => {
             showDialog('墙上挂着一个时钟，指针正在走动……', next);
+        });
+    } else {
+        // 有日记后，时钟可以拨动
+        const timeLabel = gameState.flags.clockTime === '10' ? '上午10点' :
+                          gameState.flags.clockTime === '15' ? '下午3点' : '当前时刻';
+        showDialog(`墙上挂着一个时钟，指针指向${timeLabel}。\n\n表盘边缘有一个小旋钮，好像可以拨动指针。`, () => {
+            showChoices([
+                {
+                    text: '🕙 拨到上午10点',
+                    callback: () => {
+                        gameState.flags.clockTime = '10';
+                        showDialog('你轻轻拨动旋钮，指针停在了上午10点。\n\n窗外的光线好像也跟着变了。');
+                    }
+                },
+                {
+                    text: '🕒 拨到下午3点',
+                    callback: () => {
+                        gameState.flags.clockTime = '15';
+                        showDialog('你轻轻拨动旋钮，指针停在了下午3点。\n\n窗外的光线好像也跟着变了。');
+                    }
+                },
+                {
+                    text: '↩ 不动它',
+                    callback: () => {}
+                }
+            ]);
         });
     }
 }
@@ -1653,23 +1890,21 @@ function interactSofa() {
         return;
     }
 
-    // 已触发提示后，点沙发再次弹出选项
+    // 已触发提示后，点沙发直接弹出选项
     if (gameState.flags.shownSofaCornerHint) {
-        showDialog('你又看了看沙发，总觉得角落那里有什么东西……要不还是去看看？', () => {
-            showChoices([
-                {
-                    text: '🛋️ 去沙发角落看看',
-                    callback: () => openSofaCornerScene()
-                },
-                {
-                    text: '🔎 再找找其他地方',
-                    callback: () => {
-                        gameState.flags.lookAroundCount = 0;
-                        createRoomHotspots();
-                    }
+        showChoices([
+            {
+                text: '🛋️ 去沙发角落看看',
+                callback: () => openSofaCornerScene()
+            },
+            {
+                text: '🔎 再找找其他地方',
+                callback: () => {
+                    gameState.flags.lookAroundCount = 0;
+                    createRoomHotspots();
                 }
-            ]);
-        });
+            }
+        ]);
         return;
     }
 
@@ -1736,7 +1971,7 @@ function updateInventory() {
             } else if (item === '纸条') {
                 showDialog('纸条上写着：\n"朵朵的秘密\n\n她陪我走过的岁月，是第一把钥匙。\n她留在这里的印记，是第二把钥匙。\n她最爱的那些小东西，是第三把钥匙。\n\n三把钥匙，从大到小。"');
             } else if (item === '日记') {
-                showDialog('日记封面上写着"献给朵朵"。\n\n"朵朵来的那天，我买了一个新时钟挂在墙上，想着以后每天看着时间流逝，也有她陪着。\n\n她最喜欢的时刻是下午三点，那时候阳光从窗户斜射进来，她会从沙发角落走到窗台，然后回头看我一眼，再看向那个方向。\n\n我把最重要的东西，藏在了她目光的终点。那里，时间从不停歇。"');
+                showDialog('日记封面上写着"献给朵朵"。\n\n── 2022年3月15日 ──\n\n朵朵来了。她很小，一直躲在沙发角落不出来。我把她的第一个项圈和一个小音乐盒一起放进了书架最里面的格子，5本书按厚薄排好就能打开。\n\n── 关于吃饭 ──\n\n她有自己的规律。早7点、午12点、晚6点、夜10点，从不迟到。我把这些记在食盆旁边的卡片上，怕自己忘。\n\n── 关于玩具 ──\n\n她最后一次玩玩具是离开前的那个傍晚。先闻了闻小鱼，用爪子确认了铃铛，然后把球推给我。我把那个顺序锁进了玩具箱。\n\n── 关于秘密 ──\n\n我把最重要的东西藏在了她每天下午都会凝视的地方。那里，时间从不停歇。');
             } else if (item === '项圈') {
                 showDialog('朵朵的项圈，上面刻着她的名字。\n\n项圈上刻着 2022.03.15，那是朵朵来家的日子。\n\n项圈内侧还刻着一串数字：4-4-3。\n\n这串数字……好像在哪里用得上。');
             } else if (item === '主人的信') {
@@ -1818,18 +2053,23 @@ function openDrawerScene() {
     const hotspot = document.getElementById('drawer-diary-hotspot');
     if (!gameState.flags.hasDiary) {
         hotspot.onclick = function() {
-                showDialog('这是一本旧日记，封面上写着"献给朵朵"……', () => {
+            showDialog('这是一本旧日记，封面上写着"献给朵朵"……', () => {
                 gameState.flags.hasDiary = true;
                 if (!gameState.inventory.includes('日记')) {
                     gameState.inventory.push('日记');
                     updateInventory();
                 }
-                showDialog('你获得了日记。');
+                showDialog('2022年3月15日\n\n朵朵来了。她很小，一直躲在沙发角落不出来。我把她的第一个项圈和一个小音乐盒一起放进了书架最里面的格子，5本书按厚薄排好就能打开。等她长大了，也许有人会找到。', () => {
+                showDialog('她有自己的规律。早7点、午12点、晚6点、夜10点，从不迟到。我把这些记在食盆旁边的卡片上，怕自己忘。', () => {
+                showDialog('她最后一次玩玩具是离开前的那个傍晚。先闻了闻小鱼，用爪子确认了铃铛，然后把球推给我。我把那个顺序锁进了玩具箱。', () => {
+                showDialog('我把最重要的东西藏在了她每天下午都会凝视的地方。那里，时间从不停歇。', () => {
+                    showDialog('你获得了日记。');
+                });});});});
             });
         };
     } else {
         hotspot.onclick = function() {
-            showDialog('日记已经拿走了。');
+            showDialog('日记已经拾取了。');
         };
     }
 }
@@ -1849,67 +2089,34 @@ function openWindowScene() {
     centerViewport();
     showDragHint();
 
-    // 获得项圈后，窗户可以通往阳台
-    if (gameState.flags.musicBoxSolved) {
-        showDialog('窗台上有朵朵留下的毛发和爪印。窗户虚掩着，外面是阳台……', () => {
-            showChoices([
-                {
-                    text: '🌿 推开窗户去阳台',
-                    callback: () => {
-                        closeWindowScene();
-                        openBalconyScene();
-                    }
-                },
-                {
-                    text: '🕐 顺着朵朵的视线看',
-                    callback: () => {
-                        if (!gameState.flags.seenWindowClue) {
-                            gameState.flags.seenWindowClue = true;
-                            showDialog('对了！朵朵每天下午都从这里凝视着那个时钟……', () => closeWindowScene());
-                        } else {
-                            showDialog('朵朵的视线终点是那个时钟，你已经知道了。', () => closeWindowScene());
-                        }
-                    }
-                }
-            ]);
+    // 便利贴2：窗台
+    if (!gameState.flags.stickyNotes.includes('note2')) {
+        const scene = document.getElementById('window-scene');
+        const note = document.createElement('div');
+        note.className = 'sticky-note-hotspot';
+        note.style.cssText = 'position:absolute;left:30%;top:8%;font-size:28px;cursor:pointer;z-index:210;';
+        note.textContent = '📝';
+        note.addEventListener('click', () => {
+            note.remove();
+            collectStickyNote('note2');
         });
-        // 便利贴2：窗台
-        if (!gameState.flags.stickyNotes.includes('note2')) {
-            const scene = document.getElementById('window-scene');
-            const note = document.createElement('div');
-            note.className = 'sticky-note-hotspot';
-            note.style.cssText = 'position:absolute;left:30%;top:8%;font-size:28px;cursor:pointer;z-index:210;';
-            note.textContent = '📝';
-            note.addEventListener('click', () => {
-                note.remove();
-                collectStickyNote('note2');
-            });
-            scene.appendChild(note);
-        }
-        return;
+        scene.appendChild(note);
     }
 
-    showDialog('窗台上有朵朵留下的毛发和爪印。你想起日记里写的：她总是从这里凝视着某个方向……顺着她的视线望去，那个方向是……', () => {
-        function showWindowChoices() {
-            showChoices([
-                {
-                    text: '🚪 门',
-                    callback: () => showDialog('不对，朵朵的视线不在那里……', () => showWindowChoices())
-                },
-                {
-                    text: '🕐 时钟',
-                    callback: () => {
-                        gameState.flags.seenWindowClue = true;
-                        showDialog('对了！朵朵每天下午都从这里凝视着那个时钟……', () => closeWindowScene());
-                    }
-                },
-                {
-                    text: '🪑 桌子',
-                    callback: () => showDialog('不对，朵朵的视线不在那里……', () => showWindowChoices())
+    showDialog('窗台上有朵朵留下的毛发和爪印。窗户虚掩着，外面是阳台……', () => {
+        showChoices([
+            {
+                text: '🌿 推开窗户去阳台',
+                callback: () => {
+                    closeWindowScene();
+                    openBalconyScene();
                 }
-            ]);
-        }
-        showWindowChoices();
+            },
+            {
+                text: '↩ 先回去看看',
+                callback: () => closeWindowScene()
+            }
+        ]);
     });
 }
 
@@ -1958,19 +2165,54 @@ function submitPassword() {
 
 // 显示结局
 function showEnding(type) {
-    document.getElementById('game-play').classList.add('hidden');
-    document.getElementById('ending-screen').classList.remove('hidden');
-
-    const title = document.getElementById('ending-title');
-    const text = document.getElementById('ending-text');
-
     if (type === 'cycle') {
-        title.innerHTML = '❌ 结局一：轮回';
-        text.innerHTML = '你拿着钥匙，赶紧到门口试了试，果然是房门钥匙，你按耐不住兴奋的心情，赶紧走出大门，却只觉得一阵头晕目眩，昏了过去。<br><br>昏迷时，你做了一个梦，梦里朵朵一直在说"猫咪神藏"，你不知道什么时候才能醒来。';
-    } else {
-        title.innerHTML = '✨ 结局二：猫咪神藏';
-        text.innerHTML = '你看着钥匙陷入沉思，刚刚的密码总觉得有点奇怪，watch不就是表的意思吗？你环顾四周，目光停留在墙上挂的时钟上，家里与表有关的也就只有它了，你把时钟从墙上拿了下来，时钟奇怪的重量让你觉得肯定有东西，你把时钟打开，一道金光顿时把你包围，光芒散去，你发现自己已经躺在了沙发上，旁边朵朵正在呼呼大睡，你的手上也没有伤口，仿佛刚刚的都是一场梦。<br><br>但是手中抱着的时钟却又是那么真实，你将时钟翻了过来，原来这就是猫咪神藏，你笑了。';
+        document.getElementById('game-play').classList.add('hidden');
+        document.getElementById('ending-screen').classList.remove('hidden');
+        document.getElementById('ending-title').innerHTML = '结局：轮回';
+        document.getElementById('ending-text').innerHTML = '你拿着钥匙，赶紧到门口试了试，果然是房门钥匙，你按耐不住兴奋的心情，赶紧走出大门，却只觉得一阵头晕目眩，昏了过去。<br><br>昏迷时，你做了一个梦，梦里朵朵一直在说"猫咪神藏"，你不知道什么时候才能醒来。';
+        return;
     }
+
+    // 真结局：5幕叙事序列
+    const acts = [
+        {
+            title: '第一幕',
+            text: '时钟的背面有一道细缝。\n\n你用指甲轻轻撬开，里面是一个小小的夹层——一张折叠的纸，和一张照片。'
+        },
+        {
+            title: '第二幕',
+            text: '照片里，一个人坐在沙发上，朵朵趴在他的腿上，两个人都在看向窗外的阳光。\n\n照片背面用钢笔写着：\n\n"谢谢你陪我走过这些年。\n\n2022—2026"'
+        },
+        {
+            title: '第三幕',
+            text: '你展开那张折叠的纸。\n\n"如果你走到了这里，说明你已经重新经历了我们在一起的每一段时光。\n\n书架上的项圈，是她来的第一天。\n音乐盒里的年份，是她陪我走过的岁月。\n食盆旁的记录，是她每天的仪式。\n玩具箱里的顺序，是她最后一次玩耍。\n阳台花盆下的信，是我离开前的道别。\n\n这些不是谜题，是记忆。\n\n——主人"'
+        },
+        {
+            title: '第四幕',
+            text: '你放下纸，抬起头。\n\n朵朵不知道什么时候从沙发角落走了出来，她蹭了蹭你的腿，然后跳上窗台，坐在那里，望向远处。\n\n尾巴轻轻摇摆，像是在等什么，又像是什么都不在等。'
+        },
+        {
+            title: '第五幕',
+            text: '你把时钟轻轻放回墙上。\n\n指针重新开始走动。\n\n你走向门口，回头看了一眼——朵朵还坐在窗台上，没有回头。\n\n你轻轻关上门。\n\n不是逃离，是带着这份记忆，离开。'
+        }
+    ];
+
+    let actIndex = 0;
+
+    function showAct() {
+        if (actIndex >= acts.length) {
+            document.getElementById('game-play').classList.add('hidden');
+            document.getElementById('ending-screen').classList.remove('hidden');
+            document.getElementById('ending-title').innerHTML = '✨ 猫咪神藏';
+            document.getElementById('ending-text').innerHTML = '猫咪神藏，不是宝贝，是时光。<br><br>朵朵和主人在一起的每一天，都藏在这个房间里，等待着被人重新发现。<br><br>你找到了。';
+            return;
+        }
+        const act = acts[actIndex];
+        actIndex++;
+        showDialog(`【${act.title}】\n\n${act.text}`, showAct);
+    }
+
+    showAct();
 }
 
 // 重新开始
@@ -1994,7 +2236,8 @@ function restartGame() {
         hasNote: false,
         hasDiary: false,
         drawerOpened: false,
-        seenWindowClue: false,
+        shownDrawerLockHint: false,
+        memoryFragments: [],   // 记忆碎片，集齐5块触发真结局
         photoWallSeen: false,
         sofaScratchSeen: false,
         toyCountSeen: false,
@@ -2014,6 +2257,11 @@ function restartGame() {
         hasCatLetter: false,
         balconySeen: false,
         hasLetter: false,
+        clockTime: null,
+        balconyClue1: false,
+        balconyClue2: false,
+        balconyBrickStep: 0,
+        balconyBrickSolved: false,
         stickyNotes: [],
         albumUnlocked: false
     };
