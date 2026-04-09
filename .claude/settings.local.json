@@ -5,7 +5,9 @@
       "Bash(python:*)",
       "Bash(node:*)",
       "Bash(ls:*)",
-      "WebFetch(domain:duomia.github.io)"
+      "WebFetch(domain:duomia.github.io)",
+      "Bash(grep:*)",
+      "Bash(\"C:\\\\Users\\\\v_yujunyan\\\\PycharmProjects\\\\cat-treasure\\\\style.css\":*)"
     ]
   }
 }

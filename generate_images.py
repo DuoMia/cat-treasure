@@ -154,6 +154,87 @@ def create_room_background():
     draw.ellipse([(fish_x-16, fish_y-7), (fish_x+8, fish_y+7)], fill='#60a0d0', outline='#3070a0', width=2)
     draw.polygon([(fish_x+8, fish_y), (fish_x+20, fish_y-8), (fish_x+20, fish_y+8)], fill='#60a0d0')
 
+    # 书架 (右侧 75%, 35%, 12%x30%)
+    bs_x = int(width * 0.75)
+    bs_y = int(height * 0.35)
+    bs_w = int(width * 0.12)
+    bs_h = int(height * 0.30)
+    # 书架外框
+    draw.rectangle([(bs_x, bs_y), (bs_x+bs_w, bs_y+bs_h)],
+                   fill='#5c3a1e', outline='#3a2010', width=3)
+    # 书架隔板（3层）
+    shelf_gap = bs_h // 4
+    for i in range(1, 4):
+        sy = bs_y + shelf_gap * i
+        draw.rectangle([(bs_x+2, sy-3), (bs_x+bs_w-2, sy)], fill='#3a2010')
+    # 书本（第一层）
+    book_colors = ['#c0392b', '#2980b9', '#27ae60', '#f39c12', '#8e44ad']
+    bx = bs_x + 6
+    for i, col in enumerate(book_colors):
+        bw = bs_w // 6
+        draw.rectangle([(bx, bs_y+4), (bx+bw-2, bs_y+shelf_gap-4)], fill=col)
+        bx += bw
+    # 书本（第二层）
+    book_colors2 = ['#1abc9c', '#e74c3c', '#3498db', '#e67e22']
+    bx = bs_x + 6
+    for i, col in enumerate(book_colors2):
+        bw = bs_w // 5
+        draw.rectangle([(bx, bs_y+shelf_gap+4), (bx+bw-2, bs_y+shelf_gap*2-4)], fill=col)
+        bx += bw
+    # 音乐盒（第三层，金色小盒子）
+    mb_x = bs_x + bs_w//4
+    mb_y = bs_y + shelf_gap*2 + 6
+    mb_w = bs_w // 2
+    mb_h = shelf_gap - 12
+    draw.rectangle([(mb_x, mb_y), (mb_x+mb_w, mb_y+mb_h)],
+                   fill='#c8960c', outline='#f0c040', width=2)
+    # 音乐盒装饰线
+    draw.line([(mb_x+4, mb_y+mb_h//2), (mb_x+mb_w-4, mb_y+mb_h//2)],
+              fill='#f0c040', width=1)
+
+    # 食盆 (沙发左侧 3%, 78%, 8%x8%)
+    fb_x = int(width * 0.03)
+    fb_y = int(height * 0.78)
+    fb_w = int(width * 0.08)
+    fb_h = int(height * 0.08)
+    fb_cx = fb_x + fb_w // 2
+    fb_cy = fb_y + fb_h // 2
+    # 盆底椭圆
+    draw.ellipse([(fb_cx-fb_w//2, fb_cy-fb_h//4), (fb_cx+fb_w//2, fb_cy+fb_h//4)],
+                 fill='#c0c0c0', outline='#808080', width=2)
+    # 盆口
+    draw.ellipse([(fb_cx-fb_w//2-4, fb_cy-fb_h//2-4), (fb_cx+fb_w//2+4, fb_cy-fb_h//4+4)],
+                 fill='#d8d8d8', outline='#909090', width=2)
+
+    # 画框 (书架左侧墙面 68%, 18%, 8%x20%)
+    pf_x = int(width * 0.68)
+    pf_y = int(height * 0.18)
+    pf_w = int(width * 0.08)
+    pf_h = int(height * 0.20)
+    # 画框外框
+    draw.rectangle([(pf_x, pf_y), (pf_x+pf_w, pf_y+pf_h)],
+                   fill='#8b6914', outline='#f0c040', width=3)
+    # 画框内容（草地小景）
+    draw.rectangle([(pf_x+4, pf_y+4), (pf_x+pf_w-4, pf_y+pf_h-4)],
+                   fill='#4a9a3a')
+    draw.rectangle([(pf_x+4, pf_y+4), (pf_x+pf_w-4, pf_y+pf_h//2)],
+                   fill='#87ceeb')
+
+    # 玩具箱 (桌子右侧 82%, 76%, 10%x8%)
+    tb_x = int(width * 0.82)
+    tb_y = int(height * 0.76)
+    tb_w = int(width * 0.10)
+    tb_h = int(height * 0.08)
+    draw.rectangle([(tb_x, tb_y), (tb_x+tb_w, tb_y+tb_h)],
+                   fill='#6b4423', outline='#3a2010', width=2)
+    # 木箱盖分割线
+    draw.line([(tb_x+2, tb_y+tb_h//3), (tb_x+tb_w-2, tb_y+tb_h//3)],
+              fill='#3a2010', width=2)
+    # 锁扣
+    lk_x = tb_x + tb_w//2
+    lk_y = tb_y + tb_h//3 + 4
+    draw.rectangle([(lk_x-5, lk_y), (lk_x+5, lk_y+8)], fill='#c8a060')
+
     img.save('room.jpg', 'JPEG', quality=95)
     print("Background image room.jpg generated")
 
@@ -520,6 +601,478 @@ def create_photo_wall_image():
     print("Photo wall image photo_wall.jpg generated")
 
 
+    img.save('photo_wall.jpg', 'JPEG', quality=92)
+    print("Photo wall image photo_wall.jpg generated")
+
+
+def create_bookshelf_image():
+    """书架特写场景 1200x800 - 暖色木质书架，中央音乐盒"""
+    import math
+    width, height = 1200, 800
+    img = Image.new('RGB', (width, height), color='#2c1a0e')
+    draw = ImageDraw.Draw(img)
+
+    # 背景墙纸纹理
+    for i in range(0, width, 60):
+        draw.line([(i, 0), (i, height)], fill='#331a0a', width=1)
+    for j in range(0, height, 60):
+        draw.line([(0, j), (width, j)], fill='#331a0a', width=1)
+
+    # 书架主体（居中，占画面大部分）
+    bs_x, bs_y = 100, 60
+    bs_w, bs_h = 1000, 680
+    # 书架背板
+    draw.rectangle([(bs_x, bs_y), (bs_x+bs_w, bs_y+bs_h)],
+                   fill='#4a2e14', outline='#2a1508', width=6)
+    # 书架侧板加厚
+    draw.rectangle([(bs_x, bs_y), (bs_x+30, bs_y+bs_h)], fill='#3a2010')
+    draw.rectangle([(bs_x+bs_w-30, bs_y), (bs_x+bs_w, bs_y+bs_h)], fill='#3a2010')
+    # 顶板底板
+    draw.rectangle([(bs_x, bs_y), (bs_x+bs_w, bs_y+28)], fill='#3a2010')
+    draw.rectangle([(bs_x, bs_y+bs_h-28), (bs_x+bs_w, bs_y+bs_h)], fill='#3a2010')
+
+    # 4层隔板
+    shelf_h = (bs_h - 56) // 4
+    shelves_y = []
+    for i in range(5):
+        sy = bs_y + 28 + shelf_h * i
+        shelves_y.append(sy)
+        if i < 4:
+            draw.rectangle([(bs_x+30, sy+shelf_h-12), (bs_x+bs_w-30, sy+shelf_h)],
+                           fill='#3a2010')
+
+    # 第一层：书本
+    book_data = [
+        ('#c0392b', 55), ('#2980b9', 70), ('#27ae60', 48), ('#f39c12', 62),
+        ('#8e44ad', 55), ('#1abc9c', 45), ('#e74c3c', 68), ('#3498db', 52),
+        ('#e67e22', 60), ('#16a085', 50),
+    ]
+    bx = bs_x + 40
+    row_y = shelves_y[0] + 8
+    row_bot = shelves_y[0] + shelf_h - 16
+    for col, bw in book_data:
+        draw.rectangle([(bx, row_y), (bx+bw-4, row_bot)], fill=col, outline='#00000033', width=1)
+        # 书脊装饰线
+        draw.line([(bx+bw//2, row_y+6), (bx+bw//2, row_bot-6)], fill='#ffffff33', width=1)
+        bx += bw
+
+    # 第二层：书本 + 小摆件
+    book_data2 = [
+        ('#d35400', 60), ('#2c3e50', 75), ('#7f8c8d', 50), ('#c0392b', 55),
+        ('#27ae60', 65), ('#8e44ad', 48),
+    ]
+    bx = bs_x + 40
+    row_y = shelves_y[1] + 8
+    row_bot = shelves_y[1] + shelf_h - 16
+    for col, bw in book_data2:
+        draw.rectangle([(bx, row_y), (bx+bw-4, row_bot)], fill=col, outline='#00000033', width=1)
+        draw.line([(bx+bw//2, row_y+6), (bx+bw//2, row_bot-6)], fill='#ffffff33', width=1)
+        bx += bw
+    # 小猫摆件
+    fig_x = bx + 20
+    fig_y = row_bot - 50
+    draw.ellipse([(fig_x-15, fig_y-20), (fig_x+15, fig_y)], fill='#c8a878', outline='#8b6914', width=2)
+    draw.ellipse([(fig_x-12, fig_y-4), (fig_x+12, fig_y+30)], fill='#c8a878', outline='#8b6914', width=2)
+    draw.polygon([(fig_x-12, fig_y-20), (fig_x-18, fig_y-32), (fig_x-5, fig_y-20)], fill='#c8a878')
+    draw.polygon([(fig_x+5, fig_y-20), (fig_x+18, fig_y-32), (fig_x+12, fig_y-20)], fill='#c8a878')
+
+    # 第三层：音乐盒（主角，居中突出）
+    row_y3 = shelves_y[2] + 10
+    row_bot3 = shelves_y[2] + shelf_h - 14
+    mb_h = row_bot3 - row_y3
+    mb_w = 320
+    mb_x = bs_x + (bs_w - mb_w) // 2
+    # 音乐盒主体
+    draw.rectangle([(mb_x, row_y3), (mb_x+mb_w, row_bot3)],
+                   fill='#8B6914', outline='#f0c040', width=4)
+    # 金色渐变效果（用多条线模拟）
+    for i in range(0, mb_w, 4):
+        alpha = int(40 * abs(math.sin(i / mb_w * math.pi)))
+        shade = f'#{min(0xC8+alpha,0xFF):02x}{min(0x96+alpha//2,0xFF):02x}{min(0x0C+alpha//4,0xFF):02x}'
+        draw.line([(mb_x+i, row_y3+4), (mb_x+i, row_bot3-4)], fill=shade, width=3)
+    # 音乐盒盖子分割线
+    lid_y = row_y3 + mb_h // 3
+    draw.line([(mb_x+4, lid_y), (mb_x+mb_w-4, lid_y)], fill='#f0c040', width=2)
+    # 盖子上的装饰花纹
+    cx = mb_x + mb_w // 2
+    cy = row_y3 + mb_h // 6
+    draw.ellipse([(cx-20, cy-12), (cx+20, cy+12)], outline='#f0c040', width=2)
+    draw.line([(cx-30, cy), (cx+30, cy)], fill='#f0c040', width=1)
+    draw.line([(cx, cy-18), (cx, cy+18)], fill='#f0c040', width=1)
+    # 三个按钮
+    btn_labels = ['2022', '2024', '2026']
+    btn_y = row_y3 + mb_h * 2 // 3 + 4
+    btn_spacing = mb_w // 4
+    for i, lbl in enumerate(btn_labels):
+        bx2 = mb_x + btn_spacing * (i+1) - 30
+        draw.rectangle([(bx2, btn_y), (bx2+60, btn_y+24)],
+                       fill='#a07010', outline='#f0c040', width=2)
+        try:
+            font_small = ImageFont.truetype("arial.ttf", 12)
+        except:
+            font_small = ImageFont.load_default()
+        draw.text((bx2+8, btn_y+5), lbl, fill='#fff8e0', font=font_small)
+    # 两侧书本（衬托）
+    for col, bw in [('#2c3e50', 55), ('#7f8c8d', 45)]:
+        draw.rectangle([(bs_x+40, row_y3), (bs_x+40+bw, row_bot3)], fill=col)
+        draw.rectangle([(bs_x+bs_w-40-bw, row_y3), (bs_x+bs_w-40, row_bot3)], fill=col)
+
+    # 第四层：杂物
+    book_data4 = [('#95a5a6', 50), ('#bdc3c7', 65), ('#7f8c8d', 45), ('#ecf0f1', 55)]
+    bx = bs_x + 40
+    row_y4 = shelves_y[3] + 8
+    row_bot4 = shelves_y[3] + shelf_h - 16
+    for col, bw in book_data4:
+        draw.rectangle([(bx, row_y4), (bx+bw-4, row_bot4)], fill=col)
+        bx += bw
+    # 小花瓶
+    vx = bx + 30
+    vy = row_bot4 - 60
+    draw.ellipse([(vx-15, vy+30), (vx+15, vy+60)], fill='#5b8a6e', outline='#3a6a4e', width=2)
+    draw.rectangle([(vx-8, vy), (vx+8, vy+35)], fill='#5b8a6e')
+    draw.ellipse([(vx-12, vy-5), (vx+12, vy+5)], fill='#5b8a6e', outline='#3a6a4e', width=2)
+
+    img.save('bookshelf.jpg', 'JPEG', quality=92)
+    print("Bookshelf image bookshelf.jpg generated")
+
+
+def create_balcony_image():
+    """阳台场景 1200x800 - 明亮户外感，爪印+花盆"""
+    import math
+    width, height = 1200, 800
+    # 天空渐变
+    img = Image.new('RGB', (width, height), color='#87ceeb')
+    draw = ImageDraw.Draw(img)
+
+    # 天空渐变（从上到下）
+    for y in range(int(height * 0.55)):
+        ratio = y / (height * 0.55)
+        r = int(135 + (176 - 135) * ratio)
+        g = int(206 + (224 - 206) * ratio)
+        b = int(235 + (230 - 235) * ratio)
+        draw.line([(0, y), (width, y)], fill=(r, g, b))
+
+    # 远处建筑轮廓
+    buildings = [(0, 320, 180, 480), (160, 280, 320, 480), (300, 300, 420, 480),
+                 (800, 260, 960, 480), (940, 300, 1100, 480), (1080, 280, 1200, 480)]
+    for bx1, by1, bx2, by2 in buildings:
+        draw.rectangle([(bx1, by1), (bx2, by2)], fill='#b0c4d8')
+        # 窗户
+        for wx in range(bx1+15, bx2-10, 30):
+            for wy in range(by1+15, by2-10, 25):
+                draw.rectangle([(wx, wy), (wx+14, wy+16)], fill='#d4e8f0')
+
+    # 地板（阳台地砖）
+    floor_y = int(height * 0.60)
+    for y in range(floor_y, height, 2):
+        ratio = (y - floor_y) / (height - floor_y)
+        r = int(180 + (140 - 180) * ratio)
+        g = int(160 + (120 - 160) * ratio)
+        b = int(130 + (90 - 130) * ratio)
+        draw.line([(0, y), (width, y)], fill=(r, g, b))
+    # 地砖缝
+    for x in range(0, width, 80):
+        draw.line([(x, floor_y), (x, height)], fill='#a09070', width=1)
+    for y in range(floor_y, height, 60):
+        draw.line([(0, y), (width, y)], fill='#a09070', width=1)
+
+    # 栏杆
+    rail_y = floor_y - 10
+    draw.rectangle([(0, rail_y), (width, rail_y+12)], fill='#c8b89a')
+    draw.rectangle([(0, rail_y-60), (width, rail_y-56)], fill='#c8b89a')
+    for x in range(20, width, 40):
+        draw.rectangle([(x, rail_y-60), (x+8, rail_y+12)], fill='#b8a88a')
+
+    # 爪印（从左向右延伸到花盆方向）
+    paw_positions = [
+        (200, floor_y+40), (260, floor_y+55), (330, floor_y+45),
+        (400, floor_y+60), (470, floor_y+50), (540, floor_y+65),
+        (620, floor_y+55), (700, floor_y+70), (760, floor_y+60),
+    ]
+    for px, py in paw_positions:
+        # 主掌垫
+        draw.ellipse([(px-10, py-8), (px+10, py+8)], fill='#8b6a4a', outline='#6b4a2a', width=1)
+        # 四个趾垫
+        for angle, dist in [((-25, -18), 9), ((0, -20), 9), ((25, -18), 9), ((-12, -22), 7)]:
+            tx = px + angle[0]
+            ty = py + angle[1]
+            draw.ellipse([(tx-4, ty-4), (tx+4, ty+4)], fill='#8b6a4a')
+
+    # 花盆（右侧，爪印终点）
+    pot_x, pot_y = 820, floor_y + 30
+    pot_w, pot_h = 160, 180
+    # 花盆主体（梯形）
+    draw.polygon([
+        (pot_x + 20, pot_y),
+        (pot_x + pot_w - 20, pot_y),
+        (pot_x + pot_w, pot_y + pot_h),
+        (pot_x, pot_y + pot_h)
+    ], fill='#8B4513', outline='#5C2E00', width=3)
+    # 花盆边沿
+    draw.ellipse([(pot_x+10, pot_y-10), (pot_x+pot_w-10, pot_y+10)],
+                 fill='#a05020', outline='#5C2E00', width=2)
+    # 土壤
+    draw.ellipse([(pot_x+22, pot_y-4), (pot_x+pot_w-22, pot_y+8)],
+                 fill='#4a2e14')
+    # 植物
+    stem_x = pot_x + pot_w // 2
+    stem_y = pot_y - 5
+    draw.line([(stem_x, stem_y), (stem_x-20, stem_y-60)], fill='#2d7a2d', width=3)
+    draw.line([(stem_x, stem_y), (stem_x+15, stem_y-50)], fill='#2d7a2d', width=3)
+    draw.line([(stem_x, stem_y), (stem_x, stem_y-80)], fill='#2d7a2d', width=3)
+    # 叶子
+    for lx, ly, lw, lh in [
+        (stem_x-40, stem_y-80, 40, 20),
+        (stem_x+5, stem_y-65, 35, 18),
+        (stem_x-20, stem_y-100, 45, 22),
+    ]:
+        draw.ellipse([(lx, ly), (lx+lw, ly+lh)], fill='#3a9a3a', outline='#2d7a2d', width=1)
+
+    # 另一个小花盆（左侧装饰）
+    sp_x, sp_y = 150, floor_y + 80
+    draw.polygon([
+        (sp_x+10, sp_y), (sp_x+80, sp_y),
+        (sp_x+90, sp_y+90), (sp_x, sp_y+90)
+    ], fill='#a05020', outline='#5C2E00', width=2)
+    draw.ellipse([(sp_x+5, sp_y-6), (sp_x+85, sp_y+6)], fill='#b06030', outline='#5C2E00', width=2)
+    draw.ellipse([(sp_x+12, sp_y-2), (sp_x+78, sp_y+6)], fill='#4a2e14')
+    # 小草
+    for gx in range(sp_x+20, sp_x+75, 12):
+        draw.line([(gx, sp_y-2), (gx-5, sp_y-30)], fill='#3a9a3a', width=2)
+        draw.line([(gx, sp_y-2), (gx+5, sp_y-28)], fill='#3a9a3a', width=2)
+
+    # 阳光光晕
+    for r in range(80, 0, -10):
+        alpha = int(15 * (1 - r/80))
+        draw.ellipse([(width//2-r*3, -r*2), (width//2+r*3, r*2)],
+                     fill=(255, 255, 200))
+
+    img.save('balcony.jpg', 'JPEG', quality=92)
+    print("Balcony image balcony.jpg generated")
+
+
+def create_food_bowl_image():
+    """食盆场景 1200x800 - 温暖地板，食盆+喂食记录卡"""
+    width, height = 1200, 800
+    img = Image.new('RGB', (width, height), color='#3d2f1f')
+    draw = ImageDraw.Draw(img)
+
+    # 地板纹理
+    for i in range(0, width, 80):
+        draw.line([(i, 0), (i, height)], fill='#4a3828', width=1)
+    for j in range(0, height, 80):
+        draw.line([(0, j), (width, j)], fill='#4a3828', width=1)
+
+    # 沙发底部（上方）
+    draw.rectangle([(0, 0), (width, 120)], fill='#5c3a1e')
+    draw.rectangle([(0, 115), (width, 130)], fill='#3a2010')
+
+    # 食盆（居中偏左）
+    bowl_cx, bowl_cy = 420, 520
+    # 盆底
+    draw.ellipse([(bowl_cx-100, bowl_cy-30), (bowl_cx+100, bowl_cy+30)], fill='#c0c0c0', outline='#808080', width=3)
+    # 盆身（梯形）
+    draw.polygon([
+        (bowl_cx-100, bowl_cy-30),
+        (bowl_cx+100, bowl_cy-30),
+        (bowl_cx+130, bowl_cy-120),
+        (bowl_cx-130, bowl_cy-120)
+    ], fill='#d0d0d0', outline='#909090')
+    # 盆口
+    draw.ellipse([(bowl_cx-130, bowl_cy-140), (bowl_cx+130, bowl_cy-100)], fill='#e0e0e0', outline='#909090', width=3)
+    # 盆内猫粮（小圆粒）
+    import random
+    random.seed(42)
+    for _ in range(30):
+        fx = bowl_cx + random.randint(-80, 80)
+        fy = bowl_cy - 125 + random.randint(0, 20)
+        r = random.randint(4, 8)
+        col = random.choice(['#c8a060', '#b08040', '#d4b070'])
+        draw.ellipse([(fx-r, fy-r//2), (fx+r, fy+r//2)], fill=col)
+    # 盆上的"朵朵"字样
+    try:
+        font = ImageFont.truetype("simhei.ttf", 20)
+    except:
+        font = ImageFont.load_default()
+    draw.text((bowl_cx-22, bowl_cy-80), "朵朵", fill='#606060', font=font)
+
+    # 喂食记录卡（右侧）
+    card_x, card_y = 680, 340
+    card_w, card_h = 360, 300
+    # 卡片背景
+    draw.rectangle([(card_x, card_y), (card_x+card_w, card_y+card_h)],
+                   fill='#fffde7', outline='#c8a060', width=3)
+    # 卡片标题
+    try:
+        font_title = ImageFont.truetype("simhei.ttf", 22)
+        font_body = ImageFont.truetype("simhei.ttf", 18)
+    except:
+        font_title = ImageFont.load_default()
+        font_body = font_title
+    draw.text((card_x+20, card_y+16), "朵朵喂食记录", fill='#5c3a1e', font=font_title)
+    draw.line([(card_x+16, card_y+50), (card_x+card_w-16, card_y+50)], fill='#c8a060', width=2)
+    records = [
+        ("早  7:00", "🌅"),
+        ("午 12:00", "☀️"),
+        ("晚  6:00", "🌆"),
+        ("夜 10:00", "🌙"),
+    ]
+    for i, (time_str, icon) in enumerate(records):
+        ty = card_y + 68 + i * 52
+        draw.text((card_x+24, ty), f"{icon} {time_str}", fill='#3d2f1f', font=font_body)
+        draw.line([(card_x+16, ty+38), (card_x+card_w-16, ty+38)], fill='#e8d8b0', width=1)
+    # 便利贴装饰（右下角）
+    draw.rectangle([(card_x+card_w-50, card_y+card_h-50), (card_x+card_w-10, card_y+card_h-10)],
+                   fill='#fff176', outline='#f0c040', width=1)
+
+    img.save('food_bowl.jpg', 'JPEG', quality=92)
+    print("Food bowl image food_bowl.jpg generated")
+
+
+def create_painting_image():
+    """画框谜题场景 1200x800 - 深色墙面，中央挂一幅草地画，四周有方向标记"""
+    import math
+    width, height = 1200, 800
+    img = Image.new('RGB', (width, height), color='#1a1a2e')
+    draw = ImageDraw.Draw(img)
+
+    # 墙纸纹理
+    for i in range(0, width, 50):
+        draw.line([(i, 0), (i, height)], fill='#1e1e35', width=1)
+    for j in range(0, height, 50):
+        draw.line([(0, j), (width, j)], fill='#1e1e35', width=1)
+
+    # 画框（居中）
+    frame_x, frame_y = 300, 120
+    frame_w, frame_h = 600, 560
+    # 外框
+    draw.rectangle([(frame_x-12, frame_y-12), (frame_x+frame_w+12, frame_y+frame_h+12)],
+                   fill='#8b6914', outline='#f0c040', width=4)
+    # 内框
+    draw.rectangle([(frame_x, frame_y), (frame_x+frame_w, frame_y+frame_h)],
+                   fill='#2d5a27')
+    # 草地（下半部分）
+    draw.rectangle([(frame_x, frame_y+frame_h//2), (frame_x+frame_w, frame_y+frame_h)],
+                   fill='#3a7a30')
+    # 草地纹理
+    for gx in range(frame_x+10, frame_x+frame_w, 20):
+        gy = frame_y + frame_h//2
+        draw.line([(gx, gy), (gx-5, gy-20)], fill='#4a9a3a', width=2)
+        draw.line([(gx, gy), (gx+5, gy-18)], fill='#4a9a3a', width=2)
+    # 天空（上半部分）
+    for y in range(frame_y, frame_y+frame_h//2):
+        ratio = (y - frame_y) / (frame_h//2)
+        r = int(100 + (135-100)*ratio)
+        g = int(149 + (206-149)*ratio)
+        b = int(237 + (235-237)*ratio)
+        draw.line([(frame_x, y), (frame_x+frame_w, y)], fill=(r,g,b))
+    # 太阳
+    sun_x, sun_y = frame_x + frame_w*3//4, frame_y + 80
+    draw.ellipse([(sun_x-35, sun_y-35), (sun_x+35, sun_y+35)], fill='#ffe066')
+    for angle in range(0, 360, 30):
+        sx = sun_x + int(50*math.cos(math.radians(angle)))
+        sy = sun_y + int(50*math.sin(math.radians(angle)))
+        ex = sun_x + int(65*math.cos(math.radians(angle)))
+        ey = sun_y + int(65*math.sin(math.radians(angle)))
+        draw.line([(sx, sy), (ex, ey)], fill='#ffe066', width=2)
+    # 小猫（草地上）
+    cat_x, cat_y = frame_x + frame_w//3, frame_y + frame_h*3//4
+    draw.ellipse([(cat_x-20, cat_y-16), (cat_x+20, cat_y+16)], fill='#c8a878', outline='#8b6914', width=2)
+    draw.ellipse([(cat_x-16, cat_y+12), (cat_x+16, cat_y+40)], fill='#c8a878', outline='#8b6914', width=2)
+    draw.polygon([(cat_x-16, cat_y-16), (cat_x-22, cat_y-28), (cat_x-6, cat_y-16)], fill='#c8a878')
+    draw.polygon([(cat_x+6, cat_y-16), (cat_x+22, cat_y-28), (cat_x+16, cat_y-16)], fill='#c8a878')
+
+    # 四个方向标记（画框四周，用虚线框标出热点位置）
+    directions = [
+        ('↑', frame_x+frame_w//2-30, frame_y-70, 60, 50),
+        ('→', frame_x+frame_w+20, frame_y+frame_h//2-25, 60, 50),
+        ('←', frame_x-80, frame_y+frame_h//2-25, 60, 50),
+        ('↓', frame_x+frame_w//2-30, frame_y+frame_h+20, 60, 50),
+    ]
+    try:
+        font_arrow = ImageFont.truetype("arial.ttf", 28)
+    except:
+        font_arrow = ImageFont.load_default()
+    for arrow, dx, dy, dw, dh in directions:
+        draw.rectangle([(dx, dy), (dx+dw, dy+dh)],
+                       fill='rgba(200,160,80,0)', outline='#c8a050', width=2)
+        draw.text((dx+dw//2-10, dy+dh//2-14), arrow, fill='#c8a050', font=font_arrow)
+
+    img.save('painting.jpg', 'JPEG', quality=92)
+    print("Painting image painting.jpg generated")
+
+
+def create_toy_box_image():
+    """玩具箱场景 1200x800 - 木质地板，中央小木箱+图案锁"""
+    width, height = 1200, 800
+    img = Image.new('RGB', (width, height), color='#2a1e0e')
+    draw = ImageDraw.Draw(img)
+
+    # 地板纹理
+    for i in range(0, width, 100):
+        draw.line([(i, 0), (i, height)], fill='#332510', width=1)
+    for j in range(0, height, 60):
+        draw.line([(0, j), (width, j)], fill='#332510', width=1)
+
+    # 桌子底部（上方）
+    draw.rectangle([(0, 0), (width, 80)], fill='#5c3a1e')
+    draw.rectangle([(0, 75), (width, 90)], fill='#3a2010')
+    # 桌腿
+    draw.rectangle([(100, 80), (130, 300)], fill='#4a2e14')
+    draw.rectangle([(width-130, 80), (width-100, 300)], fill='#4a2e14')
+
+    # 木箱（居中）
+    box_x, box_y = 350, 280
+    box_w, box_h = 500, 320
+    # 箱体
+    draw.rectangle([(box_x, box_y), (box_x+box_w, box_y+box_h)],
+                   fill='#6b4423', outline='#3a2010', width=4)
+    # 木纹
+    for i in range(box_y+20, box_y+box_h, 40):
+        draw.line([(box_x+8, i), (box_x+box_w-8, i)], fill='#5a3818', width=1)
+    # 箱盖分割线
+    lid_y = box_y + box_h//3
+    draw.line([(box_x+4, lid_y), (box_x+box_w-4, lid_y)], fill='#3a2010', width=3)
+    # 铰链
+    for hx in [box_x+80, box_x+box_w//2, box_x+box_w-80]:
+        draw.rectangle([(hx-8, lid_y-6), (hx+8, lid_y+6)], fill='#c8a060', outline='#8b6914', width=1)
+    # 锁扣（中央）
+    lock_x = box_x + box_w//2
+    lock_y = lid_y + 20
+    draw.rectangle([(lock_x-30, lock_y), (lock_x+30, lock_y+40)],
+                   fill='#c8a060', outline='#8b6914', width=2)
+    draw.arc([(lock_x-18, lock_y-20), (lock_x+18, lock_y+10)], start=180, end=0, fill='#8b6914', width=4)
+
+    # 图案锁按钮区域（箱盖下方）
+    btn_y = lid_y + 80
+    btn_labels = ['🐟', '🐾', '🔔', '⚽']
+    btn_spacing = box_w // 5
+    try:
+        font_emoji = ImageFont.truetype("seguiemj.ttf", 36)
+    except:
+        try:
+            font_emoji = ImageFont.truetype("arial.ttf", 28)
+        except:
+            font_emoji = ImageFont.load_default()
+    for i, lbl in enumerate(btn_labels):
+        bx = box_x + btn_spacing*(i+1) - 35
+        draw.rectangle([(bx, btn_y), (bx+70, btn_y+60)],
+                       fill='#4a2e14', outline='#8b6914', width=2)
+        draw.text((bx+10, btn_y+8), lbl, fill='#c8a060', font=font_emoji)
+
+    # 爪印装饰（地板上）
+    paw_positions = [(200, 650), (280, 680), (360, 660), (440, 690)]
+    for px, py in paw_positions:
+        draw.ellipse([(px-8, py-6), (px+8, py+6)], fill='#5c3a1e')
+        for angle, dist in [(-20, 12), (0, 14), (20, 12)]:
+            tx = px + angle
+            ty = py - dist
+            draw.ellipse([(tx-4, ty-3), (tx+4, ty+3)], fill='#5c3a1e')
+
+    img.save('toy_box.jpg', 'JPEG', quality=92)
+    print("Toy box image toy_box.jpg generated")
+
+
 if __name__ == '__main__':
     create_room_background()
     create_pen_image()
@@ -528,4 +1081,9 @@ if __name__ == '__main__':
     create_drawer_background()
     create_window_close_background()
     create_photo_wall_image()
+    create_bookshelf_image()
+    create_balcony_image()
+    create_food_bowl_image()
+    create_painting_image()
+    create_toy_box_image()
     print("\nAll images generated successfully!")

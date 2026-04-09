@@ -23,7 +23,31 @@ const gameState = {
         seenWindowClue: false,
         photoWallSeen: false,
         sofaScratchSeen: false,
-        toyCountSeen: false
+        toyCountSeen: false,
+        // 书架谜题
+        bookshelfSeen: false,
+        bookPuzzleSolved: false,   // 5本书谜题完成
+        bookPuzzleStep: 0,         // 当前点击步骤
+        hasCollar: false,
+        // 音乐盒（书架第二阶段）
+        musicBoxSolved: false,
+        musicBoxStep: 0,
+        // 食盆/画框谜题
+        foodBowlSeen: false,
+        paintingPuzzleSolved: false,
+        paintingStep: 0,
+        hasOwnerLetter: false,
+        // 玩具箱谜题
+        toyBoxSeen: false,
+        toyBoxSolved: false,
+        toyBoxStep: 0,
+        hasCatLetter: false,
+        // 阳台
+        balconySeen: false,
+        hasLetter: false,
+        // 便利贴
+        stickyNotes: [],
+        albumUnlocked: false
     }
 };
 
@@ -46,8 +70,12 @@ const roomObjects = [
     { id: 'table',      x: '55%', y: '68%', width: '25%', height: '18%', label: '桌子', onClick: interactTable },
     { id: 'clock',      x: '88%', y: '25%', width: '10%', height: '15%', label: '时钟', onClick: interactClock },
     { id: 'drawer',     x: '52%', y: '50%', width: '8%',  height: '10%', label: '抽屉', onClick: interactDrawer },
-    { id: 'photo-wall', x: '14%', y: '20%', width: '18%', height: '30%', label: '照片墙', onClick: interactPhotoWall },
-    { id: 'toys',       x: '60%', y: '82%', width: '15%', height: '10%', label: '猫玩具', onClick: interactToys }
+    { id: 'photo-wall',  x: '14%', y: '20%', width: '18%', height: '30%', label: '照片墙',  onClick: interactPhotoWall },
+    { id: 'toys',        x: '60%', y: '82%', width: '15%', height: '10%', label: '猫玩具',  onClick: interactToys },
+    { id: 'bookshelf',   x: '75%', y: '35%', width: '12%', height: '30%', label: '书架',    onClick: interactBookshelf },
+    { id: 'food-bowl',   x: '3%',  y: '78%', width: '8%',  height: '8%',  label: '食盆',    onClick: interactFoodBowl },
+    { id: 'painting',    x: '68%', y: '18%', width: '8%',  height: '20%', label: '画',      onClick: interactPainting },
+    { id: 'toy-box',     x: '82%', y: '76%', width: '10%', height: '8%',  label: '玩具箱',  onClick: interactToyBox }
 ];
 
 // 打字机效果变量
@@ -579,6 +607,22 @@ function createRoomHotspots() {
     roomObjects.forEach(obj => {
         createHotspot(obj.id, obj.label, obj.x, obj.y, obj.width, obj.height, obj.onClick);
     });
+
+    // 便利贴1：桌子旁，游戏开始即可见
+    if (!gameState.flags.stickyNotes.includes('note1')) {
+        const hotspots = document.getElementById('hotspots');
+        const note = document.createElement('div');
+        note.id = 'sticky-note-1';
+        note.style.cssText = 'position:absolute;left:53%;top:65%;font-size:24px;cursor:pointer;z-index:15;user-select:none;';
+        note.textContent = '📝';
+        note.title = '便利贴';
+        note.addEventListener('click', (e) => {
+            e.stopPropagation();
+            note.remove();
+            collectStickyNote('note1');
+        });
+        hotspots.appendChild(note);
+    }
 }
 
 // 非沙发对象的通用搜索计数（用于触发情节片段一）
@@ -603,7 +647,7 @@ function tickExploreAfterBite() {
 
 // 记录对象被点击，检查是否所有对象都被点击过（用于触发沙发角落提示）
 // 只计入初始探索阶段的6个对象，照片墙和玩具不参与
-const ALL_INTERACTIVE_OBJECTS = ['door', 'window', 'sofa', 'table', 'clock', 'drawer', 'photo-wall', 'toys'];
+const ALL_INTERACTIVE_OBJECTS = ['door', 'window', 'sofa', 'table', 'clock', 'drawer', 'photo-wall', 'toys', 'bookshelf', 'food-bowl', 'painting', 'toy-box'];
 const INITIAL_EXPLORE_OBJECTS = ['door', 'window', 'sofa', 'table', 'clock', 'drawer'];
 
 function trackObjectClick(id, afterCallback) {
@@ -891,7 +935,11 @@ function interactToys() {
     countSearch();
     trackObjectClick('toys', (next) => {
         gameState.flags.toyCountSeen = true;
-        showDialog('地板上散落着朵朵的玩具：一个毛线球、一个铃铛球、还有一条小鱼。主人把她最爱的3个玩具都留在这里了。', next);
+        if (gameState.flags.photoWallSeen && !gameState.flags.toyBoxSeen) {
+            showDialog('地板上散落着朵朵的玩具：一个毛线球、一个铃铛球、还有一条小鱼。\n\n等等……桌子下面好像还有个小木箱？', next);
+        } else {
+            showDialog('地板上散落着朵朵的玩具：一个毛线球、一个铃铛球、还有一条小鱼。主人把她最爱的3个玩具都留在这里了。', next);
+        }
     });
 }
 
@@ -916,6 +964,25 @@ function openPhotoWallScene() {
     bindPhotoClick(photo1, '2022年，朵朵刚来，还是个小猫咪。');
     bindPhotoClick(photo2, '2024年，朵朵2岁了，越来越懒了。');
     bindPhotoClick(photo3, '2026年，朵朵4岁了，还是那么爱赖在沙发角落。');
+
+    // 便利贴3：照片墙背面
+    const scene = document.getElementById('photo-wall-scene');
+    if (!gameState.flags.stickyNotes.includes('note3')) {
+        const note = document.createElement('div');
+        note.className = 'sticky-note-hotspot';
+        note.style.cssText = 'position:absolute;right:5%;bottom:10%;width:12%;height:10%;cursor:pointer;';
+        note.title = '便利贴';
+        note.textContent = '📝';
+        note.style.fontSize = '28px';
+        note.style.display = 'flex';
+        note.style.alignItems = 'center';
+        note.style.justifyContent = 'center';
+        note.addEventListener('click', () => {
+            note.remove();
+            collectStickyNote('note3');
+        });
+        scene.appendChild(note);
+    }
 }
 
 function closePhotoWallScene() {
@@ -929,6 +996,598 @@ function closePhotoWallScene() {
         createRoomHotspots();
     }
 }
+
+function closePhotoWallScene() {
+    document.getElementById('photo-wall-scene').classList.add('hidden');
+    centerViewport();
+    const hint = _pendingPhotoWallHint;
+    _pendingPhotoWallHint = null;
+    if (hint) {
+        hint();
+    } else {
+        createRoomHotspots();
+    }
+}
+
+// ===================== 书架场景 =====================
+
+function interactBookshelf() {
+    if (tickExploreAfterBite()) return;
+    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
+        countSearch();
+        trackObjectClick('bookshelf');
+        showHelpless();
+        return;
+    }
+    countSearch();
+    trackObjectClick('bookshelf', (next) => {
+        if (!gameState.flags.hasNote) {
+            showDialog('书架上摆满了书，还有一些小摆件。角落里有个精致的音乐盒，盒盖上落了一层薄薄的灰尘，好像很久没人碰过了。', next);
+        } else if (!gameState.flags.bookPuzzleSolved) {
+            showDialog('纸条上说"她陪我走过的岁月，是第一把钥匙"……书架上这5本书，厚薄各不相同。也许要按照某种顺序？', () => {
+                openBookshelfScene();
+            });
+        } else if (!gameState.flags.toyBoxSolved) {
+            showDialog('书架上的隐藏格子已经打开了，项圈已经拿走了。\n\n音乐盒还在那里，但现在还不是时候……', next);
+        } else if (!gameState.flags.musicBoxSolved) {
+            showDialog('你想起日记里的话：朵朵来的那天、她两岁的时候、她四岁的时候……\n\n音乐盒上有三个按钮，分别刻着不同的年份。也许要按照朵朵成长的顺序来？', () => {
+                openBookshelfScene();
+            });
+        } else {
+            showDialog('书架上的一切都已经探索过了。', next);
+        }
+    });
+}
+
+function openBookshelfScene() {
+    clearHotspots();
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    document.getElementById('bookshelf-scene').classList.remove('hidden');
+    centerViewport();
+    showDragHint();
+
+    gameState.flags.bookshelfSeen = true;
+
+    if (!gameState.flags.bookPuzzleSolved) {
+        // 第一阶段：5本书谜题
+        document.getElementById('bookshelf-puzzle-ui').classList.remove('hidden');
+        document.getElementById('music-box-display').classList.add('hidden');
+        gameState.flags.bookPuzzleStep = 0;
+        setupBookPuzzleHotspots();
+    } else if (!gameState.flags.musicBoxSolved) {
+        // 第二阶段：音乐盒
+        document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
+        document.getElementById('music-box-display').classList.remove('hidden');
+        gameState.flags.musicBoxStep = 0;
+        showDialog('音乐盒上有三个按钮，分别刻着不同的年份。按照朵朵成长的顺序来……', () => {
+            setupMusicBoxHotspots();
+        });
+    } else {
+        document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
+        document.getElementById('music-box-display').classList.remove('hidden');
+        showDialog('音乐盒已经打开过了，里面空空如也。');
+        setupMusicBoxHotspots();
+    }
+}
+
+// ===================== 书本谜题 =====================
+// 5本书按厚度从大到小：book1(最厚120px) > book2(100) > book3(80) > book4(60) > book5(最薄40)
+const BOOK_ORDER = ['book1', 'book2', 'book3', 'book4', 'book5'];
+
+function setupBookPuzzleHotspots() {
+    const scene = document.getElementById('bookshelf-scene');
+    scene.querySelectorAll('.book-btn').forEach(el => el.remove());
+
+    const books = [
+        { id: 'book1', label: '厚书①', width: '10%', left: '10%', color: '#c0392b' },
+        { id: 'book2', label: '厚书②', width: '8.5%', left: '22%', color: '#2980b9' },
+        { id: 'book3', label: '中书',   width: '7%',   left: '33%', color: '#27ae60' },
+        { id: 'book4', label: '薄书①', width: '5.5%', left: '43%', color: '#f39c12' },
+        { id: 'book5', label: '薄书②', width: '4%',   left: '51%', color: '#8e44ad' },
+    ];
+
+    books.forEach(b => {
+        const btn = document.createElement('div');
+        btn.className = 'book-btn';
+        btn.id = b.id;
+        btn.dataset.bookId = b.id;
+        btn.style.cssText = `left:${b.left};top:28%;width:${b.width};height:38%;background:${b.color};`;
+        btn.title = b.label;
+        btn.addEventListener('click', () => handleBookClick(b.id));
+        scene.appendChild(btn);
+    });
+
+    // 便利贴4（书架谜题完成后出现，但先注册热点占位）
+    updateBookPuzzleHint();
+}
+
+function updateBookPuzzleHint() {
+    const hint = document.getElementById('book-puzzle-hint');
+    if (hint) {
+        hint.textContent = `已按顺序抽出：${gameState.flags.bookPuzzleStep}/5`;
+    }
+}
+
+function handleBookClick(bookId) {
+    if (gameState.flags.bookPuzzleSolved) {
+        showDialog('书架上的隐藏格子已经打开了。');
+        return;
+    }
+    const expected = BOOK_ORDER[gameState.flags.bookPuzzleStep];
+    if (bookId === expected) {
+        gameState.flags.bookPuzzleStep++;
+        const btn = document.getElementById(bookId);
+        if (btn) btn.classList.add('book-selected');
+        updateBookPuzzleHint();
+
+        if (gameState.flags.bookPuzzleStep >= 5) {
+            gameState.flags.bookPuzzleSolved = true;
+            showDialog('咔哒——书架背板弹开了一个小格子！\n\n格子里静静躺着一条猫咪项圈，项圈上刻着"朵朵"，旁边还有一行小字：2022.03.15。', () => {
+                if (!gameState.inventory.includes('项圈')) {
+                    gameState.flags.hasCollar = true;
+                    gameState.inventory.push('项圈');
+                    updateInventory();
+                }
+                showDialog('你获得了朵朵的项圈。\n\n2022.03.15……那是朵朵来家的日子。照片墙上第一张照片的年份，和这个日期对上了。', () => {
+                    collectStickyNote('note4');
+                });
+            });
+        } else {
+            const remaining = 5 - gameState.flags.bookPuzzleStep;
+            showDialog(`书本被轻轻抽出，发出沙沙的声音……还差${remaining}本。`);
+        }
+    } else {
+        gameState.flags.bookPuzzleStep = 0;
+        document.querySelectorAll('.book-btn').forEach(b => b.classList.remove('book-selected'));
+        updateBookPuzzleHint();
+        showDialog('书本滑回了原位，发出轻微的碰撞声。\n\n也许顺序不对……纸条上说"从大到小"。');
+    }
+}
+
+function setupMusicBoxHotspots() {
+    const scene = document.getElementById('bookshelf-scene');
+    // 清除旧热点
+    scene.querySelectorAll('.bookshelf-hotspot').forEach(el => el.remove());
+
+    const years = [
+        { id: 'btn-2022', label: '2022', x: '28%', y: '62%' },
+        { id: 'btn-2024', label: '2024', x: '48%', y: '62%' },
+        { id: 'btn-2026', label: '2026', x: '68%', y: '62%' }
+    ];
+
+    years.forEach(y => {
+        const btn = document.createElement('div');
+        btn.className = 'bookshelf-hotspot music-btn';
+        btn.id = y.id;
+        btn.dataset.year = y.label;
+        btn.style.cssText = `left:${y.x};top:${y.y};`;
+        btn.textContent = y.label;
+        btn.addEventListener('click', () => handleMusicBoxBtn(y.label));
+        scene.appendChild(btn);
+    });
+}
+
+const MUSIC_BOX_ORDER = ['2022', '2024', '2026'];
+
+function handleMusicBoxBtn(year) {
+    if (gameState.flags.musicBoxSolved) {
+        showDialog('音乐盒已经打开过了。');
+        return;
+    }
+
+    const expected = MUSIC_BOX_ORDER[gameState.flags.musicBoxStep];
+    if (year === expected) {
+        gameState.flags.musicBoxStep++;
+        const btn = document.querySelector(`[data-year="${year}"]`);
+        if (btn) btn.classList.add('pressed');
+
+        if (gameState.flags.musicBoxStep >= 3) {
+            // 全部按对，音乐盒打开
+            gameState.flags.musicBoxSolved = true;
+            showDialog('叮——音乐盒发出一声清脆的响声，缓缓打开了。\n\n里面躺着一张小纸片，上面写着：\n"朵朵最爱的时刻是下午三点，那时候阳光从窗户斜射进来，她会从沙发角落走到窗台，然后回头看我一眼，再看向那个方向。\n\n我把最重要的东西，藏在了她目光的终点。那里，时间从不停歇。"\n\n——这正是日记里的那段话，但这里还多了一句：\n"抽屉里的密码，是她陪我的年数。"', () => {
+                showDialog('朵朵陪了主人4年（2022-2026），加上她最爱的3个玩具……443？\n\n你记下了这个数字。');
+            });
+        } else {
+            showDialog(`按钮亮起，发出轻柔的音符……还差${3 - gameState.flags.musicBoxStep}个。`);
+        }
+    } else {
+        // 按错，重置
+        gameState.flags.musicBoxStep = 0;
+        document.querySelectorAll('.music-btn').forEach(b => b.classList.remove('pressed'));
+        showDialog('音乐盒发出一声沉闷的声响，按钮全部熄灭了。\n\n也许顺序不对……想想朵朵的故事。');
+    }
+}
+
+function closeBookshelfScene() {
+    document.getElementById('bookshelf-scene').classList.add('hidden');
+    centerViewport();
+    createRoomHotspots();
+}
+
+// ===================== 食盆谜题 =====================
+
+function interactFoodBowl() {
+    if (tickExploreAfterBite()) return;
+    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
+        countSearch();
+        trackObjectClick('food-bowl');
+        showHelpless();
+        return;
+    }
+    countSearch();
+    trackObjectClick('food-bowl', (next) => {
+        if (!gameState.flags.bookPuzzleSolved) {
+            showDialog('沙发旁边放着朵朵的食盆，盆边贴着一张喂食记录卡。', next);
+        } else if (!gameState.flags.foodBowlSeen) {
+            showDialog('朵朵的食盆……盆边贴着一张喂食记录卡，上面写着每天的喂食时间。', () => {
+                openFoodBowlScene();
+            });
+        } else if (!gameState.flags.paintingPuzzleSolved) {
+            showDialog('喂食记录上写着四个时间。对照墙上的时钟，时针方向就是顺序……', next);
+        } else {
+            showDialog('食盆已经看过了，喂食记录的秘密已经解开了。', next);
+        }
+    });
+}
+
+function openFoodBowlScene() {
+    clearHotspots();
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    document.getElementById('food-bowl-scene').classList.remove('hidden');
+    centerViewport();
+    showDragHint();
+
+    gameState.flags.foodBowlSeen = true;
+
+    showDialog('你蹲下来仔细看食盆旁边的记录卡……', () => {
+        const hotspot = document.getElementById('food-bowl-record-hotspot');
+        hotspot.onclick = function() {
+            showDialog('喂食记录：\n\n早 7点 / 午 12点 / 晚 6点 / 夜 10点\n\n对照墙上的时钟，时针方向就是顺序。\n\n（7点时针朝上，12点时针朝右，6点时针朝左，10点时针朝下）', () => {
+                showDialog('上→右→左→下……这个顺序好像可以用在什么地方。\n\n墙上那幅画……');
+            });
+        };
+    });
+}
+
+function closeFoodBowlScene() {
+    document.getElementById('food-bowl-scene').classList.add('hidden');
+    centerViewport();
+    createRoomHotspots();
+}
+
+// ===================== 画框谜题 =====================
+
+function interactPainting() {
+    if (tickExploreAfterBite()) return;
+    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
+        countSearch();
+        trackObjectClick('painting');
+        showHelpless();
+        return;
+    }
+    countSearch();
+    trackObjectClick('painting', (next) => {
+        if (gameState.flags.paintingPuzzleSolved) {
+            showDialog('画框已经打开过了，里面的信已经取走了。', next);
+        } else if (!gameState.flags.foodBowlSeen) {
+            showDialog('墙上挂着一幅画，画里是一片草地，朵朵最喜欢趴在这里晒太阳。\n\n画框四周有四个小小的方向标记……', next);
+        } else {
+            showDialog('喂食时间对应的时针方向：上→右→左→下。\n\n按这个顺序点击画框四周的方向标记……', () => {
+                openPaintingPuzzle();
+            });
+        }
+    });
+}
+
+function openPaintingPuzzle() {
+    clearHotspots();
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    document.getElementById('painting-scene').classList.remove('hidden');
+    centerViewport();
+    showDragHint();
+
+    gameState.flags.paintingStep = 0;
+    setupPaintingHotspots();
+}
+
+const PAINTING_ORDER = ['up', 'right', 'left', 'down'];
+const PAINTING_LABELS = { up: '↑ 上', right: '→ 右', left: '← 左', down: '↓ 下' };
+const PAINTING_POSITIONS = {
+    up:    { left: '45%', top: '8%',  width: '10%', height: '12%' },
+    right: { left: '82%', top: '40%', width: '12%', height: '12%' },
+    left:  { left: '6%',  top: '40%', width: '12%', height: '12%' },
+    down:  { left: '45%', top: '80%', width: '10%', height: '12%' }
+};
+
+function setupPaintingHotspots() {
+    const scene = document.getElementById('painting-scene');
+    scene.querySelectorAll('.painting-btn').forEach(el => el.remove());
+
+    Object.entries(PAINTING_POSITIONS).forEach(([dir, pos]) => {
+        const btn = document.createElement('div');
+        btn.className = 'painting-btn';
+        btn.dataset.dir = dir;
+        btn.style.cssText = `left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};`;
+        btn.textContent = PAINTING_LABELS[dir];
+        btn.addEventListener('click', () => handlePaintingClick(dir));
+        scene.appendChild(btn);
+    });
+}
+
+function handlePaintingClick(dir) {
+    if (gameState.flags.paintingPuzzleSolved) {
+        showDialog('画框已经打开了。');
+        return;
+    }
+    const expected = PAINTING_ORDER[gameState.flags.paintingStep];
+    if (dir === expected) {
+        gameState.flags.paintingStep++;
+        const btn = document.querySelector(`.painting-btn[data-dir="${dir}"]`);
+        if (btn) btn.classList.add('painting-pressed');
+
+        if (gameState.flags.paintingStep >= 4) {
+            gameState.flags.paintingPuzzleSolved = true;
+            showDialog('咔哒——画框从墙上弹开了一条缝，里面夹着一封信！', () => {
+                gameState.flags.hasOwnerLetter = true;
+                gameState.inventory.push('主人的信');
+                updateInventory();
+                showDialog('你获得了主人写给朵朵的信。\n\n"朵朵，\n\n你最爱的顺序，永远是先闻味道，再用爪子确认，最后才肯吃。\n\n鱼的香气→爪子轻触→铃铛一响→球滚过来。\n\n这是你的仪式，也是我最爱看的画面。\n\n——主人"', () => {
+                    showDialog('先闻味道（鱼）→爪子确认（爪印）→铃铛→球……\n\n这个顺序……好像可以用在什么地方。');
+                });
+            });
+        } else {
+            const remaining = 4 - gameState.flags.paintingStep;
+            showDialog(`画框轻轻颤动了一下……还差${remaining}步。`);
+        }
+    } else {
+        gameState.flags.paintingStep = 0;
+        document.querySelectorAll('.painting-btn').forEach(b => b.classList.remove('painting-pressed'));
+        showDialog('画框没有反应。\n\n也许顺序不对……回想一下喂食记录上的时间。');
+    }
+}
+
+function closePaintingScene() {
+    document.getElementById('painting-scene').classList.add('hidden');
+    centerViewport();
+    createRoomHotspots();
+}
+
+// ===================== 玩具箱谜题 =====================
+
+function interactToyBox() {
+    if (tickExploreAfterBite()) return;
+    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
+        countSearch();
+        trackObjectClick('toy-box');
+        showHelpless();
+        return;
+    }
+    countSearch();
+    trackObjectClick('toy-box', (next) => {
+        if (!gameState.flags.hasOwnerLetter || !gameState.flags.photoWallSeen) {
+            showDialog('桌子下面好像有个小木箱，但上面有个图案锁，暂时打不开。', next);
+        } else if (gameState.flags.toyBoxSolved) {
+            showDialog('玩具箱已经打开了，朵朵的信已经取走了。', next);
+        } else {
+            showDialog('小木箱上有四个图案按钮：🐟 🐾 🔔 ⚽\n\n主人的信里说：先闻味道，再用爪子确认，最后才肯吃……', () => {
+                openToyBoxScene();
+            });
+        }
+    });
+}
+
+function openToyBoxScene() {
+    clearHotspots();
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    document.getElementById('toy-box-scene').classList.remove('hidden');
+    centerViewport();
+    showDragHint();
+
+    gameState.flags.toyBoxSeen = true;
+    gameState.flags.toyBoxStep = 0;
+    setupToyBoxHotspots();
+}
+
+const TOY_BOX_ORDER = ['fish', 'paw', 'bell', 'ball'];
+const TOY_BOX_ICONS = { fish: '🐟', paw: '🐾', bell: '🔔', ball: '⚽' };
+
+function setupToyBoxHotspots() {
+    const scene = document.getElementById('toy-box-scene');
+    scene.querySelectorAll('.toy-btn').forEach(el => el.remove());
+
+    const positions = [
+        { id: 'fish', left: '20%', top: '55%' },
+        { id: 'paw',  left: '36%', top: '55%' },
+        { id: 'bell', left: '52%', top: '55%' },
+        { id: 'ball', left: '68%', top: '55%' },
+    ];
+
+    positions.forEach(p => {
+        const btn = document.createElement('div');
+        btn.className = 'toy-btn';
+        btn.dataset.toyId = p.id;
+        btn.style.cssText = `left:${p.left};top:${p.top};`;
+        btn.textContent = TOY_BOX_ICONS[p.id];
+        btn.addEventListener('click', () => handleToyBoxClick(p.id));
+        scene.appendChild(btn);
+    });
+}
+
+function handleToyBoxClick(toyId) {
+    if (gameState.flags.toyBoxSolved) {
+        showDialog('玩具箱已经打开了。');
+        return;
+    }
+    const expected = TOY_BOX_ORDER[gameState.flags.toyBoxStep];
+    if (toyId === expected) {
+        gameState.flags.toyBoxStep++;
+        const btn = document.querySelector(`.toy-btn[data-toy-id="${toyId}"]`);
+        if (btn) btn.classList.add('toy-selected');
+
+        if (gameState.flags.toyBoxStep >= 4) {
+            gameState.flags.toyBoxSolved = true;
+            showDialog('咔哒——木箱的锁弹开了！\n\n里面有一封信，信纸上印满了小小的爪印……', () => {
+                gameState.flags.hasCatLetter = true;
+                gameState.inventory.push('朵朵的信');
+                updateInventory();
+                showDialog('你获得了朵朵的信。\n\n爪印排列成文字：\n\n"喵——\n\n你找到这里了。我知道你会来的。\n\n主人把最重要的东西藏在了时钟里，那是我们在一起的每一天。\n\n猫咪神藏，不是宝贝，是时光。\n\n——朵朵 🐾"', () => {
+                    collectStickyNote('note5');
+                    showDialog('你握着这封信，眼眶有些湿润。\n\n时钟……一切线索都指向那里。');
+                });
+            });
+        } else {
+            const remaining = 4 - gameState.flags.toyBoxStep;
+            showDialog(`图案亮起，发出轻柔的声响……还差${remaining}个。`);
+        }
+    } else {
+        gameState.flags.toyBoxStep = 0;
+        document.querySelectorAll('.toy-btn').forEach(b => b.classList.remove('toy-selected'));
+        showDialog('木箱发出一声沉闷的响声，图案全部熄灭了。\n\n再想想主人信里的顺序……');
+    }
+}
+
+function closeToyBoxScene() {
+    document.getElementById('toy-box-scene').classList.add('hidden');
+    centerViewport();
+    createRoomHotspots();
+}
+
+// ===================== 便利贴系统 =====================
+
+const STICKY_NOTE_TEXTS = {
+    note1: '朵朵，你知道吗，第一次见到你的时候，我就知道你会是我最好的朋友。',
+    note2: '你总是在这里等我回家，每次开门都能看到你的小脑袋。',
+    note3: '2022年，你来了。2024年，你长大了。2026年，你还是那么爱赖着我。',
+    note4: '你的项圈我一直留着，那是你来的第一天戴上的。',
+    note5: '如果有一天你找到了这里，希望你知道，我永远爱你。'
+};
+
+function collectStickyNote(id) {
+    if (gameState.flags.stickyNotes.includes(id)) return;
+    gameState.flags.stickyNotes.push(id);
+    updateInventory();
+    const count = gameState.flags.stickyNotes.length;
+    if (count >= 5) {
+        gameState.flags.albumUnlocked = true;
+        showDialog(`你收集了所有5张便利贴！\n\n"${STICKY_NOTE_TEXTS[id]}"\n\n记忆相册已解锁，可以在物品栏中查看。`);
+    } else {
+        showDialog(`你发现了一张便利贴（${count}/5）：\n\n"${STICKY_NOTE_TEXTS[id]}"`);
+    }
+}
+
+// ===================== 记忆相册 =====================
+
+function openAlbumScene() {
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    document.getElementById('album-scene').classList.remove('hidden');
+    centerViewport();
+
+    const content = document.getElementById('album-content');
+    content.innerHTML = '';
+
+    const title = document.createElement('div');
+    title.className = 'album-title';
+    title.textContent = '📖 朵朵的记忆相册';
+    content.appendChild(title);
+
+    const noteOrder = ['note1', 'note2', 'note3', 'note4', 'note5'];
+    const noteLabels = ['初遇', '等待', '成长', '项圈', '永远'];
+    noteOrder.forEach((id, i) => {
+        const page = document.createElement('div');
+        page.className = 'album-page';
+        page.innerHTML = `<div class="album-page-label">${noteLabels[i]}</div><div class="album-page-text">"${STICKY_NOTE_TEXTS[id]}"</div>`;
+        content.appendChild(page);
+    });
+
+    const footer = document.createElement('div');
+    footer.className = 'album-footer';
+    footer.textContent = '🐾 朵朵 2022—2026 🐾';
+    content.appendChild(footer);
+}
+
+function closeAlbumScene() {
+    document.getElementById('album-scene').classList.add('hidden');
+    centerViewport();
+    createRoomHotspots();
+}
+
+// ===================== 阳台场景 =====================
+
+function tryOpenBalcony() {
+    if (!gameState.flags.musicBoxSolved) {
+        showDialog('窗户虽然能打开，但外面是阳台，你有些犹豫……也许先把房间里的东西都弄清楚再说？');
+        return;
+    }
+    openBalconyScene();
+}
+
+function openBalconyScene() {
+    clearHotspots();
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    document.getElementById('balcony-scene').classList.remove('hidden');
+    centerViewport();
+    showDragHint();
+
+    gameState.flags.balconySeen = true;
+
+    if (!gameState.flags.hasLetter) {
+        showDialog('你推开窗户，踏上阳台。\n\n阳台上摆着几盆绿植，地板上有一串细小的爪印，从窗边一直延伸到角落的花盆旁。\n\n朵朵曾经在这里留下了她的痕迹。', () => {
+            setupBalconyHotspots();
+        });
+    } else {
+        showDialog('阳台上静悄悄的，信已经拿走了。');
+        setupBalconyHotspots();
+    }
+}
+
+function setupBalconyHotspots() {
+    const scene = document.getElementById('balcony-scene');
+    scene.querySelectorAll('.balcony-hotspot').forEach(el => el.remove());
+
+    // 爪印热点
+    const pawprint = document.createElement('div');
+    pawprint.className = 'balcony-hotspot paw-trail';
+    pawprint.style.cssText = 'left:20%;top:55%;width:55%;height:15%;';
+    pawprint.title = '爪印';
+    pawprint.addEventListener('click', () => {
+        showDialog('一串小小的爪印，从窗边一直通向那个最大的花盆……朵朵好像在指引你。');
+    });
+    scene.appendChild(pawprint);
+
+    // 花盆热点
+    const pot = document.createElement('div');
+    pot.className = 'balcony-hotspot flower-pot';
+    pot.style.cssText = 'left:65%;top:60%;width:20%;height:25%;';
+    pot.title = '花盆';
+    pot.addEventListener('click', () => {
+        if (!gameState.flags.hasLetter) {
+            showDialog('你蹲下来，轻轻移开花盆……花盆下面压着一个防水袋，里面有一封信。', () => {
+                gameState.flags.hasLetter = true;
+                gameState.inventory.push('信');
+                updateInventory();
+                showDialog('你获得了一封信。\n\n信封上写着：\n"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我四年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"', () => {
+                    showDialog('你握着这封信，心里涌起一股说不清的情绪。\n\n时钟……一切线索都指向那里。');
+                });
+            });
+        } else {
+            showDialog('花盆下面已经空了，信已经拿走了。');
+        }
+    });
+    scene.appendChild(pot);
+}
+
+function closeBalconyScene() {
+    document.getElementById('balcony-scene').classList.add('hidden');
+    centerViewport();
+    createRoomHotspots();
+}
+
 
 function interactTable() {
     if (tickExploreAfterBite()) return;
@@ -1035,6 +1694,24 @@ function updateInventory() {
     const inventoryItems = document.getElementById('inventory-items');
     inventoryItems.innerHTML = '';
 
+    // 便利贴作为单独条目显示
+    const noteCount = gameState.flags.stickyNotes.length;
+    if (noteCount > 0) {
+        const noteDiv = document.createElement('div');
+        noteDiv.className = 'inventory-item';
+        noteDiv.innerHTML = `<span class="item-icon">📝</span>便利贴 ${noteCount}/5${gameState.flags.albumUnlocked ? ' ✨' : ''}`;
+        noteDiv.style.cursor = 'pointer';
+        noteDiv.onclick = () => {
+            if (gameState.flags.albumUnlocked) {
+                document.getElementById('inventory-panel').classList.add('hidden');
+                openAlbumScene();
+            } else {
+                showDialog(`你已收集 ${noteCount}/5 张便利贴。集齐5张可以解锁记忆相册。`);
+            }
+        };
+        inventoryItems.appendChild(noteDiv);
+    }
+
     gameState.inventory.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'inventory-item';
@@ -1058,6 +1735,22 @@ function updateInventory() {
                 showDialog('纸条上写着：\n"朵朵的秘密\n\n她陪我走过的岁月，是第一把钥匙。\n她留在这里的印记，是第二把钥匙。\n她最爱的那些小东西，是第三把钥匙。\n\n三把钥匙，从大到小。"');
             } else if (item === '日记') {
                 showDialog('日记封面上写着"献给朵朵"。\n\n"朵朵来的那天，我买了一个新时钟挂在墙上，想着以后每天看着时间流逝，也有她陪着。\n\n她最喜欢的时刻是下午三点，那时候阳光从窗户斜射进来，她会从沙发角落走到窗台，然后回头看我一眼，再看向那个方向。\n\n我把最重要的东西，藏在了她目光的终点。那里，时间从不停歇。"');
+            } else if (item === '项圈') {
+                showDialog('朵朵的项圈，上面刻着她的名字。\n\n项圈上刻着 2022.03.15，那是朵朵来家的日子。\n\n项圈内侧还刻着一串数字：4-4-3。\n\n这串数字……好像在哪里用得上。');
+            } else if (item === '主人的信') {
+                showDialog('"朵朵，\n\n你最爱的顺序，永远是先闻味道，再用爪子确认，最后才肯吃。\n\n鱼的香气→爪子轻触→铃铛一响→球滚过来。\n\n这是你的仪式，也是我最爱看的画面。\n\n——主人"');
+            } else if (item === '朵朵的信') {
+                showDialog('"喵——\n\n你找到这里了。我知道你会来的。\n\n主人把最重要的东西藏在了时钟里，那是我们在一起的每一天。\n\n猫咪神藏，不是宝贝，是时光。\n\n——朵朵 🐾"');
+            } else if (item === '信') {
+                showDialog('"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我四年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"');
+            } else if (item.startsWith('便利贴')) {
+                const count = gameState.flags.stickyNotes.length;
+                if (gameState.flags.albumUnlocked) {
+                    document.getElementById('inventory-panel').classList.add('hidden');
+                    openAlbumScene();
+                } else {
+                    showDialog(`你已收集 ${count}/5 张便利贴。\n\n集齐5张可以解锁记忆相册。`);
+                }
             } else {
                 showDialog(`这是${item}。`);
             }
@@ -1068,7 +1761,22 @@ function updateInventory() {
 
 // 切换物品栏
 function toggleInventory() {
-    document.getElementById('inventory-panel').classList.toggle('hidden');
+    const panel = document.getElementById('inventory-panel');
+    const isHidden = panel.classList.toggle('hidden');
+    if (!isHidden) {
+        // 打开时，注册一次性外部点击监听，点击物品栏外自动收起
+        setTimeout(() => {
+            function onOutsideClick(e) {
+                if (!e.target.closest('#inventory-panel') && !e.target.closest('#inventory-toggle')) {
+                    panel.classList.add('hidden');
+                    document.removeEventListener('click', onOutsideClick, true);
+                    document.removeEventListener('touchend', onOutsideClick, true);
+                }
+            }
+            document.addEventListener('click', onOutsideClick, true);
+            document.addEventListener('touchend', onOutsideClick, true);
+        }, 0);
+    }
 }
 
 // 抽屉密码弹窗
@@ -1138,6 +1846,46 @@ function openWindowScene() {
     document.getElementById('window-scene').classList.remove('hidden');
     centerViewport();
     showDragHint();
+
+    // 获得项圈后，窗户可以通往阳台
+    if (gameState.flags.musicBoxSolved) {
+        showDialog('窗台上有朵朵留下的毛发和爪印。窗户虚掩着，外面是阳台……', () => {
+            showChoices([
+                {
+                    text: '🌿 推开窗户去阳台',
+                    callback: () => {
+                        closeWindowScene();
+                        openBalconyScene();
+                    }
+                },
+                {
+                    text: '🕐 顺着朵朵的视线看',
+                    callback: () => {
+                        if (!gameState.flags.seenWindowClue) {
+                            gameState.flags.seenWindowClue = true;
+                            showDialog('对了！朵朵每天下午都从这里凝视着那个时钟……', () => closeWindowScene());
+                        } else {
+                            showDialog('朵朵的视线终点是那个时钟，你已经知道了。', () => closeWindowScene());
+                        }
+                    }
+                }
+            ]);
+        });
+        // 便利贴2：窗台
+        if (!gameState.flags.stickyNotes.includes('note2')) {
+            const scene = document.getElementById('window-scene');
+            const note = document.createElement('div');
+            note.className = 'sticky-note-hotspot';
+            note.style.cssText = 'position:absolute;left:30%;top:8%;font-size:28px;cursor:pointer;z-index:210;';
+            note.textContent = '📝';
+            note.addEventListener('click', () => {
+                note.remove();
+                collectStickyNote('note2');
+            });
+            scene.appendChild(note);
+        }
+        return;
+    }
 
     showDialog('窗台上有朵朵留下的毛发和爪印。你想起日记里写的：她总是从这里凝视着某个方向……顺着她的视线望去，那个方向是……', () => {
         function showWindowChoices() {
@@ -1247,7 +1995,25 @@ function restartGame() {
         seenWindowClue: false,
         photoWallSeen: false,
         sofaScratchSeen: false,
-        toyCountSeen: false
+        toyCountSeen: false,
+        bookshelfSeen: false,
+        bookPuzzleSolved: false,
+        bookPuzzleStep: 0,
+        hasCollar: false,
+        musicBoxSolved: false,
+        musicBoxStep: 0,
+        foodBowlSeen: false,
+        paintingPuzzleSolved: false,
+        paintingStep: 0,
+        hasOwnerLetter: false,
+        toyBoxSeen: false,
+        toyBoxSolved: false,
+        toyBoxStep: 0,
+        hasCatLetter: false,
+        balconySeen: false,
+        hasLetter: false,
+        stickyNotes: [],
+        albumUnlocked: false
     };
 
     document.getElementById('cat-image').classList.add('hidden');
@@ -1263,5 +2029,11 @@ function restartGame() {
     document.getElementById('drawer-scene').classList.add('hidden');
     document.getElementById('window-scene').classList.add('hidden');
     document.getElementById('photo-wall-scene').classList.add('hidden');
+    document.getElementById('bookshelf-scene').classList.add('hidden');
+    document.getElementById('balcony-scene').classList.add('hidden');
+    document.getElementById('food-bowl-scene').classList.add('hidden');
+    document.getElementById('painting-scene').classList.add('hidden');
+    document.getElementById('toy-box-scene').classList.add('hidden');
+    document.getElementById('album-scene').classList.add('hidden');
     updateInventory();
 }

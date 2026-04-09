@@ -85,6 +85,55 @@
                 <div id="photo-wall-photo3" class="photo-hotspot"></div>
                 <button id="photo-wall-back" onclick="closePhotoWallScene()">← 返回</button>
             </div>
+
+            <!-- 书架场景 -->
+            <div id="bookshelf-scene" class="hidden">
+                <img id="bookshelf-image" src="bookshelf.jpg" alt="书架">
+                <!-- 书本谜题 UI -->
+                <div id="bookshelf-puzzle-ui">
+                    <div class="book-puzzle-label">📚 书架谜题</div>
+                    <div class="book-puzzle-hint" id="book-puzzle-hint">按厚度从大到小依次抽出书本：0/5</div>
+                </div>
+                <!-- 音乐盒 UI（第二阶段） -->
+                <div id="music-box-display" class="hidden">
+                    <div class="music-box-label">🎵 音乐盒</div>
+                    <div class="music-box-hint">按照朵朵成长的顺序按下按钮</div>
+                </div>
+                <button id="bookshelf-back" onclick="closeBookshelfScene()">← 返回</button>
+            </div>
+
+            <!-- 阳台场景 -->
+            <div id="balcony-scene" class="hidden">
+                <img id="balcony-image" src="balcony.jpg" alt="阳台">
+                <button id="balcony-back" onclick="closeBalconyScene()">← 返回</button>
+            </div>
+
+            <!-- 食盆场景 -->
+            <div id="food-bowl-scene" class="hidden">
+                <img id="food-bowl-image" src="food_bowl.jpg" alt="食盆">
+                <div id="food-bowl-record-hotspot"></div>
+                <button id="food-bowl-back" onclick="closeFoodBowlScene()">← 返回</button>
+            </div>
+
+            <!-- 画框谜题场景 -->
+            <div id="painting-scene" class="hidden">
+                <img id="painting-image" src="painting.jpg" alt="画框">
+                <button id="painting-back" onclick="closePaintingScene()">← 返回</button>
+            </div>
+
+            <!-- 玩具箱场景 -->
+            <div id="toy-box-scene" class="hidden">
+                <img id="toy-box-image" src="toy_box.jpg" alt="玩具箱">
+                <div class="toy-box-label">🔒 图案锁</div>
+                <div class="toy-box-hint">按照正确顺序点击图案</div>
+                <button id="toy-box-back" onclick="closeToyBoxScene()">← 返回</button>
+            </div>
+
+            <!-- 记忆相册（彩蛋） -->
+            <div id="album-scene" class="hidden">
+                <div id="album-content"></div>
+                <button id="album-back" onclick="closeAlbumScene()">← 返回</button>
+            </div>
             </div>
         </div>
 

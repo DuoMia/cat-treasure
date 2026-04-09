@@ -131,7 +131,9 @@ body {
     #sofa-corner-back,
     #drawer-scene-back,
     #window-scene-back,
-    #photo-wall-back {
+    #photo-wall-back,
+    #bookshelf-back,
+    #balcony-back {
         top: 10px;
         left: 10px;
         padding: 6px 12px;
@@ -613,7 +615,9 @@ body {
     #sofa-corner-back,
     #drawer-scene-back,
     #window-scene-back,
-    #photo-wall-back {
+    #photo-wall-back,
+    #bookshelf-back,
+    #balcony-back {
         top: 10px;
         left: 10px;
         padding: 6px 12px;
@@ -1334,4 +1338,519 @@ body {
     50% {
         transform: scale(1.05);
     }
+}
+
+/* ===================== 书架场景 ===================== */
+#bookshelf-scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    background: #2c1a0e;
+    animation: fadeIn 0.4s ease;
+    overflow: hidden;
+}
+
+#bookshelf-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+#music-box-display {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    transform: translateX(-50%);
+    width: 60%;
+    max-width: 340px;
+    background: linear-gradient(135deg, #8B6914 0%, #C8960C 50%, #8B6914 100%);
+    border: 3px solid #f0c040;
+    border-radius: 16px;
+    padding: 24px 20px 60px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
+    text-align: center;
+}
+
+.music-box-label {
+    font-size: 20px;
+    color: #fff8e0;
+    font-weight: bold;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    margin-bottom: 8px;
+}
+
+.music-box-hint {
+    font-size: 12px;
+    color: rgba(255,248,224,0.75);
+    margin-bottom: 4px;
+}
+
+.bookshelf-hotspot.music-btn {
+    position: absolute;
+    width: 60px;
+    height: 36px;
+    background: linear-gradient(180deg, #d4a017 0%, #a07010 100%);
+    border: 2px solid #f0c040;
+    border-radius: 8px;
+    color: #fff8e0;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateX(-50%);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    z-index: 210;
+    user-select: none;
+}
+
+.bookshelf-hotspot.music-btn:hover {
+    background: linear-gradient(180deg, #f0c040 0%, #c08020 100%);
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0,0,0,0.5);
+}
+
+.bookshelf-hotspot.music-btn.pressed {
+    background: linear-gradient(180deg, #60c060 0%, #308030 100%);
+    border-color: #80ff80;
+    box-shadow: 0 0 12px rgba(80,255,80,0.5);
+}
+
+#bookshelf-back {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+    z-index: 9999;
+}
+
+#bookshelf-back:hover {
+    background: rgba(0,0,0,0.75);
+}
+
+/* ===================== 阳台场景 ===================== */
+#balcony-scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    background: #87ceeb;
+    animation: fadeIn 0.4s ease;
+    overflow: hidden;
+}
+
+#balcony-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+/* 爪印样式 */
+.balcony-hotspot.paw-trail {
+    position: absolute;
+    cursor: pointer;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent 0%, transparent 15%,
+        rgba(100,80,60,0.25) 15%, rgba(100,80,60,0.25) 20%,
+        transparent 20%, transparent 35%,
+        rgba(100,80,60,0.2) 35%, rgba(100,80,60,0.2) 40%,
+        transparent 40%
+    );
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.balcony-hotspot.paw-trail:hover {
+    background: repeating-linear-gradient(
+        90deg,
+        transparent 0%, transparent 15%,
+        rgba(100,80,60,0.45) 15%, rgba(100,80,60,0.45) 20%,
+        transparent 20%, transparent 35%,
+        rgba(100,80,60,0.4) 35%, rgba(100,80,60,0.4) 40%,
+        transparent 40%
+    );
+}
+
+/* 花盆样式 */
+.balcony-hotspot.flower-pot {
+    position: absolute;
+    cursor: pointer;
+    background: radial-gradient(ellipse at 40% 30%, #8B4513 0%, #5C2E00 60%, #3a1a00 100%);
+    border-radius: 8px 8px 14px 14px;
+    border: 2px solid rgba(255,255,255,0.15);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.balcony-hotspot.flower-pot:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+/* 花盆上的绿植 */
+.balcony-hotspot.flower-pot::before {
+    content: '🌿';
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    pointer-events: none;
+}
+
+#balcony-back {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+    z-index: 9999;
+}
+
+#balcony-back:hover {
+    background: rgba(0,0,0,0.65);
+}
+
+/* ===================== 书本谜题 UI ===================== */
+#bookshelf-puzzle-ui {
+    position: absolute;
+    left: 50%;
+    top: 8%;
+    transform: translateX(-50%);
+    background: rgba(44,26,14,0.85);
+    border: 2px solid #8b6914;
+    border-radius: 12px;
+    padding: 12px 20px;
+    text-align: center;
+    z-index: 210;
+    pointer-events: none;
+}
+
+.book-puzzle-label {
+    font-size: 16px;
+    color: #f0c040;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.book-puzzle-hint {
+    font-size: 12px;
+    color: rgba(240,192,64,0.8);
+}
+
+.book-btn {
+    position: absolute;
+    top: 28%;
+    height: 38%;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    border: 2px solid rgba(0,0,0,0.4);
+    transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+    z-index: 210;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.4);
+}
+
+.book-btn:hover {
+    transform: translateY(-8px);
+    box-shadow: 2px 4px 12px rgba(0,0,0,0.6);
+    filter: brightness(1.2);
+}
+
+.book-btn.book-selected {
+    transform: translateY(-16px);
+    filter: brightness(1.4) drop-shadow(0 0 6px rgba(255,220,80,0.8));
+    border-color: #f0c040;
+}
+
+/* ===================== 食盆场景 ===================== */
+#food-bowl-scene {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 200;
+    background: #2c1a0e;
+    animation: fadeIn 0.4s ease;
+    overflow: hidden;
+}
+
+#food-bowl-image {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+#food-bowl-record-hotspot {
+    position: absolute;
+    left: 35%; top: 45%;
+    width: 30%; height: 25%;
+    cursor: pointer;
+    border: 2px dashed rgba(255,220,80,0.5);
+    border-radius: 8px;
+    transition: border-color 0.2s, background 0.2s;
+    z-index: 210;
+}
+
+#food-bowl-record-hotspot:hover {
+    border-color: #f0c040;
+    background: rgba(240,192,64,0.1);
+}
+
+#food-bowl-back {
+    position: fixed;
+    top: 16px; left: 16px;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+}
+
+/* ===================== 画框谜题场景 ===================== */
+#painting-scene {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 200;
+    background: #1a1a2e;
+    animation: fadeIn 0.4s ease;
+    overflow: hidden;
+}
+
+#painting-image {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+.painting-btn {
+    position: absolute;
+    background: rgba(200,160,80,0.85);
+    border: 2px solid #f0c040;
+    border-radius: 8px;
+    color: #fff8e0;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 210;
+    transition: background 0.2s, transform 0.1s;
+    user-select: none;
+}
+
+.painting-btn:hover {
+    background: rgba(240,192,64,0.9);
+    transform: scale(1.1);
+}
+
+.painting-btn.painting-pressed {
+    background: rgba(80,200,80,0.9);
+    border-color: #80ff80;
+    box-shadow: 0 0 10px rgba(80,255,80,0.5);
+}
+
+#painting-back {
+    position: fixed;
+    top: 16px; left: 16px;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+}
+
+/* ===================== 玩具箱场景 ===================== */
+#toy-box-scene {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 200;
+    background: #1a1208;
+    animation: fadeIn 0.4s ease;
+    overflow: hidden;
+}
+
+#toy-box-image {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+.toy-box-label {
+    position: absolute;
+    left: 50%; top: 8%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    color: #f0c040;
+    font-weight: bold;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    z-index: 210;
+    pointer-events: none;
+}
+
+.toy-box-hint {
+    position: absolute;
+    left: 50%; top: 15%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: rgba(240,192,64,0.75);
+    z-index: 210;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.toy-btn {
+    position: absolute;
+    width: 12%;
+    height: 14%;
+    background: rgba(80,50,20,0.9);
+    border: 3px solid #8b6914;
+    border-radius: 12px;
+    font-size: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 210;
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+    user-select: none;
+}
+
+.toy-btn:hover {
+    transform: scale(1.12);
+    border-color: #f0c040;
+    box-shadow: 0 0 10px rgba(240,192,64,0.4);
+}
+
+.toy-btn.toy-selected {
+    border-color: #80ff80;
+    box-shadow: 0 0 12px rgba(80,255,80,0.6);
+    background: rgba(40,80,40,0.9);
+}
+
+#toy-box-back {
+    position: fixed;
+    top: 16px; left: 16px;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+}
+
+/* ===================== 记忆相册 ===================== */
+#album-scene {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 200;
+    background: linear-gradient(160deg, #1a0f06 0%, #2c1a0e 100%);
+    animation: fadeIn 0.4s ease;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 40px;
+    box-sizing: border-box;
+}
+
+#album-content {
+    width: 100%;
+    max-width: 480px;
+}
+
+.album-title {
+    font-size: 22px;
+    color: #f0c040;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 24px;
+    text-shadow: 0 0 12px rgba(240,192,64,0.5);
+}
+
+.album-page {
+    background: rgba(255,248,220,0.08);
+    border: 1px solid rgba(240,192,64,0.3);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+
+.album-page-label {
+    font-size: 13px;
+    color: #f0c040;
+    font-weight: bold;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+
+.album-page-text {
+    font-size: 14px;
+    color: rgba(255,248,220,0.85);
+    line-height: 1.7;
+}
+
+.album-footer {
+    text-align: center;
+    font-size: 16px;
+    color: rgba(240,192,64,0.6);
+    margin-top: 16px;
+    letter-spacing: 4px;
+}
+
+#album-back {
+    position: fixed;
+    top: 16px; left: 16px;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    z-index: 9999;
 }
