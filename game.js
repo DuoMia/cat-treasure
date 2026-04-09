@@ -180,7 +180,7 @@ function showDragHint() {
     if (existing) existing.remove();
     const hint = document.createElement('div');
     hint.id = 'drag-hint';
-    hint.innerHTML = '<div class="hint-text">左右滑动查看完整画面</div><div class="hint-arrows">← →</div>';
+    hint.textContent = '← 左右滑动查看完整画面 →';
     document.body.appendChild(hint);
     setTimeout(() => hint.remove(), 3000);
 }
