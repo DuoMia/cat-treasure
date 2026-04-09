@@ -1336,7 +1336,9 @@ function openPaintingPuzzle() {
         noteA.addEventListener('click', () => {
             gameState.flags.balconyClue1 = true;
             noteA.remove();
-            showDialog('你从画框旁边的墙缝里抽出一张折叠的纸条。\n\n"朵朵最爱上午的阳光。那时候她会坐在阳台左边，一动不动，直到影子把什么东西盖住。"');
+            showDialog('你从画框旁边的墙缝里抽出一张折叠的纸条。\n\n"朵朵最爱上午的阳光。那时候她会坐在阳台左边，一动不动，直到影子把什么东西盖住。"', () => {
+                showDialog('上午的阳光……影子……\n\n你想起了墙上的那个时钟。');
+            });
         });
         scene.appendChild(noteA);
     }
@@ -1453,7 +1455,9 @@ function openToyBoxScene() {
         noteB.addEventListener('click', () => {
             gameState.flags.balconyClue2 = true;
             noteB.remove();
-            showDialog('你在玩具箱底部发现了一张夹着的纸条。\n\n"下午三点，她会挪到阳台右边，把脸埋进那盆绿植里，等影子爬过来。"');
+            showDialog('你在玩具箱底部发现了一张夹着的纸条。\n\n"下午三点，她会挪到阳台右边，把脸埋进那盆绿植里，等影子爬过来。"', () => {
+                showDialog('下午三点……影子……\n\n你想起了墙上的那个时钟。');
+            });
         });
         scene.appendChild(noteB);
     }
@@ -1634,7 +1638,7 @@ function openBalconyScene() {
 
     const clockTime = gameState.flags.clockTime;
     if (!clockTime) {
-        showDialog('你踏上阳台。\n\n阳台上摆着三盆植物，地板上有一串细小的爪印。\n\n此刻阳光平淡，什么都看不出来。', () => {
+        showDialog('你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n阳光平淡，什么都看不出来。也许光线的角度很重要……', () => {
             setupBalconyHotspots();
         });
     } else if (clockTime === '10') {
@@ -1643,6 +1647,10 @@ function openBalconyScene() {
         });
     } else if (clockTime === '15') {
         showDialog('下午的阳光从右侧低低地照进来，光线橙红。\n\n绿植的影子斜斜地落在地板上，影子末端也压着一条砖缝……', () => {
+            setupBalconyHotspots();
+        });
+    } else {
+        showDialog('你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n阳光平淡，什么都看不出来。', () => {
             setupBalconyHotspots();
         });
     }
@@ -1664,11 +1672,11 @@ function setupBalconyHotspots() {
     });
     scene.appendChild(pawprint);
 
-    // 10点影子：仙人掌影子末端的砖缝（只要时钟拨到10点就出现）
+    // 砖缝（有对应时钟时间才出现）
     if (clockTime === '10') {
         const crack1 = document.createElement('div');
         crack1.className = 'balcony-hotspot';
-        crack1.style.cssText = 'left:8%;top:78%;width:18%;height:8%;cursor:pointer;border:2px dashed rgba(255,200,50,0.6);border-radius:4px;';
+        crack1.style.cssText = 'left:8%;top:78%;width:18%;height:8%;cursor:pointer;';
         crack1.title = '仙人掌影子末端的砖缝';
         crack1.addEventListener('click', () => {
             gameState.flags.balconyClue1 = true;
@@ -1677,11 +1685,10 @@ function setupBalconyHotspots() {
         scene.appendChild(crack1);
     }
 
-    // 15点影子：绿植影子末端的砖缝（只要时钟拨到15点就出现）
     if (clockTime === '15') {
         const crack2 = document.createElement('div');
         crack2.className = 'balcony-hotspot';
-        crack2.style.cssText = 'left:74%;top:78%;width:18%;height:8%;cursor:pointer;border:2px dashed rgba(255,150,50,0.6);border-radius:4px;';
+        crack2.style.cssText = 'left:74%;top:78%;width:18%;height:8%;cursor:pointer;';
         crack2.title = '绿植影子末端的砖缝';
         crack2.addEventListener('click', () => {
             gameState.flags.balconyClue2 = true;
@@ -1690,10 +1697,10 @@ function setupBalconyHotspots() {
         scene.appendChild(crack2);
     }
 
-    // 两条线索都拿到后，地板中央出现4块砖
-    if (gameState.flags.balconyClue1 && gameState.flags.balconyClue2 && !gameState.flags.balconyBrickSolved) {
+    // 砖块谜题：始终显示，不依赖线索数量
+    if (!gameState.flags.balconyBrickSolved) {
         showBalconyBricks(scene);
-    } else if (gameState.flags.balconyBrickSolved && !gameState.flags.hasLetter) {
+    } else if (!gameState.flags.hasLetter) {
         // 砖块已解，向日葵花盆底座可以打开
         const base = document.createElement('div');
         base.className = 'balcony-hotspot';
@@ -1727,7 +1734,17 @@ function showBalconyBricks(scene) {
         const hint = document.createElement('div');
         hint.className = 'brick-hint';
         hint.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);top:68%;font-size:13px;color:rgba(255,255,255,0.8);text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap;';
-        hint.textContent = '地板上有四块刻着符号的砖……';
+        const clue1 = gameState.flags.balconyClue1;
+        const clue2 = gameState.flags.balconyClue2;
+        if (!clue1 && !clue2) {
+            hint.textContent = '地板上有四块刻着符号的砖，顺序似乎很重要……';
+        } else if (clue1 && !clue2) {
+            hint.textContent = '你有一条线索，但感觉还不够……';
+        } else if (!clue1 && clue2) {
+            hint.textContent = '你有一条线索，但感觉还不够……';
+        } else {
+            hint.textContent = '两张纸条都在手里了，试着按顺序踩下去……';
+        }
         scene.appendChild(hint);
     }
 
@@ -1775,7 +1792,19 @@ function handleBrickClick(key) {
         document.querySelectorAll('.balcony-brick').forEach(b => {
             b.style.background = 'rgba(0,0,0,0.25)';
         });
-        showDialog('地板发出一声沉闷的响声，砖块全部熄灭了。\n\n也许顺序不对……再想想那两张纸条。');
+        const clue1 = gameState.flags.balconyClue1;
+        const clue2 = gameState.flags.balconyClue2;
+        let hint;
+        if (!clue1 && !clue2) {
+            hint = '地板发出一声沉闷的响声，砖块全部熄灭了。\n\n也许需要先找到一些线索……';
+        } else if (clue1 && !clue2) {
+            hint = '地板发出一声沉闷的响声，砖块全部熄灭了。\n\n你只有一张纸条，也许还有另一条线索藏在某处……';
+        } else if (!clue1 && clue2) {
+            hint = '地板发出一声沉闷的响声，砖块全部熄灭了。\n\n你只有一张纸条，也许还有另一条线索藏在某处……';
+        } else {
+            hint = '地板发出一声沉闷的响声，砖块全部熄灭了。\n\n再想想那两张纸条说的顺序……';
+        }
+        showDialog(hint);
     }
 }
 
@@ -1932,11 +1961,11 @@ function onClockHourClick(hour) {
     if (hour === 10) {
         gameState.flags.clockTime = '10';
         updateClockHands();
-        showDialog('指针停在了上午10点。\n\n窗外的光线好像也跟着变了。');
+        showDialog('指针停在了上午10点。\n\n窗外的光线好像也跟着变了……去阳台看看？');
     } else if (hour === 3) {
         gameState.flags.clockTime = '15';
         updateClockHands();
-        showDialog('指针停在了下午3点。\n\n窗外的光线好像也跟着变了。');
+        showDialog('指针停在了下午3点。\n\n窗外的光线好像也跟着变了……去阳台看看？');
     } else {
         // 拨到其他时间，时针移动但不触发特殊效果
         const prev = gameState.flags.clockTime;
