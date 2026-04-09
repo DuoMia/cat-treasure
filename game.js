@@ -133,6 +133,7 @@ function setupPortraitDrag() {
 
     container.addEventListener('touchstart', function(e) {
         if (window.innerWidth >= window.innerHeight) return;
+        if (!document.getElementById('dialog-box').classList.contains('hidden')) return;
         startX = e.touches[0].clientX;
         startLeft = getLeft();
         moved = false;
@@ -626,11 +627,55 @@ function createRoomHotspots() {
     }
 }
 
-// 非沙发对象的通用搜索计数（用于触发情节片段一）
-function countSearch() {
-    if (!gameState.flags.foundCat) {
+// 任意对象点击计数，双轨触发沙发角落引导
+// 第3次：沙发热点开始闪烁（视觉引导，不打断）
+// 第6次：弹出一句朵朵的提示（如果还没去沙发）
+function trackObjectClick(id, afterCallback) {
+    if (gameState.flags.foundCat) {
+        if (afterCallback) afterCallback();
+        return;
+    }
+
+    if (id !== 'sofa') {
         gameState.searchCount++;
     }
+
+    // 第3次：沙发热点闪烁
+    if (gameState.searchCount === 3) {
+        setSofaGlow(true);
+    }
+
+    // 第6次：弹一句提示，之后每隔3次再提示一次
+    if (gameState.searchCount >= 6 && (gameState.searchCount - 6) % 3 === 0) {
+        if (afterCallback) {
+            afterCallback(() => triggerSofaCornerHint());
+        } else {
+            triggerSofaCornerHint();
+        }
+        return;
+    }
+
+    if (afterCallback) afterCallback();
+}
+
+// 让沙发热点发光/取消发光
+function setSofaGlow(on) {
+    const el = document.querySelector('.hotspot[data-id="sofa"]') ||
+               document.getElementById('sofa-hotspot');
+    // createHotspot 生成的元素没有固定 id，用 data-label 或遍历找
+    const hotspots = document.getElementById('hotspots');
+    if (!hotspots) return;
+    Array.from(hotspots.children).forEach(h => {
+        if (h.dataset && h.dataset.label === '沙发') {
+            h.classList.toggle('sofa-glow', on);
+        }
+    });
+}
+
+function triggerSofaCornerHint() {
+    showDialog('喵——', () => {
+        showDialog('沙发角落好像有什么动静……', () => createRoomHotspots());
+    });
 }
 
 // 被咬后继续探索时，非沙发点击计数，超过3次给提示
@@ -646,75 +691,9 @@ function tickExploreAfterBite() {
     return false;
 }
 
-// 记录对象被点击，检查是否所有对象都被点击过（用于触发沙发角落提示）
-// 只计入初始探索阶段的6个对象，照片墙和玩具不参与
-const ALL_INTERACTIVE_OBJECTS = ['door', 'window', 'sofa', 'table', 'clock', 'drawer', 'photo-wall', 'toys', 'bookshelf', 'food-bowl', 'painting', 'toy-box'];
-const INITIAL_EXPLORE_OBJECTS = ['door', 'window', 'sofa', 'table', 'clock', 'drawer'];
-
-function trackObjectClick(id, afterCallback) {
-    // 只在游戏初始阶段（未发现猫咪前）追踪
-    if (gameState.flags.foundCat) {
-        if (afterCallback) afterCallback();
-        return;
-    }
-
-    // 已触发过提示后，进入 lookAround 模式
-    if (gameState.flags.shownSofaCornerHint) {
-        // 点沙发：由 interactSofa 单独处理，这里不计数
-        if (id === 'sofa') {
-            if (afterCallback) afterCallback();
-            return;
-        }
-        // 点其他地方：计数，满3次触发提示
-        gameState.flags.lookAroundCount = (gameState.flags.lookAroundCount || 0) + 1;
-        if (gameState.flags.lookAroundCount >= 3) {
-            gameState.flags.lookAroundCount = 0;
-            if (afterCallback) {
-                afterCallback(() => triggerSofaCornerHint());
-            } else {
-                triggerSofaCornerHint();
-            }
-        } else {
-            if (afterCallback) afterCallback();
-        }
-        return;
-    }
-
-    gameState.clickedObjects.add(id);
-    const allClicked = INITIAL_EXPLORE_OBJECTS.every(obj => gameState.clickedObjects.has(obj));
-    if (allClicked) {
-        gameState.flags.shownSofaCornerHint = true;
-        gameState.flags.lookAroundCount = 0;
-        if (afterCallback) {
-            afterCallback(() => triggerSofaCornerHint());
-        } else {
-            triggerSofaCornerHint();
-        }
-    } else {
-        if (afterCallback) afterCallback();
-    }
-}
-
-function triggerSofaCornerHint() {
-    showDialog('你把房间里能看的地方都看了一遍，却始终没有头绪……忽然，你注意到沙发的角落似乎有什么东西，要不要去看看？', () => {
-        showChoices([
-            {
-                text: '🛋️ 去沙发角落看看',
-                callback: () => openSofaCornerScene()
-            },
-            {
-                text: '🔎 再仔细找找',
-                callback: () => {
-                    gameState.flags.lookAroundCount = 0;
-                    createRoomHotspots();
-                }
-            }
-        ]);
-    });
-}
-
 // 打开沙发角落场景
 function openSofaCornerScene() {
+    setSofaGlow(false);
     clearHotspots();
     document.getElementById('dialog-box').classList.add('hidden');
     document.getElementById('choice-box').classList.add('hidden');
@@ -1685,8 +1664,11 @@ function interactSofa() {
 function showHelpless() {
     gameState.flags.shownHelpless = true;
     showDialog(
-        '你决定继续翻找逃出去的线索，但是两个小时过去了，没一个抽屉能打开的，能翻的地方都翻过了，什么线索也没有，窗户也打不开，也找不到任何可以用的工具，空无一人的密闭房间让你紧张起来，这可怎么办？\n\n你下意识地把手伸进口袋想找手机，但是口袋里也什么都没有。',
-        () => createRoomHotspots()
+        '手背上还有点发疼。',
+        () => showDialog(
+            '朵朵平时不是这样的——她从来不咬人。你盯着她躲进去的那个角落，忽然意识到，她好像不是在逃跑，而是在……引导你去看什么东西？',
+            () => createRoomHotspots()
+        )
     );
 }
 
