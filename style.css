@@ -351,16 +351,6 @@ body {
     animation: none;
 }
 
-.hotspot.sofa-glow {
-    border-radius: 8px;
-    animation: sofaPulse 1.6s ease-in-out infinite;
-}
-
-@keyframes sofaPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 220, 80, 0); background: rgba(255, 220, 80, 0); }
-    50%       { box-shadow: 0 0 18px 6px rgba(255, 220, 80, 0.45); background: rgba(255, 220, 80, 0.12); }
-}
-
 .hotspot:hover {
     transform: none;
 }
@@ -1015,18 +1005,37 @@ body {
 /* 竖屏拖动提示 */
 #drag-hint {
     position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.65);
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 13px;
-    padding: 8px 18px;
-    border-radius: 20px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
     z-index: 600;
     pointer-events: none;
-    white-space: nowrap;
     animation: dragHintFade 3s ease forwards;
+}
+
+#drag-hint .hint-text {
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+#drag-hint .hint-arrows {
+    margin-top: 16px;
+    font-size: 28px;
+    animation: arrowPulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes arrowPulse {
+    from { opacity: 0.4; transform: scaleX(1); }
+    to   { opacity: 1;   transform: scaleX(1.2); }
 }
 
 @keyframes dragHintFade {

@@ -133,7 +133,6 @@ function setupPortraitDrag() {
 
     container.addEventListener('touchstart', function(e) {
         if (window.innerWidth >= window.innerHeight) return;
-        if (!document.getElementById('dialog-box').classList.contains('hidden')) return;
         startX = e.touches[0].clientX;
         startLeft = getLeft();
         moved = false;
@@ -143,6 +142,8 @@ function setupPortraitDrag() {
     container.addEventListener('touchmove', function(e) {
         if (!active || window.innerWidth >= window.innerHeight) return;
         if (isHolding) { active = false; return; } // 笔筒拖动中，放弃本次页面拖动
+        if (!document.getElementById('dialog-box').classList.contains('hidden')) { active = false; return; } // 对话框开着时禁止拖动
+        if (!document.getElementById('choice-box').classList.contains('hidden')) { active = false; return; } // 选项框开着时禁止拖动
         const dx = e.touches[0].clientX - startX;
         if (!moved && Math.abs(dx) < DRAG_THRESHOLD) return;
         moved = true;
@@ -179,7 +180,7 @@ function showDragHint() {
     if (existing) existing.remove();
     const hint = document.createElement('div');
     hint.id = 'drag-hint';
-    hint.textContent = '← 左右滑动查看完整画面 →';
+    hint.innerHTML = '<div class="hint-text">左右滑动查看完整画面</div><div class="hint-arrows">← →</div>';
     document.body.appendChild(hint);
     setTimeout(() => hint.remove(), 3000);
 }
@@ -210,6 +211,18 @@ function startGame() {
     setupPenHolderInteraction();
 
     document.getElementById('inventory-toggle').onclick = toggleInventory;
+
+    // 对话框本身绑定点击/触摸，确保热点 stopPropagation 后仍能关闭
+    const dialogBox = document.getElementById('dialog-box');
+    dialogBox.addEventListener('click', function(e) {
+        e.stopPropagation();
+        handleDialogClick();
+    });
+    dialogBox.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleDialogClick();
+    }, { passive: false });
 
     document.getElementById('game-play').addEventListener('click', function(e) {
         // 如果对话框正在显示，优先处理对话框点击
@@ -582,6 +595,7 @@ function createHotspot(id, label, x, y, width, height, onClick) {
 
     const handler = function(e) {
         if (!document.getElementById('dialog-box').classList.contains('hidden')) return;
+        if (!document.getElementById('choice-box').classList.contains('hidden')) return;
         e.stopPropagation();
         e.preventDefault();
         onClick();
@@ -628,53 +642,60 @@ function createRoomHotspots() {
 }
 
 // 任意对象点击计数，双轨触发沙发角落引导
-// 第3次：沙发热点开始闪烁（视觉引导，不打断）
-// 第6次：弹出一句朵朵的提示（如果还没去沙发）
+// 兼容旧调用，searchCount 计数已合并进 trackObjectClick
+function countSearch() {
+    if (!gameState.flags.foundCat) gameState.searchCount++;
+}
+
 function trackObjectClick(id, afterCallback) {
     if (gameState.flags.foundCat) {
         if (afterCallback) afterCallback();
         return;
     }
 
-    if (id !== 'sofa') {
-        gameState.searchCount++;
+    // 已触发过提示后，点沙发由 interactSofa 单独处理，其他地方每3次再提示一次
+    if (gameState.flags.shownSofaCornerHint) {
+        if (id === 'sofa') {
+            if (afterCallback) afterCallback();
+            return;
+        }
+        gameState.flags.lookAroundCount = (gameState.flags.lookAroundCount || 0) + 1;
+        if (gameState.flags.lookAroundCount >= 3) {
+            gameState.flags.lookAroundCount = 0;
+            if (afterCallback) {
+                afterCallback(() => triggerSofaCornerHint());
+            } else {
+                triggerSofaCornerHint();
+            }
+        } else {
+            if (afterCallback) afterCallback();
+        }
+        return;
     }
 
-    // 第3次：沙发热点闪烁
-    if (gameState.searchCount === 3) {
-        setSofaGlow(true);
-    }
-
-    // 第6次：弹一句提示，之后每隔3次再提示一次
-    if (gameState.searchCount >= 6 && (gameState.searchCount - 6) % 3 === 0) {
+    gameState.clickedObjects.add(id);
+    if (gameState.searchCount >= 6) {
+        gameState.flags.shownSofaCornerHint = true;
+        gameState.flags.lookAroundCount = 0;
         if (afterCallback) {
             afterCallback(() => triggerSofaCornerHint());
         } else {
             triggerSofaCornerHint();
         }
-        return;
+    } else {
+        if (afterCallback) afterCallback();
     }
-
-    if (afterCallback) afterCallback();
-}
-
-// 让沙发热点发光/取消发光
-function setSofaGlow(on) {
-    const el = document.querySelector('.hotspot[data-id="sofa"]') ||
-               document.getElementById('sofa-hotspot');
-    // createHotspot 生成的元素没有固定 id，用 data-label 或遍历找
-    const hotspots = document.getElementById('hotspots');
-    if (!hotspots) return;
-    Array.from(hotspots.children).forEach(h => {
-        if (h.dataset && h.dataset.label === '沙发') {
-            h.classList.toggle('sofa-glow', on);
-        }
-    });
 }
 
 function triggerSofaCornerHint() {
-    showDialog('喵——', () => {
-        showDialog('沙发角落好像有什么动静……', () => createRoomHotspots());
+    showDialog('你把房间里能看的地方都看了一遍，却始终没有头绪……忽然，你注意到沙发的角落似乎有什么东西，要不要去看看？', () => {
+        showChoices([
+            { text: '🛋️ 去沙发角落看看', callback: () => openSofaCornerScene() },
+            { text: '🔎 再仔细找找', callback: () => {
+                gameState.flags.lookAroundCount = 0;
+                createRoomHotspots();
+            }}
+        ]);
     });
 }
 
@@ -693,7 +714,6 @@ function tickExploreAfterBite() {
 
 // 打开沙发角落场景
 function openSofaCornerScene() {
-    setSofaGlow(false);
     clearHotspots();
     document.getElementById('dialog-box').classList.add('hidden');
     document.getElementById('choice-box').classList.add('hidden');
