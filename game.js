@@ -182,7 +182,6 @@ function showDragHint() {
     hint.id = 'drag-hint';
     hint.textContent = '← 左右滑动查看完整画面 →';
     document.body.appendChild(hint);
-    setTimeout(() => hint.remove(), 3000);
 }
 
 function startGame() {
