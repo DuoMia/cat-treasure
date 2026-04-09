@@ -1336,7 +1336,7 @@ function openPaintingPuzzle() {
         noteA.addEventListener('click', () => {
             gameState.flags.balconyClue1 = true;
             noteA.remove();
-            showDialog('你从画框旁边的墙缝里抽出一张折叠的纸条。\n\n"她总是等黑暗散尽，才去追那道光，最后蜷在星星落下的地方睡着。"');
+            showDialog('你从画框旁边的墙缝里抽出一张折叠的纸条。\n\n"朵朵最爱上午的阳光。那时候她会坐在阳台左边，一动不动，直到影子把什么东西盖住。"');
         });
         scene.appendChild(noteA);
     }
@@ -1453,7 +1453,7 @@ function openToyBoxScene() {
         noteB.addEventListener('click', () => {
             gameState.flags.balconyClue2 = true;
             noteB.remove();
-            showDialog('你在玩具箱底部发现了一张夹着的纸条。\n\n"光跑得比她快，一头扎进了海里。"');
+            showDialog('你在玩具箱底部发现了一张夹着的纸条。\n\n"下午三点，她会挪到阳台右边，把脸埋进那盆绿植里，等影子爬过来。"');
         });
         scene.appendChild(noteB);
     }
@@ -1664,44 +1664,28 @@ function setupBalconyHotspots() {
     });
     scene.appendChild(pawprint);
 
-    // 10点影子：仙人掌影子末端的砖缝
-    if (clockTime === '10' && gameState.flags.balconyClue1) {
+    // 10点影子：仙人掌影子末端的砖缝（只要时钟拨到10点就出现）
+    if (clockTime === '10') {
         const crack1 = document.createElement('div');
         crack1.className = 'balcony-hotspot';
         crack1.style.cssText = 'left:8%;top:78%;width:18%;height:8%;cursor:pointer;border:2px dashed rgba(255,200,50,0.6);border-radius:4px;';
         crack1.title = '仙人掌影子末端的砖缝';
         crack1.addEventListener('click', () => {
+            gameState.flags.balconyClue1 = true;
             showDialog('你蹲下来，从砖缝里抽出一张卷起的纸条。\n\n"她总是等黑暗散尽，才去追那道光，最后蜷在星星落下的地方睡着。"');
-        });
-        scene.appendChild(crack1);
-    } else if (clockTime === '10' && !gameState.flags.balconyClue1) {
-        const crack1 = document.createElement('div');
-        crack1.className = 'balcony-hotspot';
-        crack1.style.cssText = 'left:8%;top:78%;width:18%;height:8%;cursor:pointer;border:2px dashed rgba(255,200,50,0.6);border-radius:4px;';
-        crack1.title = '仙人掌影子末端的砖缝';
-        crack1.addEventListener('click', () => {
-            showDialog('影子末端压着一条砖缝，但光线还不够，什么都看不清。\n\n也许还需要什么线索……');
         });
         scene.appendChild(crack1);
     }
 
-    // 15点影子：绿植影子末端的砖缝
-    if (clockTime === '15' && gameState.flags.balconyClue2) {
+    // 15点影子：绿植影子末端的砖缝（只要时钟拨到15点就出现）
+    if (clockTime === '15') {
         const crack2 = document.createElement('div');
         crack2.className = 'balcony-hotspot';
         crack2.style.cssText = 'left:74%;top:78%;width:18%;height:8%;cursor:pointer;border:2px dashed rgba(255,150,50,0.6);border-radius:4px;';
         crack2.title = '绿植影子末端的砖缝';
         crack2.addEventListener('click', () => {
+            gameState.flags.balconyClue2 = true;
             showDialog('你蹲下来，从砖缝里抽出一张卷起的纸条。\n\n"光跑得比她快，一头扎进了海里。"');
-        });
-        scene.appendChild(crack2);
-    } else if (clockTime === '15' && !gameState.flags.balconyClue2) {
-        const crack2 = document.createElement('div');
-        crack2.className = 'balcony-hotspot';
-        crack2.style.cssText = 'left:74%;top:78%;width:18%;height:8%;cursor:pointer;border:2px dashed rgba(255,150,50,0.6);border-radius:4px;';
-        crack2.title = '绿植影子末端的砖缝';
-        crack2.addEventListener('click', () => {
-            showDialog('影子末端压着一条砖缝，但光线还不够，什么都看不清。\n\n也许还需要什么线索……');
         });
         scene.appendChild(crack2);
     }
@@ -1855,31 +1839,120 @@ function interactClock() {
             showDialog('墙上挂着一个时钟，指针正在走动……', next);
         });
     } else {
-        // 有日记后，时钟可以拨动
-        const timeLabel = gameState.flags.clockTime === '10' ? '上午10点' :
-                          gameState.flags.clockTime === '15' ? '下午3点' : '当前时刻';
-        showDialog(`墙上挂着一个时钟，指针指向${timeLabel}。\n\n表盘边缘有一个小旋钮，好像可以拨动指针。`, () => {
-            showChoices([
-                {
-                    text: '🕙 拨到上午10点',
-                    callback: () => {
-                        gameState.flags.clockTime = '10';
-                        showDialog('你轻轻拨动旋钮，指针停在了上午10点。\n\n窗外的光线好像也跟着变了。');
-                    }
-                },
-                {
-                    text: '🕒 拨到下午3点',
-                    callback: () => {
-                        gameState.flags.clockTime = '15';
-                        showDialog('你轻轻拨动旋钮，指针停在了下午3点。\n\n窗外的光线好像也跟着变了。');
-                    }
-                },
-                {
-                    text: '↩ 不动它',
-                    callback: () => {}
-                }
-            ]);
-        });
+        openClockScene();
+    }
+}
+
+function openClockScene() {
+    clearHotspots();
+    document.getElementById('dialog-box').classList.add('hidden');
+    document.getElementById('choice-box').classList.add('hidden');
+    document.getElementById('clock-scene').classList.remove('hidden');
+    centerViewport();
+    initClockFace();
+}
+
+function closeClockScene() {
+    document.getElementById('clock-scene').classList.add('hidden');
+    centerViewport();
+    createRoomHotspots();
+}
+
+function initClockFace() {
+    const svg = document.getElementById('clock-svg');
+    const cx = 100, cy = 100, r = 80;
+
+    // 清理旧热区
+    document.getElementById('clock-ticks').innerHTML = '';
+    document.getElementById('clock-numbers').innerHTML = '';
+    document.getElementById('clock-hotspots').innerHTML = '';
+
+    const numLabels = ['12','1','2','3','4','5','6','7','8','9','10','11'];
+
+    for (let h = 0; h < 12; h++) {
+        const angle = (h / 12) * 2 * Math.PI - Math.PI / 2;
+        const tx = cx + Math.cos(angle) * 72;
+        const ty = cy + Math.sin(angle) * 72;
+        const ix = cx + Math.cos(angle) * 88;
+        const iy = cy + Math.sin(angle) * 88;
+        const ox = cx + Math.cos(angle) * 94;
+        const oy = cy + Math.sin(angle) * 94;
+
+        // 刻度线
+        const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tick.setAttribute('x1', ix); tick.setAttribute('y1', iy);
+        tick.setAttribute('x2', ox); tick.setAttribute('y2', oy);
+        tick.setAttribute('stroke', '#8b6f47'); tick.setAttribute('stroke-width', '2');
+        document.getElementById('clock-ticks').appendChild(tick);
+
+        // 数字
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', tx); text.setAttribute('y', ty);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('dominant-baseline', 'central');
+        text.setAttribute('font-size', '13');
+        text.setAttribute('fill', '#5a3e1b');
+        text.setAttribute('font-family', 'serif');
+        text.textContent = numLabels[h];
+        document.getElementById('clock-numbers').appendChild(text);
+
+        // 热区圆
+        const hotspot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        hotspot.setAttribute('cx', tx); hotspot.setAttribute('cy', ty);
+        hotspot.setAttribute('r', '12');
+        hotspot.setAttribute('fill', 'transparent');
+        hotspot.setAttribute('cursor', 'pointer');
+        hotspot.dataset = {};
+        hotspot.setAttribute('data-hour', h === 0 ? 12 : h);
+        hotspot.addEventListener('click', () => onClockHourClick(h === 0 ? 12 : h));
+        document.getElementById('clock-hotspots').appendChild(hotspot);
+    }
+
+    updateClockHands();
+}
+
+function updateClockHands() {
+    const time = gameState.flags.clockTime;
+    let hour = 0;
+    if (time === '10') hour = 10;
+    else if (time === '15') hour = 3;
+
+    const angle = (hour / 12) * 2 * Math.PI - Math.PI / 2;
+    const len = 38;
+    const x2 = 100 + Math.cos(angle) * len;
+    const y2 = 100 + Math.sin(angle) * len;
+    document.getElementById('clock-hour-hand').setAttribute('x2', x2);
+    document.getElementById('clock-hour-hand').setAttribute('y2', y2);
+
+    const label = time === '10' ? '10 : 00' : time === '15' ? '03 : 00' : '-- : --';
+    document.getElementById('clock-time-label').textContent = label;
+}
+
+function onClockHourClick(hour) {
+    if (hour === 10) {
+        gameState.flags.clockTime = '10';
+        updateClockHands();
+        showDialog('指针停在了上午10点。\n\n窗外的光线好像也跟着变了。');
+    } else if (hour === 3) {
+        gameState.flags.clockTime = '15';
+        updateClockHands();
+        showDialog('指针停在了下午3点。\n\n窗外的光线好像也跟着变了。');
+    } else {
+        // 拨到其他时间，时针移动但不触发特殊效果
+        const prev = gameState.flags.clockTime;
+        // 临时显示这个时间的指针位置（不改变 clockTime）
+        const angle = (hour / 12) * 2 * Math.PI - Math.PI / 2;
+        const len = 38;
+        const x2 = 100 + Math.cos(angle) * len;
+        const y2 = 100 + Math.sin(angle) * len;
+        document.getElementById('clock-hour-hand').setAttribute('x2', x2);
+        document.getElementById('clock-hour-hand').setAttribute('y2', y2);
+        document.getElementById('clock-time-label').textContent = `${String(hour).padStart(2,'0')} : 00`;
+        // 短暂停留后恢复（让玩家感受到"拨动"但没有效果）
+        setTimeout(() => {
+            gameState.flags.clockTime = String(hour);
+            // 不触发特殊对话，只是记录位置
+        }, 300);
     }
 }
 

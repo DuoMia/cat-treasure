@@ -77,6 +77,30 @@
                 <button id="window-scene-back" onclick="closeWindowScene()">← 返回</button>
             </div>
 
+            <!-- 时钟特写场景 -->
+            <div id="clock-scene" class="hidden">
+                <div id="clock-face-wrapper">
+                    <svg id="clock-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 表盘 -->
+                        <circle cx="100" cy="100" r="95" fill="#f5efe0" stroke="#8b6f47" stroke-width="6"/>
+                        <!-- 刻度 -->
+                        <g id="clock-ticks"></g>
+                        <!-- 数字 -->
+                        <g id="clock-numbers"></g>
+                        <!-- 分针（固定在12点） -->
+                        <line id="clock-minute-hand" x1="100" y1="100" x2="100" y2="22" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+                        <!-- 时针 -->
+                        <line id="clock-hour-hand" x1="100" y1="100" x2="100" y2="38" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+                        <!-- 中心点 -->
+                        <circle cx="100" cy="100" r="5" fill="#8b6f47"/>
+                        <!-- 可点击的刻度热区 -->
+                        <g id="clock-hotspots"></g>
+                    </svg>
+                    <div id="clock-time-label">-- : --</div>
+                </div>
+                <button id="clock-scene-back" onclick="closeClockScene()">← 返回</button>
+            </div>
+
             <!-- 照片墙特写场景 -->
             <div id="photo-wall-scene" class="hidden">
                 <img id="photo-wall-image" src="photo_wall.jpg" alt="照片墙">
