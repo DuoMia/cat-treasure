@@ -8,7 +8,6 @@ const gameState = {
     flags: {
         foundCat: false,
         wasBitten: false,
-        shownHelpless: false,
         foundBump: false,
         hasBox: false,
         solvedPassword: false,
@@ -38,6 +37,9 @@ const gameState = {
         paintingPuzzleSolved: false,
         paintingStep: 0,
         hasOwnerLetter: false,
+        hasBowl: false,
+        bowlZone: 0,        // 当前食盆对准的区域索引(0=未对准)
+        paintingSymbolsFound: [],  // 已收集的符号
         // 玩具箱谜题
         toyBoxSeen: false,
         toyBoxSolved: false,
@@ -195,6 +197,7 @@ function startGame() {
     document.getElementById('title-screen').classList.add('hidden');
     document.getElementById('game-play').classList.remove('hidden');
     document.getElementById('inventory-toggle').classList.remove('hidden');
+    document.getElementById('help-toggle').classList.remove('hidden');
 
     if (isMobileDevice()) {
         setupPortraitDrag();
@@ -217,6 +220,26 @@ function startGame() {
     setupPenHolderInteraction();
 
     document.getElementById('inventory-toggle').onclick = toggleInventory;
+
+    // 全局拦截：对话框或选项框开着时，阻止所有其他元素的点击/触摸
+    function blockWhenOverlay(e) {
+        const dialogBox = document.getElementById('dialog-box');
+        const choiceBox = document.getElementById('choice-box');
+        const dialogOpen = !dialogBox.classList.contains('hidden');
+        const choiceOpen = !choiceBox.classList.contains('hidden');
+        if (dialogOpen && !e.target.closest('#dialog-box')) {
+            e.stopPropagation();
+            e.preventDefault();
+            handleDialogClick();
+            return;
+        }
+        if (choiceOpen && !e.target.closest('#choice-box')) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    }
+    document.addEventListener('click', blockWhenOverlay, true);
+    document.addEventListener('touchend', blockWhenOverlay, { capture: true, passive: false });
 
     // 对话框本身绑定点击/触摸，确保热点 stopPropagation 后仍能关闭
     const dialogBox = document.getElementById('dialog-box');
@@ -667,10 +690,8 @@ function createRoomHotspots() {
 }
 
 // 任意对象点击计数，双轨触发沙发角落引导
-// 兼容旧调用，searchCount 计数已合并进 trackObjectClick
-function countSearch() {
-    if (!gameState.flags.foundCat) gameState.searchCount++;
-}
+// countSearch 已废弃，计数统一在 trackObjectClick 里处理
+function countSearch() {}
 
 function trackObjectClick(id, afterCallback) {
     if (gameState.flags.foundCat) {
@@ -698,7 +719,7 @@ function trackObjectClick(id, afterCallback) {
         return;
     }
 
-    gameState.clickedObjects.add(id);
+    gameState.searchCount++;
     if (gameState.searchCount >= 6) {
         gameState.flags.shownSofaCornerHint = true;
         gameState.flags.lookAroundCount = 0;
@@ -892,10 +913,6 @@ function interactDoor() {
                 }
             ])
         );
-    } else if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('door');
-        showHelpless();
     } else {
         countSearch();
         trackObjectClick('door', (next) => {
@@ -908,10 +925,6 @@ function interactWindow() {
     if (tickExploreAfterBite()) return;
     if (gameState.flags.hasDiary) {
         openWindowScene();
-    } else if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('window');
-        showHelpless();
     } else {
         countSearch();
         trackObjectClick('window', (next) => {
@@ -922,11 +935,7 @@ function interactWindow() {
 
 function interactDrawer() {
     if (tickExploreAfterBite()) return;
-    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('drawer');
-        showHelpless();
-    } else if (gameState.flags.hasNote && !gameState.flags.drawerOpened) {
+    if (gameState.flags.hasNote && !gameState.flags.drawerOpened) {
         openDrawerModal();
     } else if (gameState.flags.drawerOpened) {
         openDrawerScene();
@@ -949,12 +958,6 @@ let _pendingPhotoWallHint = null;
 
 function interactPhotoWall() {
     if (tickExploreAfterBite()) return;
-    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('photo-wall');
-        showHelpless();
-        return;
-    }
     countSearch();
     trackObjectClick('photo-wall', (next) => {
         _pendingPhotoWallHint = next || null;
@@ -964,12 +967,6 @@ function interactPhotoWall() {
 
 function interactToys() {
     if (tickExploreAfterBite()) return;
-    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('toys');
-        showHelpless();
-        return;
-    }
     countSearch();
     trackObjectClick('toys', (next) => {
         gameState.flags.toyCountSeen = true;
@@ -1051,12 +1048,6 @@ function closePhotoWallScene() {
 
 function interactBookshelf() {
     if (tickExploreAfterBite()) return;
-    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('bookshelf');
-        showHelpless();
-        return;
-    }
     countSearch();
     trackObjectClick('bookshelf', (next) => {
         if (!gameState.flags.hasDiary) {
@@ -1088,20 +1079,20 @@ function openBookshelfScene() {
     if (!gameState.flags.bookPuzzleSolved) {
         // 第一阶段：5本书谜题
         document.getElementById('bookshelf-puzzle-ui').classList.remove('hidden');
-        document.getElementById('music-box-display').classList.add('hidden');
+
         gameState.flags.bookPuzzleStep = 0;
         setupBookPuzzleHotspots();
     } else if (!gameState.flags.musicBoxSolved) {
         // 第二阶段：音乐盒
         document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
-        document.getElementById('music-box-display').classList.remove('hidden');
+
         gameState.flags.musicBoxStep = 0;
         showDialog('音乐盒上有三个按钮，分别刻着不同的年份。按照朵朵成长的顺序来……', () => {
             setupMusicBoxHotspots();
         });
     } else {
         document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
-        document.getElementById('music-box-display').classList.remove('hidden');
+
         showDialog('音乐盒已经打开过了，里面空空如也。');
         setupMusicBoxHotspots();
     }
@@ -1170,7 +1161,7 @@ function handleBookClick(bookId) {
                     collectMemoryFragment(0);
                     // 直接切换到音乐盒阶段
                     document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
-                    document.getElementById('music-box-display').classList.remove('hidden');
+
                     scene.querySelectorAll('.book-btn').forEach(el => el.remove());
                     gameState.flags.musicBoxStep = 0;
                     showDialog('音乐盒盖子上刻着三个年份。日记里说过朵朵的故事……也许要按照她成长的顺序来？', () => {
@@ -1207,7 +1198,6 @@ function setupMusicBoxHotspots() {
         btn.id = p.id;
         btn.dataset.phase = p.key;
         btn.style.cssText = `left:${p.x};top:${p.y};`;
-        btn.textContent = p.label;
         btn.addEventListener('click', () => handleMusicBoxBtn(p.key));
         scene.appendChild(btn);
     });
@@ -1255,12 +1245,6 @@ function closeBookshelfScene() {
 
 function interactFoodBowl() {
     if (tickExploreAfterBite()) return;
-    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('food-bowl');
-        showHelpless();
-        return;
-    }
     countSearch();
     trackObjectClick('food-bowl', (next) => {
         if (!gameState.flags.hasDiary) {
@@ -1281,7 +1265,37 @@ function openFoodBowlScene() {
 
     gameState.flags.foodBowlSeen = true;
 
-    showDialog('你蹲下来仔细看食盆旁边的记录卡……\n\n喂食记录：\n\n早 7点 / 午 12点 / 晚 6点 / 夜 10点');
+    const scene = document.getElementById('food-bowl-scene');
+
+    // 记录卡热点
+    if (!scene.querySelector('#food-card-hotspot')) {
+        const card = document.createElement('div');
+        card.id = 'food-card-hotspot';
+        card.style.cssText = 'position:absolute;left:55%;top:60%;width:30%;height:28%;cursor:pointer;';
+        card.addEventListener('click', () => {
+            showDialog('你凑近看那张泛黄的记录卡……\n\n"她吃早饭的时候，总喜欢背对着窗户，靠着那面墙坐着。\n\n中午的阳光最烈，她会找最亮的地方，正对着光吃。\n\n傍晚她有点困，歪在离门最近的角落，有时候吃到一半就打盹。\n\n夜里安静，她会躲到最暗的地方，专心吃完再出来。"');
+        });
+        scene.appendChild(card);
+    }
+
+    // 食盆拾取热点
+    if (!gameState.flags.hasBowl) {
+        if (!scene.querySelector('#food-bowl-pickup')) {
+            const bowl = document.createElement('div');
+            bowl.id = 'food-bowl-pickup';
+            bowl.style.cssText = 'position:absolute;left:15%;top:45%;width:35%;height:40%;cursor:pointer;';
+            bowl.addEventListener('click', () => {
+                gameState.flags.hasBowl = true;
+                bowl.remove();
+                if (!gameState.inventory.includes('食盆')) {
+                    gameState.inventory.push('食盆');
+                    updateInventory();
+                }
+                showDialog('你拿起食盆，翻过来看了看盆底——上面有一个浅浅的镂空花纹，像是被反复摩擦留下的痕迹。');
+            });
+            scene.appendChild(bowl);
+        }
+    }
 }
 
 function closeFoodBowlScene() {
@@ -1291,23 +1305,31 @@ function closeFoodBowlScene() {
 }
 
 // ===================== 画框谜题 =====================
+// 4个区域对应卡片描述：
+// 早(背对窗靠墙) → 左上  中(正对光) → 右上  晚(离门最近) → 右下  夜(最暗处) → 左下
+// 每个区域藏一个符号，食盆叠上去才能看见
+// 正确顺序：早→午→晚→夜 = 左上→右上→右下→左下
+
+const BOWL_ZONES = [
+    { id: 'morning', left: '25%', top: '15%',  width: '22%', height: '30%', symbol: '🌸', label: '窗边' },
+    { id: 'noon',    left: '58%', top: '15%',  width: '22%', height: '30%', symbol: '☀️', label: '阳光处' },
+    { id: 'evening', left: '58%', top: '52%',  width: '22%', height: '30%', symbol: '🌿', label: '门边' },
+    { id: 'night',   left: '25%', top: '52%',  width: '22%', height: '30%', symbol: '🌙', label: '树荫下' },
+];
+const BOWL_ORDER = ['morning', 'noon', 'evening', 'night'];
 
 function interactPainting() {
     if (tickExploreAfterBite()) return;
-    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('painting');
-        showHelpless();
-        return;
-    }
     countSearch();
     trackObjectClick('painting', (next) => {
         if (gameState.flags.paintingPuzzleSolved) {
             showDialog('画框已经打开过了，里面的信已经取走了。', next);
         } else if (!gameState.flags.hasDiary) {
-            showDialog('墙上挂着一幅画，画里是一片草地，朵朵最喜欢趴在这里晒太阳。\n\n画框四周有四个小小的方向标记……', next);
+            showDialog('墙上挂着一幅画，画里是一片草地，朵朵最喜欢趴在这里晒太阳。', next);
+        } else if (!gameState.flags.hasBowl) {
+            showDialog('墙上挂着一幅画，草地上的光影很复杂……\n\n你总觉得画里藏着什么，但什么都看不出来。', next);
         } else {
-            showDialog('墙上挂着一幅画，画里是一片草地，朵朵最喜欢趴在这里晒太阳。\n\n画框四周有四个方向标记……', () => {
+            showDialog('你拿着食盆靠近画框，盆底的花纹在画面上投下奇怪的光影……', () => {
                 openPaintingPuzzle();
             });
         }
@@ -1323,9 +1345,10 @@ function openPaintingPuzzle() {
     showDragHint();
 
     gameState.flags.paintingStep = 0;
-    setupPaintingHotspots();
+    gameState.flags.paintingSymbolsFound = [];
+    setupPaintingOverlay();
 
-    // 便条A：藏在画框旁边的墙缝里，给阳台谜题的第一条线索
+    // 便条A：藏在画框旁边的墙缝里
     const scene = document.getElementById('painting-scene');
     if (!gameState.flags.balconyClue1) {
         const noteA = document.createElement('div');
@@ -1344,42 +1367,124 @@ function openPaintingPuzzle() {
     }
 }
 
-const PAINTING_ORDER = ['up', 'right', 'left', 'down'];
-const PAINTING_LABELS = { up: '↑ 上', right: '→ 右', left: '← 左', down: '↓ 下' };
-const PAINTING_POSITIONS = {
-    up:    { left: '45%', top: '8%',  width: '10%', height: '12%' },
-    right: { left: '82%', top: '40%', width: '12%', height: '12%' },
-    left:  { left: '6%',  top: '40%', width: '12%', height: '12%' },
-    down:  { left: '45%', top: '80%', width: '10%', height: '12%' }
-};
-
-function setupPaintingHotspots() {
+function setupPaintingOverlay() {
     const scene = document.getElementById('painting-scene');
-    scene.querySelectorAll('.painting-btn').forEach(el => el.remove());
+    scene.querySelectorAll('.painting-zone,.painting-bowl-overlay,.painting-progress').forEach(el => el.remove());
 
-    Object.entries(PAINTING_POSITIONS).forEach(([dir, pos]) => {
-        const btn = document.createElement('div');
-        btn.className = 'painting-btn';
-        btn.dataset.dir = dir;
-        btn.style.cssText = `left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};`;
-        btn.textContent = PAINTING_LABELS[dir];
-        btn.addEventListener('click', () => handlePaintingClick(dir));
-        scene.appendChild(btn);
+    // 进度提示
+    const progress = document.createElement('div');
+    progress.className = 'painting-progress';
+    const step = gameState.flags.paintingStep;
+    const hints = ['把食盆对准画里朵朵早饭的位置……', '对准她中午吃饭的地方……', '对准傍晚她打盹的角落……', '最后，找到她夜里躲着吃饭的暗处……'];
+    progress.textContent = step < 4 ? `(${step}/4) ${hints[step]}` : '';
+    progress.style.cssText = 'position:absolute;bottom:12%;left:50%;transform:translateX(-50%);color:#fff8e0;font-size:14px;text-shadow:0 1px 4px #000;pointer-events:none;z-index:220;';
+    scene.appendChild(progress);
+
+    // 食盆叠加层（可拖动）
+    const bowl = document.createElement('div');
+    bowl.className = 'painting-bowl-overlay';
+    bowl.style.cssText = 'position:absolute;left:35%;top:35%;width:30%;height:30%;cursor:grab;z-index:215;border-radius:50%;border:3px dashed rgba(255,220,100,0.7);background:rgba(255,220,100,0.08);display:flex;align-items:center;justify-content:center;font-size:28px;user-select:none;';
+    bowl.textContent = '🥣';
+    bowl.title = '拖动食盆，对准画里的位置';
+    scene.appendChild(bowl);
+
+    // 拖动逻辑
+    let dragging = false, ox = 0, oy = 0;
+    bowl.addEventListener('mousedown', e => {
+        dragging = true;
+        const r = bowl.getBoundingClientRect();
+        ox = e.clientX - r.left;
+        oy = e.clientY - r.top;
+        bowl.style.cursor = 'grabbing';
+        e.preventDefault();
     });
+    document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const sr = scene.getBoundingClientRect();
+        const x = (e.clientX - sr.left - ox) / sr.width * 100;
+        const y = (e.clientY - sr.top - oy) / sr.height * 100;
+        bowl.style.left = Math.max(0, Math.min(70, x)) + '%';
+        bowl.style.top  = Math.max(0, Math.min(70, y)) + '%';
+        checkBowlZone(bowl, scene);
+    });
+    document.addEventListener('mouseup', () => {
+        if (dragging) { dragging = false; bowl.style.cursor = 'grab'; }
+    });
+
+    // 触摸支持
+    bowl.addEventListener('touchstart', e => {
+        dragging = true;
+        const r = bowl.getBoundingClientRect();
+        ox = e.touches[0].clientX - r.left;
+        oy = e.touches[0].clientY - r.top;
+        e.preventDefault();
+    }, { passive: false });
+    bowl.addEventListener('touchmove', e => {
+        if (!dragging) return;
+        const sr = scene.getBoundingClientRect();
+        const x = (e.touches[0].clientX - sr.left - ox) / sr.width * 100;
+        const y = (e.touches[0].clientY - sr.top - oy) / sr.height * 100;
+        bowl.style.left = Math.max(0, Math.min(70, x)) + '%';
+        bowl.style.top  = Math.max(0, Math.min(70, y)) + '%';
+        checkBowlZone(bowl, scene);
+        e.preventDefault();
+    }, { passive: false });
+    bowl.addEventListener('touchend', () => { dragging = false; });
 }
 
-function handlePaintingClick(dir) {
-    if (gameState.flags.paintingPuzzleSolved) {
-        showDialog('画框已经打开了。');
-        return;
-    }
-    const expected = PAINTING_ORDER[gameState.flags.paintingStep];
-    if (dir === expected) {
-        gameState.flags.paintingStep++;
-        const btn = document.querySelector(`.painting-btn[data-dir="${dir}"]`);
-        if (btn) btn.classList.add('painting-pressed');
+function checkBowlZone(bowl, scene) {
+    const step = gameState.flags.paintingStep;
+    if (step >= 4) return;
 
-        if (gameState.flags.paintingStep >= 4) {
+    const expectedZone = BOWL_ZONES[BOWL_ORDER.indexOf(BOWL_ORDER[step])];
+    const br = bowl.getBoundingClientRect();
+    const sr = scene.getBoundingClientRect();
+
+    // 食盆中心坐标（百分比）
+    const bx = (br.left + br.width / 2 - sr.left) / sr.width * 100;
+    const by = (br.top + br.height / 2 - sr.top) / sr.height * 100;
+
+    // 目标区域中心
+    const zx = parseFloat(expectedZone.left) + parseFloat(expectedZone.width) / 2;
+    const zy = parseFloat(expectedZone.top) + parseFloat(expectedZone.height) / 2;
+
+    const dist = Math.sqrt((bx - zx) ** 2 + (by - zy) ** 2);
+
+    // 移除旧符号提示
+    scene.querySelectorAll('.painting-symbol-reveal').forEach(el => el.remove());
+
+    if (dist < 12) {
+        // 对准了，显示符号
+        const sym = document.createElement('div');
+        sym.className = 'painting-symbol-reveal';
+        sym.style.cssText = `position:absolute;left:${expectedZone.left};top:${expectedZone.top};width:${expectedZone.width};height:${expectedZone.height};display:flex;align-items:center;justify-content:center;font-size:36px;z-index:216;cursor:pointer;animation:fadeIn 0.3s ease;`;
+        sym.textContent = expectedZone.symbol;
+        sym.title = '点击确认';
+        sym.addEventListener('click', () => confirmSymbol(expectedZone.symbol, scene));
+        scene.appendChild(sym);
+        bowl.style.borderColor = 'rgba(100,255,100,0.9)';
+    } else {
+        bowl.style.borderColor = 'rgba(255,220,100,0.7)';
+    }
+}
+
+function confirmSymbol(symbol, scene) {
+    const step = gameState.flags.paintingStep;
+    gameState.flags.paintingSymbolsFound.push(symbol);
+    gameState.flags.paintingStep++;
+
+    scene.querySelectorAll('.painting-symbol-reveal').forEach(el => el.remove());
+
+    // 已确认的符号显示在底部
+    const confirmed = document.createElement('div');
+    confirmed.className = 'painting-symbol-reveal';
+    confirmed.style.cssText = `position:absolute;bottom:18%;left:${20 + step * 15}%;font-size:28px;z-index:220;pointer-events:none;`;
+    confirmed.textContent = symbol;
+    scene.appendChild(confirmed);
+
+    if (gameState.flags.paintingStep >= 4) {
+        // 全部找到
+        setTimeout(() => {
             gameState.flags.paintingPuzzleSolved = true;
             showDialog('咔哒——画框从墙上弹开了一条缝，里面夹着一封信！', () => {
                 gameState.flags.hasOwnerLetter = true;
@@ -1391,14 +1496,18 @@ function handlePaintingClick(dir) {
                     });
                 });
             });
-        } else {
-            const remaining = 4 - gameState.flags.paintingStep;
-            showDialog(`画框轻轻颤动了一下……还差${remaining}步。`);
-        }
+        }, 600);
     } else {
-        gameState.flags.paintingStep = 0;
-        document.querySelectorAll('.painting-btn').forEach(b => b.classList.remove('painting-pressed'));
-        showDialog('画框没有反应。\n\n也许顺序不对……食盆旁边的记录卡上写着什么？');
+        // 刷新进度提示
+        setupPaintingOverlay();
+        // 保留已确认符号
+        gameState.flags.paintingSymbolsFound.forEach((s, i) => {
+            const el = document.createElement('div');
+            el.className = 'painting-symbol-reveal';
+            el.style.cssText = `position:absolute;bottom:18%;left:${20 + i * 15}%;font-size:28px;z-index:220;pointer-events:none;`;
+            el.textContent = s;
+            scene.appendChild(el);
+        });
     }
 }
 
@@ -1412,12 +1521,6 @@ function closePaintingScene() {
 
 function interactToyBox() {
     if (tickExploreAfterBite()) return;
-    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('toy-box');
-        showHelpless();
-        return;
-    }
     countSearch();
     trackObjectClick('toy-box', (next) => {
         if (!gameState.flags.hasDiary) {
@@ -1449,9 +1552,8 @@ function openToyBoxScene() {
     if (!gameState.flags.balconyClue2) {
         const noteB = document.createElement('div');
         noteB.id = 'balcony-note-b';
-        noteB.style.cssText = 'position:absolute;left:4%;bottom:8%;width:6%;height:8%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;';
+        noteB.style.cssText = 'position:absolute;left:4%;bottom:8%;width:6%;height:8%;cursor:pointer;';
         noteB.title = '玩具箱底部的纸条';
-        noteB.textContent = '📄';
         noteB.addEventListener('click', () => {
             gameState.flags.balconyClue2 = true;
             noteB.remove();
@@ -1472,9 +1574,9 @@ function setupToyBoxHotspots() {
 
     const positions = [
         { id: 'fish', left: '20%', top: '55%' },
-        { id: 'paw',  left: '36%', top: '55%' },
-        { id: 'bell', left: '52%', top: '55%' },
-        { id: 'ball', left: '68%', top: '55%' },
+        { id: 'paw',  left: '30%', top: '55%' },
+        { id: 'bell', left: '40%', top: '55%' },
+        { id: 'ball', left: '50%', top: '55%' },
     ];
 
     positions.forEach(p => {
@@ -1482,7 +1584,6 @@ function setupToyBoxHotspots() {
         btn.className = 'toy-btn';
         btn.dataset.toyId = p.id;
         btn.style.cssText = `left:${p.left};top:${p.top};`;
-        btn.textContent = TOY_BOX_ICONS[p.id];
         btn.addEventListener('click', () => handleToyBoxClick(p.id));
         scene.appendChild(btn);
     });
@@ -1555,7 +1656,9 @@ function collectMemoryFragment(index) {
     const count = gameState.flags.memoryFragments.length;
     showDialog(`✨ 记忆碎片（${count}/5）：\n\n"${MEMORY_FRAGMENT_TEXTS[index]}"`, () => {
         if (count >= 5) {
-            showDialog('五块记忆碎片全部拼合……\n\n你感到房间里有什么东西悄悄变了。\n\n墙上的时钟，指针停了。');
+            showDialog('五块记忆碎片全部拼合……\n\n你感到房间里有什么东西悄悄变了。\n\n墙上的时钟，指针停了。', () => {
+                closeBalconyScene();
+            });
         }
     });
 }
@@ -1628,6 +1731,18 @@ function openBalconyScene() {
     centerViewport();
     showDragHint();
 
+    // 根据时钟切换阳台图片
+    const balconyImg = document.getElementById('balcony-image');
+    const ct = gameState.flags.clockTime;
+    if (ct === '10') {
+        balconyImg.src = 'balcony_10.jpg';
+    } else if (ct === '15') {
+        balconyImg.src = 'balcony_15.jpg';
+    } else {
+        balconyImg.src = 'balcony.jpg';
+    }
+
+    const isFirstVisit = !gameState.flags.balconySeen;
     gameState.flags.balconySeen = true;
 
     if (gameState.flags.hasLetter) {
@@ -1639,7 +1754,11 @@ function openBalconyScene() {
     const clockTime = gameState.flags.clockTime;
     if (!clockTime) {
         showDialog('你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n阳光平淡，什么都看不出来。也许光线的角度很重要……', () => {
-            setupBalconyHotspots();
+            if (isFirstVisit) {
+                showDialog('地板上有四块刻着符号的砖，顺序似乎很重要……', () => setupBalconyHotspots());
+            } else {
+                setupBalconyHotspots();
+            }
         });
     } else if (clockTime === '10') {
         showDialog('上午的阳光从左侧斜射进来，光线柔和。\n\n仙人掌的影子被拉得很长，影子末端压着地板上的一条砖缝……', () => {
@@ -1704,7 +1823,7 @@ function setupBalconyHotspots() {
         // 砖块已解，向日葵花盆底座可以打开
         const base = document.createElement('div');
         base.className = 'balcony-hotspot';
-        base.style.cssText = 'left:48%;top:68%;width:14%;height:8%;cursor:pointer;background:rgba(255,220,100,0.3);border:2px solid rgba(255,200,50,0.8);border-radius:4px;';
+        base.style.cssText = 'left:48%;top:68%;width:14%;height:8%;cursor:pointer;';
         base.title = '地板上弹开的底座';
         base.addEventListener('click', () => {
             showDialog('地板上有一道弹开的缝隙，里面压着一个防水袋，里面有一封信。', () => {
@@ -1729,25 +1848,6 @@ const BRICK_LABELS = { moon: '🌙', sun: '☀️', wave: '🌊', star: '⭐' };
 function showBalconyBricks(scene) {
     scene.querySelectorAll('.balcony-brick').forEach(el => el.remove());
 
-    // 提示语
-    if (!scene.querySelector('.brick-hint')) {
-        const hint = document.createElement('div');
-        hint.className = 'brick-hint';
-        hint.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);top:68%;font-size:13px;color:rgba(255,255,255,0.8);text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap;';
-        const clue1 = gameState.flags.balconyClue1;
-        const clue2 = gameState.flags.balconyClue2;
-        if (!clue1 && !clue2) {
-            hint.textContent = '地板上有四块刻着符号的砖，顺序似乎很重要……';
-        } else if (clue1 && !clue2) {
-            hint.textContent = '你有一条线索，但感觉还不够……';
-        } else if (!clue1 && clue2) {
-            hint.textContent = '你有一条线索，但感觉还不够……';
-        } else {
-            hint.textContent = '两张纸条都在手里了，试着按顺序踩下去……';
-        }
-        scene.appendChild(hint);
-    }
-
     const bricks = [
         { key: 'star',  left: '18%', top: '76%' },
         { key: 'sun',   left: '34%', top: '76%' },
@@ -1759,8 +1859,7 @@ function showBalconyBricks(scene) {
         const brick = document.createElement('div');
         brick.className = 'balcony-brick balcony-hotspot';
         brick.dataset.brickKey = b.key;
-        brick.style.cssText = `left:${b.left};top:${b.top};width:10%;height:10%;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(0,0,0,0.25);border:2px solid rgba(255,255,255,0.3);border-radius:4px;`;
-        brick.textContent = BRICK_LABELS[b.key];
+        brick.style.cssText = `left:${b.left};top:${b.top};width:6%;height:6%;cursor:pointer;`;
         brick.addEventListener('click', () => handleBrickClick(b.key));
         scene.appendChild(brick);
     });
@@ -1773,24 +1872,25 @@ function handleBrickClick(key) {
     if (key === expected) {
         gameState.flags.balconyBrickStep++;
         const brick = document.querySelector(`.balcony-brick[data-brick-key="${key}"]`);
-        if (brick) brick.style.background = 'rgba(255,200,50,0.5)';
+        if (brick) brick.style.boxShadow = '0 0 12px 4px rgba(255,220,80,0.85)';
 
         if (gameState.flags.balconyBrickStep >= 4) {
             gameState.flags.balconyBrickSolved = true;
-            const scene = document.getElementById('balcony-scene');
-            scene.querySelectorAll('.balcony-brick').forEach(el => el.remove());
-            const hint = scene.querySelector('.brick-hint');
-            if (hint) hint.remove();
-            showDialog('四块砖依次亮起，地板发出轻微的震动声……\n\n向日葵花盆的底座弹开了一道缝。', () => {
-                setupBalconyHotspots();
-            });
+            // 全部高亮后短暂停留再清除
+            setTimeout(() => {
+                const scene = document.getElementById('balcony-scene');
+                scene.querySelectorAll('.balcony-brick').forEach(el => el.remove());
+                showDialog('四块砖依次亮起，地板发出轻微的震动声……\n\n向日葵花盆的底座弹开了一道缝。', () => {
+                    setupBalconyHotspots();
+                });
+            }, 600);
         } else {
             showDialog(`砖块亮起……还差${4 - gameState.flags.balconyBrickStep}块。`);
         }
     } else {
         gameState.flags.balconyBrickStep = 0;
         document.querySelectorAll('.balcony-brick').forEach(b => {
-            b.style.background = 'rgba(0,0,0,0.25)';
+            b.style.boxShadow = '';
         });
         const clue1 = gameState.flags.balconyClue1;
         const clue2 = gameState.flags.balconyClue2;
@@ -1817,12 +1917,6 @@ function closeBalconyScene() {
 
 function interactTable() {
     if (tickExploreAfterBite()) return;
-    if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('table');
-        showHelpless();
-        return;
-    }
 
     // 如果钢笔还没掉落，提示玩家查看笔筒
     if (!gameState.penFallen && !gameState.inventory.includes('钢笔')) {
@@ -1858,10 +1952,6 @@ function interactClock() {
             '时钟的指针停了。\n\n你把它从墙上取下来，它比想象中重得多……',
             () => showEnding('treasure')
         );
-    } else if (gameState.flags.wasBitten && !gameState.flags.shownHelpless) {
-        countSearch();
-        trackObjectClick('clock');
-        showHelpless();
     } else if (!gameState.flags.hasDiary) {
         countSearch();
         trackObjectClick('clock', (next) => {
@@ -2016,18 +2106,6 @@ function interactSofa() {
     });
 }
 
-// 情节片段四：无助
-function showHelpless() {
-    gameState.flags.shownHelpless = true;
-    showDialog(
-        '手背上还有点发疼。',
-        () => showDialog(
-            '朵朵平时不是这样的——她从来不咬人。你盯着她躲进去的那个角落，忽然意识到，她好像不是在逃跑，而是在……引导你去看什么东西？',
-            () => createRoomHotspots()
-        )
-    );
-}
-
 // 更新物品栏
 function updateInventory() {
     const inventoryItems = document.getElementById('inventory-items');
@@ -2118,6 +2196,66 @@ function toggleInventory() {
     }
 }
 
+// 动态提示系统
+window.showHelp = function() {
+    const f = gameState.flags;
+    const inv = gameState.inventory;
+    let hint = '';
+
+    if (!f.wasBitten) {
+        hint = '试着四处看看，房间里有什么不寻常的地方？沙发那边好像有动静……';
+    } else if (!f.hasBox) {
+        if (!inv.includes('钢笔')) {
+            hint = '朵朵刚才从桌子那边跑过来——桌上的笔筒好像被碰歪了，仔细看看？';
+        } else {
+            hint = '你有了钢笔。沙发下面好像有什么东西，试着去沙发那边看看。';
+        }
+    } else if (!f.solvedPassword) {
+        hint = '你找到了一个铁盒，五位字母密码锁。看看铁盒底部的图案，再对照一下手上朵朵留下的咬痕和抓痕——那些断断续续的点和线，像不像某种密码？';
+    } else if (!f.bookPuzzleSolved) {
+        if (!f.hasNote) {
+            hint = '铁盒打开了，里面有钥匙和一张纸条，先把纸条拿出来看看。';
+        } else {
+            hint = '纸条上说"三把钥匙，从大到小"。书架上的书厚度不一样，试着按从厚到薄的顺序依次抽出来？';
+        }
+    } else if (!f.foodBowlSeen) {
+        hint = '书架格子打开了，你找到了项圈和音乐盒。先别急着弄音乐盒——沙发旁边有个食盆，去看看。';
+    } else if (!f.hasBowl) {
+        hint = '食盆旁边有张记录卡，仔细读读。食盆本身好像也可以拿起来……';
+    } else if (!f.paintingPuzzleSolved) {
+        hint = '拿着食盆去画框那里，把食盆对准画里朵朵吃饭的位置，看看会发生什么。';
+    } else if (!f.hasOwnerLetter) {
+        hint = '画框已经弹开了，里面应该有什么东西。';
+    } else if (!f.toyBoxSolved) {
+        hint = '主人的信里写了朵朵吃饭的仪式顺序。桌子下面有个玩具箱，按那个顺序试试？';
+    } else if (!f.hasCatLetter) {
+        hint = '玩具箱打开了！里面应该有朵朵留下的东西，看看里面。';
+    } else if (!f.musicBoxSolved) {
+        hint = '书架上还有个音乐盒没解开，三个按钮刻着年份。照片墙上记录了朵朵每个阶段，按她成长的顺序来？';
+    } else if (!f.hasDiary) {
+        if (!f.drawerOpened) {
+            hint = '音乐盒解开了，里面有抽屉密码的线索。数数房间里的玩具数量，再看看照片墙上的年份，算算朵朵的年龄……';
+        } else {
+            hint = '抽屉打开了，里面有朵朵的日记，拿起来看看。';
+        }
+    } else if (!f.balconySeen) {
+        hint = '你看了日记。日记里提到朵朵每天都凝视着某个方向——去窗户那边看看。';
+    } else if (!f.balconyClue1 || !f.balconyClue2) {
+        const got = (f.balconyClue1 ? 1 : 0) + (f.balconyClue2 ? 1 : 0);
+        hint = `阳台上有两张纸条藏在影子里（已找到 ${got}/2）。试着在时钟上拨到上午10点或下午3点，阳台的影子位置会不一样。`;
+    } else if (!f.balconyBrickSolved) {
+        hint = '两张纸条都找到了！地板上四块刻着符号的砖，按两张纸条描述的顺序踩下去。';
+    } else if (!f.hasLetter) {
+        hint = '砖块谜题解开了！地板上弹出了一个暗格，看看里面有什么。';
+    } else if (!f.lookedAtClock) {
+        hint = '你拿到了主人的信，信里说时钟藏着秘密。去看看那个时钟吧。';
+    } else {
+        hint = '所有线索都指向时钟。试着打开它——猫咪神藏就在里面。';
+    }
+
+    showDialog('💡 ' + hint);
+};
+
 // 抽屉密码弹窗
 function openDrawerModal() {
     document.getElementById('drawer-modal').classList.remove('hidden');
@@ -2155,23 +2293,24 @@ function openDrawerScene() {
     const hotspot = document.getElementById('drawer-diary-hotspot');
     if (!gameState.flags.hasDiary) {
         hotspot.onclick = function() {
-            showDialog('这是一本旧日记，封面上写着"献给朵朵"……', () => {
+            showDialog('2022年3月15日\n\n朵朵来了。她很小，一直躲在沙发角落不出来。我把她的第一个项圈和一个小音乐盒一起放进了书架最里面的格子，5本书按厚薄排好就能打开。等她长大了，也许有人会找到。', () => {
+            showDialog('她有自己的规律。早7点、午12点、晚6点、夜10点，从不迟到。我把这些记在食盆旁边的卡片上，怕自己忘。', () => {
+            showDialog('她最后一次玩玩具是离开前的那个傍晚。先闻了闻小鱼，用爪子确认了铃铛，然后把球推给我。我把那个顺序锁进了玩具箱。', () => {
+            showDialog('我把最重要的东西藏在了她每天下午都会凝视的地方。那里，时间从不停歇。', () => {
                 gameState.flags.hasDiary = true;
                 if (!gameState.inventory.includes('日记')) {
                     gameState.inventory.push('日记');
                     updateInventory();
                 }
-                showDialog('2022年3月15日\n\n朵朵来了。她很小，一直躲在沙发角落不出来。我把她的第一个项圈和一个小音乐盒一起放进了书架最里面的格子，5本书按厚薄排好就能打开。等她长大了，也许有人会找到。', () => {
-                showDialog('她有自己的规律。早7点、午12点、晚6点、夜10点，从不迟到。我把这些记在食盆旁边的卡片上，怕自己忘。', () => {
-                showDialog('她最后一次玩玩具是离开前的那个傍晚。先闻了闻小鱼，用爪子确认了铃铛，然后把球推给我。我把那个顺序锁进了玩具箱。', () => {
-                showDialog('我把最重要的东西藏在了她每天下午都会凝视的地方。那里，时间从不停歇。', () => {
-                    showDialog('你获得了日记。');
-                });});});});
-            });
+                showDialog('日记已拾取，可以在背包里随时查看。');
+                hotspot.onclick = function() {
+                    showDialog('日记已经拿了，可以在背包看看。');
+                };
+            });});});});
         };
     } else {
         hotspot.onclick = function() {
-            showDialog('日记已经拾取了。');
+            showDialog('日记已经拿了，可以在背包看看。');
         };
     }
 }
@@ -2326,7 +2465,6 @@ function restartGame() {
     gameState.flags = {
         foundCat: false,
         wasBitten: false,
-        shownHelpless: false,
         foundBump: false,
         hasBox: false,
         solvedPassword: false,
@@ -2353,6 +2491,9 @@ function restartGame() {
         paintingPuzzleSolved: false,
         paintingStep: 0,
         hasOwnerLetter: false,
+        hasBowl: false,
+        bowlZone: 0,
+        paintingSymbolsFound: [],
         toyBoxSeen: false,
         toyBoxSolved: false,
         toyBoxStep: 0,
@@ -2377,6 +2518,7 @@ function restartGame() {
     document.getElementById('title-screen').classList.remove('hidden');
     document.getElementById('game-play').classList.add('hidden');
     document.getElementById('inventory-toggle').classList.add('hidden');
+    document.getElementById('help-toggle').classList.add('hidden');
     document.getElementById('inventory-panel').classList.add('hidden');
     document.getElementById('sofa-corner-scene').classList.add('hidden');
     document.getElementById('drawer-scene').classList.add('hidden');

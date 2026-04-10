@@ -7,7 +7,8 @@
       "Bash(ls:*)",
       "WebFetch(domain:duomia.github.io)",
       "Bash(grep:*)",
-      "Bash(\"C:\\\\Users\\\\v_yujunyan\\\\PycharmProjects\\\\cat-treasure\\\\style.css\":*)"
+      "Bash(\"C:\\\\Users\\\\v_yujunyan\\\\PycharmProjects\\\\cat-treasure\\\\style.css\":*)",
+      "Bash(python3:*)"
     ]
   }
 }

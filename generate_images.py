@@ -737,118 +737,414 @@ def create_bookshelf_image():
 
 
 def create_balcony_image():
-    """阳台场景 1200x800 - 明亮户外感，爪印+花盆"""
-    import math
+    """阳台场景 1200x800 - 傍晚暖光，石板地面，三盆植物，隐约刻纹砖块"""
+    import math, random
+    random.seed(7)
     width, height = 1200, 800
-    # 天空渐变
-    img = Image.new('RGB', (width, height), color='#87ceeb')
+    img = Image.new('RGB', (width, height), color='#e8c88a')
     draw = ImageDraw.Draw(img)
 
-    # 天空渐变（从上到下）
-    for y in range(int(height * 0.55)):
-        ratio = y / (height * 0.55)
-        r = int(135 + (176 - 135) * ratio)
-        g = int(206 + (224 - 206) * ratio)
-        b = int(235 + (230 - 235) * ratio)
-        draw.line([(0, y), (width, y)], fill=(r, g, b))
+    floor_y = _draw_balcony_base(draw, img, width, height,
+        sky_colors=[(255,180,120),(210,130,160)],
+        floor_color_top=(160,148,120), floor_color_bot=(130,118,95))
 
-    # 远处建筑轮廓
-    buildings = [(0, 320, 180, 480), (160, 280, 320, 480), (300, 300, 420, 480),
-                 (800, 260, 960, 480), (940, 300, 1100, 480), (1080, 280, 1200, 480)]
-    for bx1, by1, bx2, by2 in buildings:
-        draw.rectangle([(bx1, by1), (bx2, by2)], fill='#b0c4d8')
-        # 窗户
-        for wx in range(bx1+15, bx2-10, 30):
-            for wy in range(by1+15, by2-10, 25):
-                draw.rectangle([(wx, wy), (wx+14, wy+16)], fill='#d4e8f0')
-
-    # 地板（阳台地砖）
-    floor_y = int(height * 0.60)
-    for y in range(floor_y, height, 2):
-        ratio = (y - floor_y) / (height - floor_y)
-        r = int(180 + (140 - 180) * ratio)
-        g = int(160 + (120 - 160) * ratio)
-        b = int(130 + (90 - 130) * ratio)
-        draw.line([(0, y), (width, y)], fill=(r, g, b))
-    # 地砖缝
-    for x in range(0, width, 80):
-        draw.line([(x, floor_y), (x, height)], fill='#a09070', width=1)
-    for y in range(floor_y, height, 60):
-        draw.line([(0, y), (width, y)], fill='#a09070', width=1)
-
-    # 栏杆
-    rail_y = floor_y - 10
-    draw.rectangle([(0, rail_y), (width, rail_y+12)], fill='#c8b89a')
-    draw.rectangle([(0, rail_y-60), (width, rail_y-56)], fill='#c8b89a')
-    for x in range(20, width, 40):
-        draw.rectangle([(x, rail_y-60), (x+8, rail_y+12)], fill='#b8a88a')
-
-    # 爪印（从左向右延伸到花盆方向）
-    paw_positions = [
-        (200, floor_y+40), (260, floor_y+55), (330, floor_y+45),
-        (400, floor_y+60), (470, floor_y+50), (540, floor_y+65),
-        (620, floor_y+55), (700, floor_y+70), (760, floor_y+60),
-    ]
-    for px, py in paw_positions:
-        # 主掌垫
-        draw.ellipse([(px-10, py-8), (px+10, py+8)], fill='#8b6a4a', outline='#6b4a2a', width=1)
-        # 四个趾垫
-        for angle, dist in [((-25, -18), 9), ((0, -20), 9), ((25, -18), 9), ((-12, -22), 7)]:
-            tx = px + angle[0]
-            ty = py + angle[1]
-            draw.ellipse([(tx-4, ty-4), (tx+4, ty+4)], fill='#8b6a4a')
-
-    # 花盆（右侧，爪印终点）
-    pot_x, pot_y = 820, floor_y + 30
-    pot_w, pot_h = 160, 180
-    # 花盆主体（梯形）
-    draw.polygon([
-        (pot_x + 20, pot_y),
-        (pot_x + pot_w - 20, pot_y),
-        (pot_x + pot_w, pot_y + pot_h),
-        (pot_x, pot_y + pot_h)
-    ], fill='#8B4513', outline='#5C2E00', width=3)
-    # 花盆边沿
-    draw.ellipse([(pot_x+10, pot_y-10), (pot_x+pot_w-10, pot_y+10)],
-                 fill='#a05020', outline='#5C2E00', width=2)
-    # 土壤
-    draw.ellipse([(pot_x+22, pot_y-4), (pot_x+pot_w-22, pot_y+8)],
-                 fill='#4a2e14')
-    # 植物
-    stem_x = pot_x + pot_w // 2
-    stem_y = pot_y - 5
-    draw.line([(stem_x, stem_y), (stem_x-20, stem_y-60)], fill='#2d7a2d', width=3)
-    draw.line([(stem_x, stem_y), (stem_x+15, stem_y-50)], fill='#2d7a2d', width=3)
-    draw.line([(stem_x, stem_y), (stem_x, stem_y-80)], fill='#2d7a2d', width=3)
-    # 叶子
-    for lx, ly, lw, lh in [
-        (stem_x-40, stem_y-80, 40, 20),
-        (stem_x+5, stem_y-65, 35, 18),
-        (stem_x-20, stem_y-100, 45, 22),
-    ]:
-        draw.ellipse([(lx, ly), (lx+lw, ly+lh)], fill='#3a9a3a', outline='#2d7a2d', width=1)
-
-    # 另一个小花盆（左侧装饰）
-    sp_x, sp_y = 150, floor_y + 80
-    draw.polygon([
-        (sp_x+10, sp_y), (sp_x+80, sp_y),
-        (sp_x+90, sp_y+90), (sp_x, sp_y+90)
-    ], fill='#a05020', outline='#5C2E00', width=2)
-    draw.ellipse([(sp_x+5, sp_y-6), (sp_x+85, sp_y+6)], fill='#b06030', outline='#5C2E00', width=2)
-    draw.ellipse([(sp_x+12, sp_y-2), (sp_x+78, sp_y+6)], fill='#4a2e14')
-    # 小草
-    for gx in range(sp_x+20, sp_x+75, 12):
-        draw.line([(gx, sp_y-2), (gx-5, sp_y-30)], fill='#3a9a3a', width=2)
-        draw.line([(gx, sp_y-2), (gx+5, sp_y-28)], fill='#3a9a3a', width=2)
-
-    # 阳光光晕
-    for r in range(80, 0, -10):
-        alpha = int(15 * (1 - r/80))
-        draw.ellipse([(width//2-r*3, -r*2), (width//2+r*3, r*2)],
-                     fill=(255, 255, 200))
+    # ── 共用植物/爪印/砖块 ──
+    _draw_balcony_plants(draw, floor_y, width, height, random_mod=7)
 
     img.save('balcony.jpg', 'JPEG', quality=92)
     print("Balcony image balcony.jpg generated")
+
+
+def _draw_balcony_base(draw, img, width, height, sky_colors, floor_color_top, floor_color_bot, light_overlay=None):
+    """公共：天空+地板+栏杆+砖块刻纹，返回 floor_y"""
+    import math, random
+    random.seed(7)
+
+    sky_h = int(height * 0.52)
+    floor_y = int(height * 0.58)
+
+    # 天空
+    r0,g0,b0 = sky_colors[0]
+    r1,g1,b1 = sky_colors[1]
+    for y in range(sky_h):
+        t = y / sky_h
+        draw.line([(0,y),(width,y)], fill=(int(r0+(r1-r0)*t), int(g0+(g1-g0)*t), int(b0+(b1-b0)*t)))
+
+    # 远山
+    mountain_pts = [(0,sky_h),(120,sky_h-80),(260,sky_h-50),(400,sky_h-110),
+                    (560,sky_h-60),(700,sky_h-130),(860,sky_h-70),(1000,sky_h-100),
+                    (1200,sky_h-55),(1200,sky_h),(0,sky_h)]
+    draw.polygon(mountain_pts, fill='#c0a070')
+    for tx in [80,200,950,1080]:
+        draw.rectangle([(tx-6,sky_h-90),(tx+6,sky_h-20)], fill='#7a5030')
+        draw.ellipse([(tx-28,sky_h-130),(tx+28,sky_h-60)], fill='#4a7030')
+
+    # 地板渐变
+    rt,gt,bt = floor_color_top
+    rb,gb,bb = floor_color_bot
+    for y in range(floor_y, height):
+        t = (y-floor_y)/(height-floor_y)
+        draw.line([(0,y),(width,y)], fill=(int(rt+(rb-rt)*t), int(gt+(gb-gt)*t), int(bt+(bb-bt)*t)))
+
+    # 光线叠加（可选）
+    if light_overlay:
+        overlay = Image.new('RGBA', (width, height), (0,0,0,0))
+        od = ImageDraw.Draw(overlay)
+        lx, ly, lcolor, lalpha = light_overlay
+        for i in range(30):
+            a = int(lalpha * (1 - i/30))
+            od.polygon(lx(i), fill=(*lcolor, a))
+        img.paste(Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB'))
+
+    # 石板缝
+    row_gaps = [40,48,58,70,85,105]
+    cy2 = floor_y
+    row_ys = [floor_y]
+    for gap in row_gaps:
+        cy2 += gap
+        if cy2 < height:
+            row_ys.append(cy2)
+            draw.line([(0,cy2),(width,cy2)], fill='#9a8860', width=2)
+    for i, ry in enumerate(row_ys[:-1]):
+        next_ry = row_ys[i+1] if i+1 < len(row_ys) else height
+        offset = (i%2)*60; col_w = 100+i*15
+        for cx3 in range(offset, width+col_w, col_w):
+            draw.line([(cx3,ry),(cx3,next_ry)], fill='#9a8860', width=1)
+    for _ in range(600):
+        nx=random.randint(0,width-1); ny=random.randint(floor_y,height-1)
+        nc=random.randint(130,170)
+        draw.point((nx,ny), fill=(nc,nc-10,nc-20))
+
+    # 栏杆
+    rail_y = floor_y - 8
+    draw.rectangle([(0,rail_y-4),(width,rail_y+8)], fill='#5a4030')
+    draw.rectangle([(0,rail_y-2),(width,rail_y+6)], fill='#7a5840')
+    draw.rectangle([(0,rail_y-72),(width,rail_y-64)], fill='#5a4030')
+    draw.rectangle([(0,rail_y-70),(width,rail_y-66)], fill='#7a5840')
+    for x in range(16, width, 36):
+        draw.rectangle([(x,rail_y-72),(x+6,rail_y+8)], fill='#6a4830')
+        draw.line([(x+1,rail_y-72),(x+1,rail_y+8)], fill='#9a7858', width=1)
+
+    return floor_y
+
+
+def _draw_cat_sitting(draw, cx, cy, facing='right', fur='#d4b080', stripe='#b8905a'):
+    """在 (cx,cy) 画一只坐姿猫，facing='right'或'left'，fur=毛色，stripe=条纹色"""
+    import math
+    f = 1 if facing == 'right' else -1
+    outline = '#7a5030'
+
+    # ── 尾巴（先画，在身体后面）──
+    # 尾巴从臀部绕到身体侧面
+    tail_base_x = cx - f * 28
+    tail_base_y = cy + 10
+    for i in range(8, 0, -1):
+        t = i / 8
+        tx = tail_base_x - f * int(30 * math.sin(t * math.pi * 0.7))
+        ty = tail_base_y + int(35 * (1 - t))
+        r = 6 + i
+        draw.ellipse([(tx-r, ty-r//2), (tx+r, ty+r//2)], fill=fur)
+
+    # ── 后腿/臀部（椭圆，两侧）──
+    draw.ellipse([(cx - 32, cy - 5), (cx + 32, cy + 30)], fill=fur, outline=outline, width=1)
+
+    # ── 身体（圆润椭圆）──
+    draw.ellipse([(cx - 26, cy - 38), (cx + 26, cy + 18)], fill=fur, outline=outline, width=1)
+
+    # ── 身体条纹 ──
+    for dy in [-20, -8, 4]:
+        draw.arc([(cx - 20, cy + dy - 4), (cx + 20, cy + dy + 4)],
+                 180 + f * 20, 360 - f * 20, fill=stripe, width=2)
+
+    # ── 前爪（两只，放在身体前方地面）──
+    paw_y = cy + 22
+    for px_off in [-10, 8]:
+        paw_x = cx + f * px_off
+        draw.ellipse([(paw_x - 10, paw_y - 6), (paw_x + 10, paw_y + 6)],
+                     fill=fur, outline=outline, width=1)
+        # 趾线
+        for toe in [-5, 0, 5]:
+            draw.line([(paw_x + toe, paw_y + 2), (paw_x + toe, paw_y + 7)],
+                      fill=outline, width=1)
+
+    # ── 颈部 ──
+    draw.ellipse([(cx - 12, cy - 50), (cx + 12, cy - 28)], fill=fur, outline=outline, width=1)
+
+    # ── 头部 ──
+    hx = cx + f * 4
+    hy = cy - 68
+    draw.ellipse([(hx - 22, hy - 20), (hx + 22, hy + 20)], fill=fur, outline=outline, width=2)
+
+    # ── 耳朵 ──
+    # 外耳
+    draw.polygon([(hx + f * 6, hy - 18), (hx + f * 20, hy - 38), (hx + f * 22, hy - 14)], fill=fur)
+    draw.polygon([(hx - f * 6, hy - 18), (hx - f * 16, hy - 36), (hx - f * 18, hy - 14)], fill=fur)
+    # 耳内粉
+    draw.polygon([(hx + f * 8, hy - 18), (hx + f * 18, hy - 34), (hx + f * 19, hy - 16)], fill='#e8a0a0')
+    draw.polygon([(hx - f * 8, hy - 18), (hx - f * 14, hy - 32), (hx - f * 15, hy - 16)], fill='#e8a0a0')
+
+    # ── 头部条纹 ──
+    for i, (sx, sy, ex, ey) in enumerate([
+        (hx - f*2, hy - 18, hx + f*4, hy - 10),
+        (hx - f*8, hy - 14, hx - f*2, hy - 6),
+    ]):
+        draw.line([(sx, sy), (ex, ey)], fill=stripe, width=2)
+
+    # ── 眼睛（半闭，慵懒晒太阳）──
+    eye_x = hx + f * 8
+    eye_y = hy - 4
+    # 眼白
+    draw.ellipse([(eye_x - 6, eye_y - 4), (eye_x + 6, eye_y + 4)], fill='#f0e8d0')
+    # 瞳孔（细缝）
+    draw.ellipse([(eye_x - 2, eye_y - 3), (eye_x + 2, eye_y + 3)], fill='#2a1808')
+    # 上眼睑（半闭）
+    draw.arc([(eye_x - 6, eye_y - 4), (eye_x + 6, eye_y + 4)], 200, 340, fill=outline, width=2)
+
+    # 另一只眼（稍远）
+    eye2_x = hx - f * 4
+    draw.ellipse([(eye2_x - 5, eye_y - 3), (eye2_x + 5, eye_y + 3)], fill='#f0e8d0')
+    draw.ellipse([(eye2_x - 2, eye_y - 2), (eye2_x + 2, eye_y + 2)], fill='#2a1808')
+    draw.arc([(eye2_x - 5, eye_y - 3), (eye2_x + 5, eye_y + 3)], 200, 340, fill=outline, width=2)
+
+    # ── 鼻子 ──
+    nx, ny = hx + f * 3, hy + 6
+    draw.polygon([(nx, ny - 3), (nx - 4, ny + 3), (nx + 4, ny + 3)], fill='#e08080')
+
+    # ── 嘴 ──
+    draw.arc([(nx - 5, ny + 2), (nx + 1, ny + 8)], 0, 180, fill=outline, width=1)
+    draw.arc([(nx + 1, ny + 2), (nx + 7, ny + 8)], 0, 180, fill=outline, width=1)
+
+    # ── 胡须 ──
+    for wy, wlen, wdir in [(-2, 22, 1), (3, 20, 1), (8, 18, 1)]:
+        draw.line([(nx + f * 5, hy + wy), (nx + f * 5 + f * wlen, hy + wy - wdir)],
+                  fill='#e8e0d0', width=1)
+        draw.line([(nx - f * 5, hy + wy), (nx - f * 5 - f * wlen, hy + wy - wdir)],
+                  fill='#e8e0d0', width=1)
+
+
+def _draw_balcony_plants(draw, floor_y, width, height, random_mod):
+    """画三盆植物（仙人掌/向日葵/绿植）和爪印，供三张阳台图共用"""
+    import math, random
+    random.seed(random_mod)
+
+    # ── 爪印（先画，被植物覆盖）──
+    paw_trail = [
+        (230, floor_y+55), (285, floor_y+38), (340, floor_y+52),
+        (395, floor_y+35), (450, floor_y+50), (490, floor_y+33),
+        (660, floor_y+48), (710, floor_y+30), (760, floor_y+46),
+        (810, floor_y+32), (865, floor_y+50), (910, floor_y+34),
+    ]
+    for i, (px, py) in enumerate(paw_trail):
+        side = 1 if i % 2 == 0 else -1
+        draw.ellipse([(px-10, py-7),(px+10, py+7)], fill='#7a5838')
+        for dx, dy in [(-13+side*3, -14), (-4+side*3, -17), (6+side*3, -15), (side*14, -10)]:
+            draw.ellipse([(px+dx-4, py+dy-3),(px+dx+4, py+dy+3)], fill='#7a5838')
+
+    # ── 左侧：仙人掌盆 ──
+    cact_x, cact_y = 90, floor_y + 15
+    draw.polygon([(cact_x, cact_y+110),(cact_x+100, cact_y+110),
+                  (cact_x+88, cact_y+160),(cact_x+12, cact_y+160)], fill='#b06030')
+    draw.ellipse([(cact_x-4, cact_y+104),(cact_x+104, cact_y+120)], fill='#c07040')
+    draw.ellipse([(cact_x+8, cact_y+108),(cact_x+92, cact_y+118)], fill='#3a2010')
+    draw.rounded_rectangle([(cact_x+38, cact_y-10),(cact_x+62, cact_y+112)], radius=10, fill='#4a8a30')
+    draw.rounded_rectangle([(cact_x+10, cact_y+30),(cact_x+42, cact_y+50)], radius=8, fill='#4a8a30')
+    draw.rounded_rectangle([(cact_x+8, cact_y-10),(cact_x+28, cact_y+34)], radius=8, fill='#4a8a30')
+    draw.rounded_rectangle([(cact_x+58, cact_y+50),(cact_x+92, cact_y+70)], radius=8, fill='#4a8a30')
+    draw.rounded_rectangle([(cact_x+72, cact_y+10),(cact_x+92, cact_y+54)], radius=8, fill='#4a8a30')
+    for sy in range(cact_y, cact_y+110, 18):
+        draw.line([(cact_x+38, sy+4),(cact_x+30, sy)], fill='#c8d870', width=1)
+        draw.line([(cact_x+62, sy+4),(cact_x+70, sy)], fill='#c8d870', width=1)
+
+    # ── 中央：向日葵盆 ──
+    sun_x, sun_y = 520, floor_y + 10
+    draw.polygon([(sun_x, sun_y+130),(sun_x+120, sun_y+130),
+                  (sun_x+108, sun_y+185),(sun_x+12, sun_y+185)], fill='#a05828')
+    draw.ellipse([(sun_x-6, sun_y+124),(sun_x+126, sun_y+140)], fill='#b86830')
+    draw.ellipse([(sun_x+8, sun_y+128),(sun_x+112, sun_y+138)], fill='#3a2010')
+    draw.line([(sun_x+60, sun_y+128),(sun_x+60, sun_y-20)], fill='#3a7020', width=7)
+    draw.line([(sun_x+60, sun_y+60),(sun_x+30, sun_y+30)], fill='#3a7020', width=5)
+    draw.line([(sun_x+60, sun_y+80),(sun_x+90, sun_y+50)], fill='#3a7020', width=5)
+    draw.ellipse([(sun_x+5, sun_y+18),(sun_x+42, sun_y+42)], fill='#4a8a28')
+    draw.ellipse([(sun_x+78, sun_y+38),(sun_x+115, sun_y+62)], fill='#4a8a28')
+    fcx, fcy = sun_x+60, sun_y-20
+    draw.ellipse([(fcx-22, fcy-22),(fcx+22, fcy+22)], fill='#5a3010')
+    for ang in range(0, 360, 30):
+        px2 = fcx + int(34*math.cos(math.radians(ang)))
+        py2 = fcy + int(34*math.sin(math.radians(ang)))
+        draw.ellipse([(px2-10, py2-6),(px2+10, py2+6)], fill='#e8b020')
+
+    # ── 右侧：绿植盆（宽叶）──
+    grn_x, grn_y = 940, floor_y + 20
+    draw.polygon([(grn_x, grn_y+120),(grn_x+130, grn_y+120),
+                  (grn_x+116, grn_y+178),(grn_x+14, grn_y+178)], fill='#8a4820')
+    draw.ellipse([(grn_x-5, grn_y+114),(grn_x+135, grn_y+130)], fill='#a05830')
+    draw.ellipse([(grn_x+10, grn_y+118),(grn_x+120, grn_y+128)], fill='#3a2010')
+    leaves = [(-20,-80,30,-20),(10,-100,70,-30),(-40,-60,-5,10),
+              (50,-70,95,-10),(20,-120,80,-60),(-10,-50,50,0)]
+    for lx1,ly1,lx2,ly2 in leaves:
+        draw.ellipse([(grn_x+65+lx1, grn_y+120+ly1),(grn_x+65+lx2, grn_y+120+ly2)],
+                     fill=random.choice(['#3a8a30','#4a9a38','#2a7028']))
+        mx = (grn_x+65+lx1+grn_x+65+lx2)//2
+        my = (grn_y+120+ly1+grn_y+120+ly2)//2
+        draw.line([(grn_x+65, grn_y+120),(mx, my)], fill='#2a6020', width=1)
+
+    # ── 四块刻纹砖 ──
+    brick_y = int(height * 0.76)
+    brick_h = int(height * 0.10)
+    brick_w = int(width * 0.10)
+    brick_xs = [int(width*0.18), int(width*0.34), int(width*0.50), int(width*0.66)]
+    eg = '#6a5a3a'; eg2 = '#8a7858'
+
+    bx = brick_xs[0]; cx2, cy2 = bx+brick_w//2, brick_y+brick_h//2
+    R, r = 16, 10
+    moon_pts = []
+    for a in range(300, 421):
+        moon_pts.append((cx2 + int(R*math.cos(math.radians(a))),
+                         cy2 + int(R*math.sin(math.radians(a)))))
+    for a in range(60, -61, -1):
+        moon_pts.append((cx2 + 5 + int(r*math.cos(math.radians(a))),
+                         cy2 + int(r*math.sin(math.radians(a)))))
+    draw.polygon(moon_pts, fill=eg)
+    draw.arc([(cx2-R, cy2-R),(cx2+R, cy2+R)], 300, 60, fill=eg2, width=1)
+
+    bx = brick_xs[1]; cx2, cy2 = bx+brick_w//2, brick_y+brick_h//2
+    draw.ellipse([(cx2-7,cy2-7),(cx2+7,cy2+7)], fill=eg)
+    for ang in range(0, 360, 45):
+        a = math.radians(ang)
+        x1 = cx2 + int(10*math.cos(a)); y1 = cy2 + int(10*math.sin(a))
+        x2 = cx2 + int(18*math.cos(a)); y2 = cy2 + int(18*math.sin(a))
+        draw.line([(x1,y1),(x2,y2)], fill=eg, width=3)
+        draw.ellipse([(x2-2,y2-2),(x2+2,y2+2)], fill=eg2)
+
+    bx = brick_xs[2]; cx2, cy2 = bx+brick_w//2, brick_y+brick_h//2
+    for off in [-9, 0, 9]:
+        pts = []
+        for t in range(0, 361, 20):
+            x = cx2 - 18 + int(36 * t / 360)
+            y = cy2 + off + int(7 * math.sin(math.radians(t)))
+            pts.append((x, y))
+        for i in range(len(pts)-1):
+            draw.line([pts[i], pts[i+1]], fill=eg, width=2)
+
+    bx = brick_xs[3]; cx2, cy2 = bx+brick_w//2, brick_y+brick_h//2
+    star_pts = []
+    for i in range(10):
+        a = math.radians(i * 36 - 90)
+        dist = 17 if i % 2 == 0 else 7
+        star_pts.append((cx2 + int(dist*math.cos(a)), cy2 + int(dist*math.sin(a))))
+    draw.polygon(star_pts, fill=eg)
+    inner_pts = []
+    for i in range(10):
+        a = math.radians(i * 36 - 90)
+        dist = 14 if i % 2 == 0 else 5
+        inner_pts.append((cx2 + int(dist*math.cos(a)), cy2 + int(dist*math.sin(a))))
+    draw.polygon(inner_pts, fill=eg2)
+
+
+def create_balcony_morning_image():
+    """上午10点阳台：阳光从左侧斜射，仙人掌影子向右延伸，朵朵坐在左边晒太阳"""
+    import math, random
+    random.seed(7)
+    width, height = 1200, 800
+    img = Image.new('RGB', (width, height), color='#e8d0a0')
+    draw = ImageDraw.Draw(img)
+
+    floor_y = _draw_balcony_base(draw, img, width, height,
+        sky_colors=[(255,240,200),(220,200,160)],
+        floor_color_top=(168,155,125), floor_color_bot=(138,125,100))
+
+    # ── 上午阳光：从左上角射入，暖黄光柱 ──
+    light_pts = [
+        (0, 0), (320, 0), (width, floor_y+200), (width, floor_y+400), (0, floor_y+100)
+    ]
+    light_overlay = Image.new('RGBA', (width, height), (0,0,0,0))
+    ld = ImageDraw.Draw(light_overlay)
+    for i in range(12):
+        alpha = int(38 * (1 - i/12))
+        ld.polygon(light_pts, fill=(255, 220, 120, alpha))
+    img = Image.alpha_composite(img.convert('RGBA'), light_overlay).convert('RGB')
+    draw = ImageDraw.Draw(img)
+
+    # ── 共用植物/爪印/砖块 ──
+    _draw_balcony_plants(draw, floor_y, width, height, random_mod=7)
+
+    # ── 仙人掌影子：上午光从左上，影子向右延伸 ──
+    cact_x = 90
+    shadow_color = (110, 98, 75, 120)
+    shadow = Image.new('RGBA', (width, height), (0,0,0,0))
+    sd = ImageDraw.Draw(shadow)
+    sd.polygon([
+        (cact_x+38, floor_y+15), (cact_x+62, floor_y+15),
+        (cact_x+62+280, floor_y+160), (cact_x+38+260, floor_y+160)
+    ], fill=shadow_color)
+    sd.polygon([
+        (cact_x+8, floor_y+30), (cact_x+42, floor_y+30),
+        (cact_x+42+200, floor_y+80), (cact_x+8+190, floor_y+80)
+    ], fill=shadow_color)
+    sd.polygon([
+        (cact_x+58, floor_y+40), (cact_x+92, floor_y+40),
+        (cact_x+92+160, floor_y+100), (cact_x+58+155, floor_y+100)
+    ], fill=shadow_color)
+    img = Image.alpha_composite(img.convert('RGBA'), shadow).convert('RGB')
+    draw = ImageDraw.Draw(img)
+
+    # ── 朵朵：坐在阳台左边，一动不动晒太阳 ──
+    _draw_cat_sitting(draw, cx=310, cy=floor_y+50, facing='right')
+
+    img.save('balcony_10.jpg', 'JPEG', quality=92)
+    print("Balcony morning image balcony_10.jpg generated")
+
+
+def create_balcony_afternoon_image():
+    """下午3点阳台：阳光从右侧低角度斜射，绿植影子向左延伸，朵朵坐在右侧绿植旁"""
+    import math, random
+    random.seed(7)
+    width, height = 1200, 800
+    img = Image.new('RGB', (width, height), color='#e8c890')
+    draw = ImageDraw.Draw(img)
+
+    floor_y = _draw_balcony_base(draw, img, width, height,
+        sky_colors=[(255,210,140),(210,170,110)],
+        floor_color_top=(162,148,118), floor_color_bot=(132,118,92))
+
+    # ── 下午阳光：从右侧低角度射入，橙色光柱 ──
+    light_pts = [
+        (width, 0), (width-300, 0), (0, floor_y+300), (0, floor_y+500), (width, floor_y+150)
+    ]
+    light_overlay = Image.new('RGBA', (width, height), (0,0,0,0))
+    ld = ImageDraw.Draw(light_overlay)
+    for i in range(12):
+        alpha = int(45 * (1 - i/12))
+        ld.polygon(light_pts, fill=(255, 180, 80, alpha))
+    img = Image.alpha_composite(img.convert('RGBA'), light_overlay).convert('RGB')
+    draw = ImageDraw.Draw(img)
+
+    # ── 共用植物/爪印/砖块 ──
+    _draw_balcony_plants(draw, floor_y, width, height, random_mod=7)
+
+    # ── 绿植影子：下午光从右，影子向左大幅延伸 ──
+    grn_x, grn_y = 940, floor_y + 20
+    shadow_color = (100, 90, 65, 130)
+    shadow = Image.new('RGBA', (width, height), (0,0,0,0))
+    sd = ImageDraw.Draw(shadow)
+    sd.polygon([
+        (grn_x, grn_y+120), (grn_x+130, grn_y+120),
+        (grn_x+130-320, floor_y+180), (grn_x-320, floor_y+180)
+    ], fill=shadow_color)
+    for lx1,ly1,lx2,ly2 in [(-20,-80,30,-20),(10,-100,70,-30),(20,-120,80,-60)]:
+        lmx = grn_x+65+(lx1+lx2)//2; lmy = grn_y+120+(ly1+ly2)//2
+        sd.polygon([
+            (lmx-20, lmy), (lmx+20, lmy),
+            (lmx+20-280, floor_y+150), (lmx-20-280, floor_y+150)
+        ], fill=shadow_color)
+    img = Image.alpha_composite(img.convert('RGBA'), shadow).convert('RGB')
+    draw = ImageDraw.Draw(img)
+
+    # ── 朵朵：坐在右侧绿植旁，面朝左，把脸凑近叶子 ──
+    _draw_cat_sitting(draw, cx=870, cy=floor_y+50, facing='left')
+
+    img.save('balcony_15.jpg', 'JPEG', quality=92)
+    print("Balcony afternoon image balcony_15.jpg generated")
 
 
 def create_food_bowl_image():
@@ -869,32 +1165,48 @@ def create_food_bowl_image():
 
     # 食盆（居中偏左）
     bowl_cx, bowl_cy = 420, 520
-    # 盆底
-    draw.ellipse([(bowl_cx-100, bowl_cy-30), (bowl_cx+100, bowl_cy+30)], fill='#c0c0c0', outline='#808080', width=3)
-    # 盆身（梯形）
+    # 盆身（梯形，从盆口到盆底）
+    bowl_top_y = bowl_cy - 150   # 盆口顶部
+    bowl_top_rx = 130            # 盆口半径
+    bowl_bot_y = bowl_cy         # 盆底中心y
+    bowl_bot_rx = 90             # 盆底半径
+
+    # 先画盆身侧面（梯形填充）
     draw.polygon([
-        (bowl_cx-100, bowl_cy-30),
-        (bowl_cx+100, bowl_cy-30),
-        (bowl_cx+130, bowl_cy-120),
-        (bowl_cx-130, bowl_cy-120)
-    ], fill='#d0d0d0', outline='#909090')
-    # 盆口
-    draw.ellipse([(bowl_cx-130, bowl_cy-140), (bowl_cx+130, bowl_cy-100)], fill='#e0e0e0', outline='#909090', width=3)
-    # 盆内猫粮（小圆粒）
+        (bowl_cx - bowl_top_rx, bowl_top_y + 20),
+        (bowl_cx + bowl_top_rx, bowl_top_y + 20),
+        (bowl_cx + bowl_bot_rx, bowl_bot_y),
+        (bowl_cx - bowl_bot_rx, bowl_bot_y),
+    ], fill='#d0d0d0', outline='#909090', width=2)
+
+    # 盆底椭圆（覆盖在梯形底部，无缝衔接）
+    draw.ellipse([
+        (bowl_cx - bowl_bot_rx, bowl_bot_y - 18),
+        (bowl_cx + bowl_bot_rx, bowl_bot_y + 18)
+    ], fill='#b8b8b8', outline='#808080', width=2)
+
+    # 盆口椭圆
+    draw.ellipse([
+        (bowl_cx - bowl_top_rx, bowl_top_y),
+        (bowl_cx + bowl_top_rx, bowl_top_y + 40)
+    ], fill='#e8e8e8', outline='#909090', width=3)
+
+    # 盆内猫粮（小圆粒，画在盆口椭圆内）
     import random
     random.seed(42)
     for _ in range(30):
-        fx = bowl_cx + random.randint(-80, 80)
-        fy = bowl_cy - 125 + random.randint(0, 20)
+        fx = bowl_cx + random.randint(-75, 75)
+        fy = bowl_top_y + 18 + random.randint(0, 14)
         r = random.randint(4, 8)
         col = random.choice(['#c8a060', '#b08040', '#d4b070'])
         draw.ellipse([(fx-r, fy-r//2), (fx+r, fy+r//2)], fill=col)
+
     # 盆上的"朵朵"字样
     try:
         font = ImageFont.truetype("simhei.ttf", 20)
     except:
         font = ImageFont.load_default()
-    draw.text((bowl_cx-22, bowl_cy-80), "朵朵", fill='#606060', font=font)
+    draw.text((bowl_cx-22, bowl_top_y + 50), "朵朵", fill='#606060', font=font)
 
     # 喂食记录卡（右侧）
     card_x, card_y = 680, 340
@@ -911,15 +1223,16 @@ def create_food_bowl_image():
         font_body = font_title
     draw.text((card_x+20, card_y+16), "朵朵喂食记录", fill='#5c3a1e', font=font_title)
     draw.line([(card_x+16, card_y+50), (card_x+card_w-16, card_y+50)], fill='#c8a060', width=2)
+    # 不用 emoji，改用文字标签避免渲染乱码
     records = [
-        ("早  7:00", "🌅"),
-        ("午 12:00", "☀️"),
-        ("晚  6:00", "🌆"),
-        ("夜 10:00", "🌙"),
+        ("早  7:00", "[晨]"),
+        ("午 12:00", "[午]"),
+        ("晚  6:00", "[晚]"),
+        ("夜 10:00", "[夜]"),
     ]
-    for i, (time_str, icon) in enumerate(records):
+    for i, (time_str, label) in enumerate(records):
         ty = card_y + 68 + i * 52
-        draw.text((card_x+24, ty), f"{icon} {time_str}", fill='#3d2f1f', font=font_body)
+        draw.text((card_x+24, ty), f"{label} {time_str}", fill='#3d2f1f', font=font_body)
         draw.line([(card_x+16, ty+38), (card_x+card_w-16, ty+38)], fill='#e8d8b0', width=1)
     # 便利贴装饰（右下角）
     draw.rectangle([(card_x+card_w-50, card_y+card_h-50), (card_x+card_w-10, card_y+card_h-10)],
@@ -930,7 +1243,7 @@ def create_food_bowl_image():
 
 
 def create_painting_image():
-    """画框谜题场景 1200x800 - 深色墙面，中央挂一幅草地画，四周有方向标记"""
+    """画框谜题场景 1200x800 - 深色墙面，中央挂一幅草地画，四个区域有明确空间参照"""
     import math
     width, height = 1200, 800
     img = Image.new('RGB', (width, height), color='#1a1a2e')
@@ -948,58 +1261,108 @@ def create_painting_image():
     # 外框
     draw.rectangle([(frame_x-12, frame_y-12), (frame_x+frame_w+12, frame_y+frame_h+12)],
                    fill='#8b6914', outline='#f0c040', width=4)
-    # 内框
+    # 内框（草地底色）
     draw.rectangle([(frame_x, frame_y), (frame_x+frame_w, frame_y+frame_h)],
                    fill='#2d5a27')
-    # 草地（下半部分）
-    draw.rectangle([(frame_x, frame_y+frame_h//2), (frame_x+frame_w, frame_y+frame_h)],
-                   fill='#3a7a30')
-    # 草地纹理
-    for gx in range(frame_x+10, frame_x+frame_w, 20):
-        gy = frame_y + frame_h//2
-        draw.line([(gx, gy), (gx-5, gy-20)], fill='#4a9a3a', width=2)
-        draw.line([(gx, gy), (gx+5, gy-18)], fill='#4a9a3a', width=2)
-    # 天空（上半部分）
-    for y in range(frame_y, frame_y+frame_h//2):
-        ratio = (y - frame_y) / (frame_h//2)
-        r = int(100 + (135-100)*ratio)
-        g = int(149 + (206-149)*ratio)
-        b = int(237 + (235-237)*ratio)
-        draw.line([(frame_x, y), (frame_x+frame_w, y)], fill=(r,g,b))
-    # 太阳
-    sun_x, sun_y = frame_x + frame_w*3//4, frame_y + 80
-    draw.ellipse([(sun_x-35, sun_y-35), (sun_x+35, sun_y+35)], fill='#ffe066')
-    for angle in range(0, 360, 30):
-        sx = sun_x + int(50*math.cos(math.radians(angle)))
-        sy = sun_y + int(50*math.sin(math.radians(angle)))
-        ex = sun_x + int(65*math.cos(math.radians(angle)))
-        ey = sun_y + int(65*math.sin(math.radians(angle)))
-        draw.line([(sx, sy), (ex, ey)], fill='#ffe066', width=2)
-    # 小猫（草地上）
-    cat_x, cat_y = frame_x + frame_w//3, frame_y + frame_h*3//4
-    draw.ellipse([(cat_x-20, cat_y-16), (cat_x+20, cat_y+16)], fill='#c8a878', outline='#8b6914', width=2)
-    draw.ellipse([(cat_x-16, cat_y+12), (cat_x+16, cat_y+40)], fill='#c8a878', outline='#8b6914', width=2)
-    draw.polygon([(cat_x-16, cat_y-16), (cat_x-22, cat_y-28), (cat_x-6, cat_y-16)], fill='#c8a878')
-    draw.polygon([(cat_x+6, cat_y-16), (cat_x+22, cat_y-28), (cat_x+16, cat_y-16)], fill='#c8a878')
 
-    # 四个方向标记（画框四周，用虚线框标出热点位置）
-    directions = [
-        ('↑', frame_x+frame_w//2-30, frame_y-70, 60, 50),
-        ('→', frame_x+frame_w+20, frame_y+frame_h//2-25, 60, 50),
-        ('←', frame_x-80, frame_y+frame_h//2-25, 60, 50),
-        ('↓', frame_x+frame_w//2-30, frame_y+frame_h+20, 60, 50),
-    ]
-    try:
-        font_arrow = ImageFont.truetype("arial.ttf", 28)
-    except:
-        font_arrow = ImageFont.load_default()
-    for arrow, dx, dy, dw, dh in directions:
-        draw.rectangle([(dx, dy), (dx+dw, dy+dh)],
-                       fill='rgba(200,160,80,0)', outline='#c8a050', width=2)
-        draw.text((dx+dw//2-10, dy+dh//2-14), arrow, fill='#c8a050', font=font_arrow)
+    # 天空渐变（上半部分）
+    for y in range(frame_y, frame_y + frame_h // 2):
+        ratio = (y - frame_y) / (frame_h // 2)
+        r = int(100 + (135 - 100) * ratio)
+        g = int(149 + (206 - 149) * ratio)
+        b = int(237 + (235 - 237) * ratio)
+        draw.line([(frame_x, y), (frame_x + frame_w, y)], fill=(r, g, b))
+
+    # 草地（下半部分）
+    draw.rectangle([(frame_x, frame_y + frame_h // 2), (frame_x + frame_w, frame_y + frame_h)],
+                   fill='#3a7a30')
+    for gx in range(frame_x + 10, frame_x + frame_w, 20):
+        gy = frame_y + frame_h // 2
+        draw.line([(gx, gy), (gx - 5, gy - 20)], fill='#4a9a3a', width=2)
+        draw.line([(gx, gy), (gx + 5, gy - 18)], fill='#4a9a3a', width=2)
+
+    # ── 左上角：窗户（背对窗靠墙 = 早饭位置）──
+    win_x = frame_x + 30
+    win_y = frame_y + 30
+    win_w, win_h = 110, 130
+    draw.rectangle([(win_x, win_y), (win_x + win_w, win_y + win_h)],
+                   fill='#aaddff', outline='#5a3a1a', width=4)
+    draw.line([(win_x + win_w // 2, win_y), (win_x + win_w // 2, win_y + win_h)],
+              fill='#5a3a1a', width=3)
+    draw.line([(win_x, win_y + win_h // 2), (win_x + win_w, win_y + win_h // 2)],
+              fill='#5a3a1a', width=3)
+    # 窗户光晕
+    for r in range(30, 5, -5):
+        draw.ellipse([(win_x + win_w // 2 - r, win_y + win_h // 2 - r),
+                      (win_x + win_w // 2 + r, win_y + win_h // 2 + r)],
+                     outline=(180, 220, 255, 80))
+
+    # ── 右上角：太阳（正对光 = 午饭位置）──
+    sun_x = frame_x + frame_w - 90
+    sun_y = frame_y + 70
+    draw.ellipse([(sun_x - 40, sun_y - 40), (sun_x + 40, sun_y + 40)], fill='#ffe066')
+    for angle in range(0, 360, 30):
+        sx = sun_x + int(55 * math.cos(math.radians(angle)))
+        sy = sun_y + int(55 * math.sin(math.radians(angle)))
+        ex = sun_x + int(72 * math.cos(math.radians(angle)))
+        ey = sun_y + int(72 * math.sin(math.radians(angle)))
+        draw.line([(sx, sy), (ex, ey)], fill='#ffe066', width=3)
+    # 阳光照射区域（右上草地泛黄）
+    for lx in range(frame_x + frame_w // 2, frame_x + frame_w):
+        alpha = int(40 * (lx - frame_x - frame_w // 2) / (frame_w // 2))
+        draw.line([(lx, frame_y + frame_h // 2), (lx, frame_y + frame_h // 2 + 80)],
+                  fill=(255, 230, 100))
+
+    # ── 右下角：门（离门最近 = 傍晚位置）──
+    door_x = frame_x + frame_w - 120
+    door_y = frame_y + frame_h - 200
+    door_w2, door_h2 = 90, 190
+    draw.rectangle([(door_x, door_y), (door_x + door_w2, door_y + door_h2)],
+                   fill='#5a3a1a', outline='#3a2010', width=4)
+    # 门板纹理
+    draw.line([(door_x + 15, door_y + 20), (door_x + door_w2 - 15, door_y + 20)],
+              fill='#3a2010', width=2)
+    draw.line([(door_x + 15, door_y + door_h2 // 2), (door_x + door_w2 - 15, door_y + door_h2 // 2)],
+              fill='#3a2010', width=2)
+    # 门把手
+    draw.ellipse([(door_x + 12, door_y + door_h2 // 2 - 10),
+                  (door_x + 24, door_y + door_h2 // 2 + 10)],
+                 fill='#c8a050')
+
+    # ── 左下角：大树树荫（最暗处 = 夜饭位置）──
+    tree_x = frame_x + 80
+    tree_y = frame_y + frame_h // 2 - 60
+    # 树干
+    draw.rectangle([(tree_x - 12, tree_y + 60), (tree_x + 12, frame_y + frame_h)],
+                   fill='#4a3010')
+    # 树冠（多层，营造浓密感）
+    for layer, (rx, ry, rw, rh, col) in enumerate([
+        (tree_x, tree_y, 90, 80, '#1a4a10'),
+        (tree_x - 10, tree_y + 40, 100, 70, '#1e5a14'),
+        (tree_x - 5, tree_y + 75, 85, 60, '#226018'),
+    ]):
+        draw.ellipse([(rx - rw // 2, ry), (rx + rw // 2, ry + rh)], fill=col)
+    # 树荫暗色覆盖（左下草地变暗）
+    for sx in range(frame_x, frame_x + frame_w // 3):
+        shade = int(30 * (1 - (sx - frame_x) / (frame_w // 3)))
+        draw.line([(sx, frame_y + frame_h // 2), (sx, frame_y + frame_h)],
+                  fill=(0, max(0, 40 - shade), 0))
+
+    # 小猫（草地中央，不遮挡四角参照物）
+    cat_x = frame_x + frame_w // 2
+    cat_y = frame_y + frame_h * 3 // 4
+    draw.ellipse([(cat_x - 20, cat_y - 16), (cat_x + 20, cat_y + 16)],
+                 fill='#c8a878', outline='#8b6914', width=2)
+    draw.ellipse([(cat_x - 16, cat_y + 12), (cat_x + 16, cat_y + 40)],
+                 fill='#c8a878', outline='#8b6914', width=2)
+    draw.polygon([(cat_x - 16, cat_y - 16), (cat_x - 22, cat_y - 28), (cat_x - 6, cat_y - 16)],
+                 fill='#c8a878')
+    draw.polygon([(cat_x + 6, cat_y - 16), (cat_x + 22, cat_y - 28), (cat_x + 16, cat_y - 16)],
+                 fill='#c8a878')
 
     img.save('painting.jpg', 'JPEG', quality=92)
     print("Painting image painting.jpg generated")
+
 
 
 def create_toy_box_image():

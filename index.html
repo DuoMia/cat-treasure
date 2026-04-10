@@ -118,11 +118,6 @@
                     <div class="book-puzzle-label">📚 书架谜题</div>
                     <div class="book-puzzle-hint" id="book-puzzle-hint">按厚度从大到小依次抽出书本：0/5</div>
                 </div>
-                <!-- 音乐盒 UI（第二阶段） -->
-                <div id="music-box-display" class="hidden">
-                    <div class="music-box-label">🎵 音乐盒</div>
-                    <div class="music-box-hint">按照朵朵成长的顺序按下按钮</div>
-                </div>
                 <button id="bookshelf-back" onclick="closeBookshelfScene()">← 返回</button>
             </div>
 
@@ -135,7 +130,6 @@
             <!-- 食盆场景 -->
             <div id="food-bowl-scene" class="hidden">
                 <img id="food-bowl-image" src="food_bowl.jpg" alt="食盆">
-                <div id="food-bowl-record-hotspot"></div>
                 <button id="food-bowl-back" onclick="closeFoodBowlScene()">← 返回</button>
             </div>
 
@@ -174,6 +168,7 @@
 
         <!-- 物品栏（全局，所有场景可见） -->
         <button id="inventory-toggle" class="hidden">🎒</button>
+        <button id="help-toggle" class="hidden" onclick="showHelp()">💡</button>
         <div id="inventory-panel" class="hidden">
             <div class="inventory-header">物品栏</div>
             <div id="inventory-items"></div>
