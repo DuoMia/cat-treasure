@@ -114,7 +114,7 @@ export function updateInventory() {
         noteDiv.className = 'inventory-item';
         const isMobile = window.innerWidth <= 768;
         const noteText = isMobile ? `便利贴${noteCount}/5` : `便利贴 ${noteCount}/5${gameState.flags.albumUnlocked ? ' ✨' : ''}`;
-        noteDiv.innerHTML = `<span class="item-icon">📝</span>${noteText}`;
+        noteDiv.innerHTML = `${noteText}`;
         noteDiv.style.cursor = 'pointer';
         noteDiv.onclick = () => {
             if (gameState.flags.albumUnlocked) {
@@ -130,7 +130,7 @@ export function updateInventory() {
     gameState.inventory.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'inventory-item';
-        itemDiv.innerHTML = `<span class="item-icon">📦</span>${item}`;
+        itemDiv.innerHTML = `${item}`;
         itemDiv.style.cursor = 'pointer';
         itemDiv.onclick = () => handleItemClick(item);
         inventoryItems.appendChild(itemDiv);
