@@ -111,15 +111,16 @@ body {
     #help-toggle {
         position: fixed;
         top: 8px;
-        width: 28px;
-        height: 28px;
-        font-size: 14px;
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
         z-index: 400;
         border-radius: 6px;
-        background: rgba(0, 0, 0, 0.45);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: none;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: none !important;
         backdrop-filter: blur(4px);
+        transition: none;
     }
 
     #inventory-toggle {
@@ -127,7 +128,7 @@ body {
     }
 
     #help-toggle {
-        right: 42px;
+        right: 40px;
     }
 
     /* 物品栏面板 - 移动端更紧凑 */
