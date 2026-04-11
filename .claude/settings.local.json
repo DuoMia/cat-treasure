@@ -13,7 +13,8 @@
       "Bash(py --version)",
       "Bash(pip install:*)",
       "Bash(npm run:*)",
-      "Bash(awk '{print $5, $9}')"
+      "Bash(awk '{print $5, $9}')",
+      "Bash(sort -t: -k3 -n)"
     ]
   }
 }
