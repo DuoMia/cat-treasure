@@ -112,7 +112,9 @@ export function updateInventory() {
     if (noteCount > 0) {
         const noteDiv = document.createElement('div');
         noteDiv.className = 'inventory-item';
-        noteDiv.innerHTML = `<span class="item-icon">📝</span>便利贴 ${noteCount}/5${gameState.flags.albumUnlocked ? ' ✨' : ''}`;
+        const isMobile = window.innerWidth <= 768;
+        const noteText = isMobile ? `便利贴${noteCount}/5` : `便利贴 ${noteCount}/5${gameState.flags.albumUnlocked ? ' ✨' : ''}`;
+        noteDiv.innerHTML = `<span class="item-icon">📝</span>${noteText}`;
         noteDiv.style.cursor = 'pointer';
         noteDiv.onclick = () => {
             if (gameState.flags.albumUnlocked) {
