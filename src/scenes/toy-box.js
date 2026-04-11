@@ -101,6 +101,9 @@ function checkWin() {
 }
 
 // ── 渲染 ──────────────────────────────────────────────────────────
+// 缓存格子尺寸，供手势模块复用
+let _cellW = 0, _cellH = 0;
+
 function renderBoard() {
     const board = document.getElementById('klotski-board');
     if (!board) return;
@@ -108,13 +111,13 @@ function renderBoard() {
 
     const bw = board.clientWidth || board.offsetWidth;
     const bh = board.clientHeight || board.offsetHeight;
-    const cellW = bw / COLS;
-    const cellH = bh / ROWS;
+    _cellW = bw / COLS;
+    _cellH = bh / ROWS;
 
-    // 出口指示（底部 col=1-2 之间）
+    // 出口指示
     const exitMark = document.createElement('div');
     exitMark.className = 'klotski-exit-mark';
-    exitMark.style.cssText = `left:${1 * cellW}px;top:${WIN_ROW * cellH}px;width:${2 * cellW}px;height:${cellH}px;`;
+    exitMark.style.cssText = `left:${WIN_COL * _cellW}px;top:${WIN_ROW * _cellH}px;width:${2 * _cellW}px;height:${_cellH}px;`;
     board.appendChild(exitMark);
 
     blocks.forEach(b => {
@@ -122,20 +125,13 @@ function renderBoard() {
         el.className = 'klotski-block' + (b.isLetter ? ' klotski-letter' : '');
         if (b.id === selectedId) el.classList.add('klotski-selected');
         el.dataset.id = b.id;
-
-        el.style.left   = (b.col * cellW + 3) + 'px';
-        el.style.top    = (b.row * cellH + 3) + 'px';
-        el.style.width  = (b.cs * cellW - 6) + 'px';
-        el.style.height = (b.rs * cellH - 6) + 'px';
-
+        el.style.left   = (b.col * _cellW + 3) + 'px';
+        el.style.top    = (b.row * _cellH + 3) + 'px';
+        el.style.width  = (b.cs * _cellW - 6) + 'px';
+        el.style.height = (b.rs * _cellH - 6) + 'px';
         el.innerHTML = `<span class="klotski-icon">${b.label}</span>`;
-
-        // PC：点击选中 + 点击移动
+        // PC 点击
         el.addEventListener('click', () => onBlockClick(b.id));
-
-        // 移动端：手指滑动移动方块
-        bindSwipe(el, b.id);
-
         board.appendChild(el);
     });
 
@@ -143,58 +139,86 @@ function renderBoard() {
     if (counter) counter.textContent = `步数：${moveCount}`;
 }
 
-// ── 滑动手势 ──────────────────────────────────────────────────────
-const SWIPE_THRESHOLD = 8; // px，超过此距离才算滑动
+// 只更新方块位置和选中态，不重建 DOM
+function updateBlockEl(b) {
+    const el = document.querySelector(`#klotski-board .klotski-block[data-id="${b.id}"]`);
+    if (!el) return;
+    el.style.left   = (b.col * _cellW + 3) + 'px';
+    el.style.top    = (b.row * _cellH + 3) + 'px';
+    el.classList.toggle('klotski-selected', b.id === selectedId);
+}
 
-function bindSwipe(el, id) {
-    let tx0 = 0, ty0 = 0, swiped = false;
+function updateCounter() {
+    const counter = document.getElementById('klotski-counter');
+    if (counter) counter.textContent = `步数：${moveCount}`;
+}
 
-    el.addEventListener('touchstart', e => {
+// ── 手势（挂在 board 上，支持连续滑动）────────────────────────────
+const SWIPE_MIN = 10; // px
+
+function bindBoardSwipe(board) {
+    let activeId = null;   // 当前手指按住的方块 id
+    let tx0 = 0, ty0 = 0; // 每次滑动的起点（每格重置）
+
+    board.addEventListener('touchstart', e => {
+        if (gameState.flags.toyBoxSolved) return;
         e.stopPropagation();
-        tx0 = e.touches[0].clientX;
-        ty0 = e.touches[0].clientY;
-        swiped = false;
-        // 选中高亮
-        if (selectedId !== id) {
-            selectedId = id;
-            renderBoard();
+        const t = e.touches[0];
+        const target = document.elementFromPoint(t.clientX, t.clientY);
+        const blockEl = target?.closest('.klotski-block');
+        const id = blockEl?.dataset.id;
+        if (!id) { activeId = null; return; }
+
+        activeId = id;
+        tx0 = t.clientX;
+        ty0 = t.clientY;
+
+        // 更新选中态，不重建 DOM
+        const prev = selectedId;
+        selectedId = id;
+        if (prev !== id) {
+            if (prev) updateBlockEl(blocks.find(b => b.id === prev));
+            updateBlockEl(blocks.find(b => b.id === id));
         }
     }, { passive: true });
 
-    el.addEventListener('touchmove', e => {
+    board.addEventListener('touchmove', e => {
         e.preventDefault();
         e.stopPropagation();
-        if (swiped || gameState.flags.toyBoxSolved) return;
-        const dx = e.touches[0].clientX - tx0;
-        const dy = e.touches[0].clientY - ty0;
-        if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) return;
+        if (!activeId || gameState.flags.toyBoxSolved) return;
+
+        const t = e.touches[0];
+        const dx = t.clientX - tx0;
+        const dy = t.clientY - ty0;
+        if (Math.abs(dx) < SWIPE_MIN && Math.abs(dy) < SWIPE_MIN) return;
 
         const dir = Math.abs(dx) >= Math.abs(dy)
             ? (dx > 0 ? 'right' : 'left')
             : (dy > 0 ? 'down' : 'up');
 
-        swiped = true;
-        const b = blocks.find(b => b.id === id);
+        const b = blocks.find(b => b.id === activeId);
         if (b && doMove(b, dir)) {
+            // 重置起点，支持连续滑动
+            tx0 = t.clientX;
+            ty0 = t.clientY;
             selectedId = null;
-            renderBoard();
+            updateBlockEl(b);
+            updateCounter();
+            // 更新其他可能受影响的方块（grid 已重建，位置不变，只需刷新选中态）
+            blocks.forEach(other => {
+                if (other.id !== b.id) updateBlockEl(other);
+            });
             if (checkWin()) onWin();
         }
     }, { passive: false });
 
-    el.addEventListener('touchend', e => {
+    board.addEventListener('touchend', e => {
         e.stopPropagation();
-        // 没有滑动 → 视为点击（取消选中）
-        if (!swiped) {
-            if (selectedId === id) {
-                selectedId = null;
-                renderBoard();
-            }
-        }
+        activeId = null;
     }, { passive: true });
 }
 
-// ── 交互 ──────────────────────────────────────────────────────────
+// ── 交互（PC 点击）────────────────────────────────────────────────
 function onBlockClick(id) {
     if (gameState.flags.toyBoxSolved) return;
 
@@ -311,6 +335,7 @@ function buildBoardDOM(scene) {
 
     const board = document.createElement('div');
     board.id = 'klotski-board';
+    bindBoardSwipe(board);
     wrapper.appendChild(board);
 
     const footer = document.createElement('div');
