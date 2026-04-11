@@ -1,0 +1,54 @@
+// ===================== 便利贴 + 记忆碎片 =====================
+
+import { gameState, saveGame } from './state.js';
+import { STICKY_NOTE_TEXTS, MEMORY_FRAGMENT_TEXTS } from './data.js';
+import { showDialog, showEnding } from './ui.js';
+import { updateInventory } from './ui.js';
+
+function checkTrueEnding() {
+    if (gameState.flags.memoryFragments.length >= 5 && gameState.flags.stickyNotes.length >= 5) {
+        showEnding('treasure');
+    }
+}
+
+export function collectMemoryFragment(index) {
+    if (gameState.flags.memoryFragments.includes(index)) return;
+    gameState.flags.memoryFragments.push(index);
+    saveGame();
+    const count = gameState.flags.memoryFragments.length;
+    showDialog(`✨ 记忆碎片（${count}/5）：\n\n"${MEMORY_FRAGMENT_TEXTS[index]}"`, () => {
+        if (count >= 5) {
+            if (!gameState.inventory.includes('钥匙')) {
+                gameState.inventory.push('钥匙');
+                updateInventory();
+            }
+            showDialog('五块记忆碎片全部拼合……\n\n你感到房间里有什么东西悄悄变了。\n\n一把钥匙从某处滑落到你手中——那是离开这里的钥匙。', () => {
+                const balconyScene = document.getElementById('balcony-scene');
+                if (balconyScene && !balconyScene.classList.contains('hidden')) {
+                    balconyScene.classList.add('hidden');
+                }
+                checkTrueEnding();
+            });
+        }
+    });
+}
+
+export function allFragmentsCollected() {
+    return gameState.flags.memoryFragments.length >= 5;
+}
+
+export function collectStickyNote(id) {
+    if (gameState.flags.stickyNotes.includes(id)) return;
+    gameState.flags.stickyNotes.push(id);
+    saveGame();
+    updateInventory();
+    const count = gameState.flags.stickyNotes.length;
+    if (count >= 5) {
+        gameState.flags.albumUnlocked = true;
+        showDialog(`你收集了所有5张便利贴！\n\n"${STICKY_NOTE_TEXTS[id]}"\n\n记忆相册已解锁，可以在物品栏中查看。`, () => {
+            checkTrueEnding();
+        });
+    } else {
+        showDialog(`你发现了一张便利贴（${count}/5）：\n\n"${STICKY_NOTE_TEXTS[id]}"`);
+    }
+}

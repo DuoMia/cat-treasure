@@ -1,0 +1,390 @@
+// ===================== 书架场景（含音乐盒谜题） =====================
+
+import { gameState, saveGame } from '../state.js';
+import { sceneManager } from '../scene-manager.js';
+import { showDialog, updateInventory } from '../ui.js';
+import { collectStickyNote, collectMemoryFragment } from '../notes.js';
+import { PUZZLES, MUSIC_BOX_PHASES } from '../data.js';
+
+// ── 书脊拼图 ────────────────────────────────────────────────
+// cat.jpg (960×1280) 取中间 4:3 横向区域 (960×720, y从280开始)
+// 缩放到 260×200 后纵向分5份，每份宽52px
+// background-size: 260px 200px
+// background-position-y: -76px (对应原图 y=280 的缩放偏移)
+// 正确顺序：seg1(最左) → seg5(最右)
+const JIGSAW_SEGMENTS = [
+    { id: 'seg1', bgX:   0 },
+    { id: 'seg2', bgX:  52 },
+    { id: 'seg3', bgX: 104 },
+    { id: 'seg4', bgX: 156 },
+    { id: 'seg5', bgX: 208 },
+];
+
+const CORRECT_ORDER = ['seg1', 'seg2', 'seg3', 'seg4', 'seg5'];
+
+let dragSrcId = null;
+let jigsawSlots = [null, null, null, null, null];
+
+function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function makePieceEl(seg) {
+    const el = document.createElement('div');
+    el.className = 'jigsaw-piece';
+    el.dataset.segId = seg.id;
+    el.draggable = true;
+    // 用 background-image 显示猫咪图片的对应竖条
+    el.style.cssText = `
+        background-image: url('cat.jpg');
+        background-size: 260px 200px;
+        background-position: -${seg.bgX}px -76px;
+        background-repeat: no-repeat;
+    `;
+
+    // 桌面拖拽
+    el.addEventListener('dragstart', e => {
+        dragSrcId = seg.id;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => el.classList.add('dragging'), 0);
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+
+    // 触摸拖拽
+    let touchClone;
+    el.addEventListener('touchstart', e => {
+        dragSrcId = seg.id;
+        const t = e.touches[0];
+        touchClone = el.cloneNode(true);
+        touchClone.style.cssText += `
+            position:fixed;opacity:0.85;pointer-events:none;z-index:9999;
+            width:52px;height:200px;left:${t.clientX - 26}px;top:${t.clientY - 100}px;
+            transform:rotate(-4deg) scale(1.05);
+            box-shadow:4px 8px 24px rgba(0,0,0,0.7);border-radius:2px;`;
+        document.body.appendChild(touchClone);
+        el.style.opacity = '0.3';
+        e.preventDefault();
+    }, { passive: false });
+    el.addEventListener('touchmove', e => {
+        const t = e.touches[0];
+        if (touchClone) {
+            touchClone.style.left = `${t.clientX - 26}px`;
+            touchClone.style.top = `${t.clientY - 100}px`;
+        }
+        e.preventDefault();
+    }, { passive: false });
+    el.addEventListener('touchend', e => {
+        if (touchClone) { touchClone.remove(); touchClone = null; }
+        el.style.opacity = '';
+        const t = e.changedTouches[0];
+        const target = document.elementFromPoint(t.clientX, t.clientY);
+        const slot = target?.closest('.jigsaw-slot');
+        if (slot) handleDropOnSlot(slot);
+        e.preventDefault();
+    }, { passive: false });
+
+    return el;
+}
+
+function makeSlotEl(idx) {
+    const el = document.createElement('div');
+    el.className = 'jigsaw-slot';
+    el.dataset.slotIdx = idx;
+    el.dataset.num = idx + 1;
+
+    el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    el.addEventListener('dragenter', e => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        handleDropOnSlot(el);
+    });
+    return el;
+}
+
+function handleDropOnSlot(slotEl) {
+    if (!dragSrcId) return;
+    const slotIdx = parseInt(slotEl.dataset.slotIdx);
+    const srcSlotIdx = jigsawSlots.indexOf(dragSrcId);
+    const displaced = jigsawSlots[slotIdx];
+    jigsawSlots[slotIdx] = dragSrcId;
+    if (srcSlotIdx >= 0) jigsawSlots[srcSlotIdx] = displaced;
+    dragSrcId = null;
+    renderJigsawSlots();
+    checkJigsawSolution();
+}
+
+function renderJigsawSlots() {
+    const scene = document.getElementById('bookshelf-scene');
+    scene.querySelectorAll('.jigsaw-slot').forEach((slotEl, idx) => {
+        slotEl.innerHTML = '';
+        const segId = jigsawSlots[idx];
+        if (segId) {
+            const seg = JIGSAW_SEGMENTS.find(s => s.id === segId);
+            if (seg) slotEl.appendChild(makePieceEl(seg));
+        }
+        // 状态类
+        slotEl.classList.toggle('filled', !!segId);
+        slotEl.classList.toggle('correct', segId === CORRECT_ORDER[idx]);
+    });
+    const trayEl = scene.querySelector('.jigsaw-tray');
+    if (trayEl) {
+        trayEl.innerHTML = '';
+        JIGSAW_SEGMENTS.forEach(seg => {
+            if (!jigsawSlots.includes(seg.id)) trayEl.appendChild(makePieceEl(seg));
+        });
+    }
+}
+
+function checkJigsawSolution() {
+    if (!CORRECT_ORDER.every((id, i) => jigsawSlots[i] === id)) return;
+
+    const scene = document.getElementById('bookshelf-scene');
+    // 闪烁动画
+    scene.querySelectorAll('.jigsaw-slot').forEach(s => s.classList.add('solving'));
+
+    setTimeout(() => {
+        scene.querySelectorAll('.jigsaw-overlay, .jigsaw-slots, .jigsaw-tray, .jigsaw-label').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transition = 'opacity 0.6s';
+        });
+
+        setTimeout(() => {
+            gameState.flags.bookPuzzleSolved = true;
+            saveGame();
+            showDialog('咔哒——书架背板弹开了一个小格子！\n\n格子里静静躺着一条猫咪项圈，项圈上刻着"朵朵"，旁边还有一行小字：2022.03.15。\n\n项圈旁边，还有一个小小的音乐盒。', () => {
+                if (!gameState.inventory.includes('项圈')) {
+                    gameState.flags.hasCollar = true;
+                    gameState.inventory.push('项圈');
+                    saveGame();
+                    updateInventory();
+                }
+                showDialog('你获得了朵朵的项圈。\n\n2022.03.15……那是朵朵来家的日子。', () => {
+                    collectStickyNote('note4');
+                    collectMemoryFragment(0);
+                    scene.querySelectorAll('.jigsaw-overlay, .jigsaw-slots, .jigsaw-tray, .jigsaw-label').forEach(el => el.remove());
+                    document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
+                    simonRound = 0;
+                    simonLitButtons = 0;
+                    simonPlaying = false;
+                    showDialog('音乐盒上有三个按钮，各代表一个音阶。\n\n它会先播放一段旋律，你来复现——主人常哼给朵朵听的那几个音。', () => {
+                        setupMusicBoxHotspots();
+                        startSimonRound();
+                    });
+                });
+            });
+        }, 700);
+    }, 200);
+}
+
+function setupBookPuzzleHotspots() {
+    const scene = document.getElementById('bookshelf-scene');
+    scene.querySelectorAll('.jigsaw-overlay, .jigsaw-slots, .jigsaw-tray, .jigsaw-label').forEach(el => el.remove());
+    jigsawSlots = [null, null, null, null, null];
+
+    // 遮罩层（遮住音乐盒按钮）
+    const overlay = document.createElement('div');
+    overlay.className = 'jigsaw-overlay';
+    scene.appendChild(overlay);
+
+    // 标题
+    const label = document.createElement('div');
+    label.className = 'jigsaw-label';
+    label.textContent = '将书脊图案拼成朵朵的样子';
+    scene.appendChild(label);
+
+    // 目标槽位行
+    const slotsContainer = document.createElement('div');
+    slotsContainer.className = 'jigsaw-slots';
+    for (let i = 0; i < 5; i++) slotsContainer.appendChild(makeSlotEl(i));
+    scene.appendChild(slotsContainer);
+
+    // 散件托盘
+    const tray = document.createElement('div');
+    tray.className = 'jigsaw-tray';
+    shuffleArray(JIGSAW_SEGMENTS).forEach(seg => tray.appendChild(makePieceEl(seg)));
+    scene.appendChild(tray);
+
+    const hint = document.getElementById('book-puzzle-hint');
+    if (hint) hint.textContent = '拖拽书脊图案，拼出朵朵走路的样子';
+}
+
+// ── Simon Says 音乐盒 ──────────────────────────────────────────
+const NOTE_FREQS = { A: 330, B: 440, C: 550 };
+const ROUND_LENGTHS = [2, 3, 4];
+
+let simonSequence = [];
+let simonRound = 0;
+let simonPlayerIdx = 0;
+let simonPlaying = false;
+let simonLitButtons = 0;
+
+function generateSequence(length) {
+    const keys = ['A', 'B', 'C'];
+    const seq = [];
+    for (let i = 0; i < length; i++) seq.push(keys[Math.floor(Math.random() * 3)]);
+    return seq;
+}
+
+function playNote(key, duration = 400) {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = NOTE_FREQS[key];
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + duration / 1000);
+    } catch (e) {}
+}
+
+function highlightBtn(key, duration = 400) {
+    const btn = document.querySelector(`.music-btn[data-phase="${key}"]`);
+    if (!btn) return;
+    btn.classList.add('active');
+    setTimeout(() => btn.classList.remove('active'), duration);
+}
+
+function updateSimonHud() {
+    const hud = document.getElementById('simon-hud');
+    if (!hud) return;
+    const dots = [0, 1, 2].map(i => {
+        let cls = '';
+        if (i < simonLitButtons) cls = 'done';
+        else if (i === simonRound) cls = 'active';
+        const inner = i < simonLitButtons ? '✓' : '●';
+        return `<span class="simon-dot ${cls}">${inner}</span>`;
+    }).join('');
+    hud.innerHTML = `<div class="simon-round-label">第 ${Math.min(simonRound + 1, 3)} / 3 轮</div><div class="simon-dots">${dots}</div>`;
+}
+
+function playSequence(seq, onDone) {
+    simonPlaying = true;
+    const scene = document.getElementById('bookshelf-scene');
+    if (scene) scene.classList.add('simon-playing');
+    let i = 0;
+    function next() {
+        if (i >= seq.length) {
+            simonPlaying = false;
+            if (scene) scene.classList.remove('simon-playing');
+            if (onDone) onDone();
+            return;
+        }
+        const key = seq[i++];
+        playNote(key, 400);
+        highlightBtn(key, 400);
+        setTimeout(next, 550);
+    }
+    setTimeout(next, 400);
+}
+
+function startSimonRound() {
+    simonSequence = generateSequence(ROUND_LENGTHS[simonRound]);
+    simonPlayerIdx = 0;
+    updateSimonHud();
+    showDialog(`第${simonRound + 1}轮：仔细听……`, () => {
+        playSequence(simonSequence, () => {});
+    });
+}
+
+function handleMusicBoxBtn(key) {
+    if (gameState.flags.musicBoxSolved) { showDialog('音乐盒已经打开过了。'); return; }
+    if (simonPlaying) return;
+
+    playNote(key, 300);
+    highlightBtn(key, 300);
+
+    if (key === simonSequence[simonPlayerIdx]) {
+        simonPlayerIdx++;
+        if (simonPlayerIdx >= simonSequence.length) {
+            simonRound++;
+            simonLitButtons = simonRound;
+            document.querySelectorAll('.music-btn').forEach((btn, idx) => {
+                if (idx < simonLitButtons) btn.classList.add('lit');
+            });
+            updateSimonHud();
+
+            if (simonRound >= 3) {
+                gameState.flags.musicBoxSolved = true;
+                saveGame();
+                showDialog('叮——三个按钮全部亮起，音乐盒缓缓打开了。\n\n里面躺着一张小纸片，上面写着：\n"抽屉里的密码，是她陪我的年数。"', () => {
+                    showDialog('朵朵2022年来，2026年……她陪了主人4年。\n\n你记下了这个数字。', () => {
+                        collectMemoryFragment(1);
+                    });
+                });
+            } else {
+                showDialog(`✓ 第${simonRound}轮完成！`, () => { startSimonRound(); });
+            }
+        }
+    } else {
+        simonPlayerIdx = 0;
+        updateSimonHud();
+        showDialog('音符不对……重新听一遍。', () => {
+            playSequence(simonSequence, () => {});
+        });
+    }
+}
+
+export function openBookshelfScene() {
+    sceneManager.open('bookshelf-scene', () => {
+        gameState.flags.bookshelfSeen = true;
+        saveGame();
+
+        if (!gameState.flags.bookPuzzleSolved) {
+            document.getElementById('bookshelf-puzzle-ui').classList.remove('hidden');
+            setupBookPuzzleHotspots();
+        } else if (!gameState.flags.musicBoxSolved) {
+            document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
+            simonRound = 0;
+            simonLitButtons = 0;
+            simonPlaying = false;
+            showDialog('音乐盒上有三个按钮，各代表一个音阶。\n\n它会先播放一段旋律，你来复现——主人常哼给朵朵听的那几个音。', () => {
+                setupMusicBoxHotspots();
+                startSimonRound();
+            });
+        } else {
+            document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
+            showDialog('音乐盒已经打开过了，里面空空如也。');
+            setupMusicBoxHotspots();
+        }
+    });
+}
+
+function setupMusicBoxHotspots() {
+    const scene = document.getElementById('bookshelf-scene');
+    scene.querySelectorAll('.bookshelf-hotspot, #simon-hud').forEach(el => el.remove());
+
+    // Simon HUD
+    const hud = document.createElement('div');
+    hud.id = 'simon-hud';
+    hud.className = 'simon-hud';
+    scene.appendChild(hud);
+    updateSimonHud();
+
+    MUSIC_BOX_PHASES.forEach((p, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'bookshelf-hotspot music-btn';
+        btn.id = p.id;
+        btn.dataset.phase = p.key;
+        btn.dataset.idx = idx;
+        if (idx < simonLitButtons) btn.classList.add('lit');
+        btn.style.cssText = `left:${p.x};top:${p.y};`;
+        btn.innerHTML = `<span class="music-btn-label">${p.label}</span>`;
+        btn.addEventListener('click', () => handleMusicBoxBtn(p.key));
+        scene.appendChild(btn);
+    });
+}
+
+export function closeBookshelfScene() {
+    sceneManager.closeToRoom();
+}

@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>猫咪神藏 - 密室逃脱</title>
     <link rel="stylesheet" href="style.css">
     <script>
@@ -29,6 +29,7 @@
             <h1 class="title-text">🐱 猫咪神藏</h1>
             <p class="subtitle">你被困在梦境世界，唯一的线索是"猫咪神藏"...</p>
             <button class="start-btn" onclick="startGame()">开始游戏</button>
+            <button id="restart-btn" class="restart-btn hidden" onclick="restartGame()">重新开始</button>
         </div>
 
         <!-- 游戏画面 -->
@@ -56,29 +57,29 @@
             </div>
 
             <!-- 沙发角落场景（全屏覆盖，在 room-scene 外） -->
-            <div id="sofa-corner-scene" class="hidden">
-                <img id="sofa-corner-image" src="sofa_corner.jpg" alt="沙发角落">
+            <div id="sofa-corner-scene" class="hidden scene-container">
+                <img id="sofa-corner-image" src="sofa_corner.jpg" alt="沙发角落" class="scene-image">
                 <img id="sofa-corner-cat" src="cat.jpg" alt="朵朵">
                 <div id="sofa-corner-bump"></div>
                 <div id="sofa-corner-scratch" class="hidden"></div>
-                <button id="sofa-corner-back" onclick="closeSofaCornerScene()">← 返回</button>
+                <button id="sofa-corner-back" class="scene-back-btn" onclick="closeSofaCornerScene()">← 返回</button>
             </div>
 
             <!-- 抽屉特写场景 -->
-            <div id="drawer-scene" class="hidden">
-                <img id="drawer-image" src="drawer.jpg" alt="抽屉内部">
+            <div id="drawer-scene" class="hidden scene-container">
+                <img id="drawer-image" src="drawer.jpg" alt="抽屉内部" class="scene-image">
                 <div id="drawer-diary-hotspot"></div>
-                <button id="drawer-scene-back" onclick="closeDrawerScene()">← 返回</button>
+                <button id="drawer-scene-back" class="scene-back-btn" onclick="closeDrawerScene()">← 返回</button>
             </div>
 
             <!-- 窗户特写场景 -->
-            <div id="window-scene" class="hidden">
-                <img id="window-close-image" src="window_close.jpg" alt="窗户特写">
-                <button id="window-scene-back" onclick="closeWindowScene()">← 返回</button>
+            <div id="window-scene" class="hidden scene-container">
+                <img id="window-close-image" src="window_close.jpg" alt="窗户特写" class="scene-image">
+                <button id="window-scene-back" class="scene-back-btn" onclick="closeWindowScene()">← 返回</button>
             </div>
 
             <!-- 时钟特写场景 -->
-            <div id="clock-scene" class="hidden">
+            <div id="clock-scene" class="hidden scene-container" style="background:#1a1008;display:flex;align-items:center;justify-content:center;">
                 <div id="clock-face-wrapper">
                     <svg id="clock-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                         <!-- 表盘 -->
@@ -98,59 +99,59 @@
                     </svg>
                     <div id="clock-time-label">-- : --</div>
                 </div>
-                <button id="clock-scene-back" onclick="closeClockScene()">← 返回</button>
+                <button id="clock-scene-back" class="scene-back-btn" onclick="closeClockScene()">← 返回</button>
             </div>
 
             <!-- 照片墙特写场景 -->
-            <div id="photo-wall-scene" class="hidden">
-                <img id="photo-wall-image" src="photo_wall.jpg" alt="照片墙">
+            <div id="photo-wall-scene" class="hidden scene-container">
+                <img id="photo-wall-image" src="photo_wall.jpg" alt="照片墙" class="scene-image">
                 <div id="photo-wall-photo1" class="photo-hotspot"></div>
                 <div id="photo-wall-photo2" class="photo-hotspot"></div>
                 <div id="photo-wall-photo3" class="photo-hotspot"></div>
-                <button id="photo-wall-back" onclick="closePhotoWallScene()">← 返回</button>
+                <button id="photo-wall-back" class="scene-back-btn" onclick="closePhotoWallScene()">← 返回</button>
             </div>
 
             <!-- 书架场景 -->
-            <div id="bookshelf-scene" class="hidden">
-                <img id="bookshelf-image" src="bookshelf.jpg" alt="书架">
+            <div id="bookshelf-scene" class="hidden scene-container" style="background:#2c1a0e;">
+                <img id="bookshelf-image" src="bookshelf.jpg" alt="书架" class="scene-image">
                 <!-- 书本谜题 UI -->
                 <div id="bookshelf-puzzle-ui">
                     <div class="book-puzzle-label">📚 书架谜题</div>
                     <div class="book-puzzle-hint" id="book-puzzle-hint">按厚度从大到小依次抽出书本：0/5</div>
                 </div>
-                <button id="bookshelf-back" onclick="closeBookshelfScene()">← 返回</button>
+                <button id="bookshelf-back" class="scene-back-btn" onclick="closeBookshelfScene()">← 返回</button>
             </div>
 
             <!-- 阳台场景 -->
-            <div id="balcony-scene" class="hidden">
-                <img id="balcony-image" src="balcony.jpg" alt="阳台">
-                <button id="balcony-back" onclick="closeBalconyScene()">← 返回</button>
+            <div id="balcony-scene" class="hidden scene-container" style="background:#87ceeb;">
+                <img id="balcony-image" src="balcony.jpg" alt="阳台" class="scene-image">
+                <button id="balcony-back" class="scene-back-btn" onclick="closeBalconyScene()">← 返回</button>
             </div>
 
             <!-- 食盆场景 -->
-            <div id="food-bowl-scene" class="hidden">
-                <img id="food-bowl-image" src="food_bowl.jpg" alt="食盆">
-                <button id="food-bowl-back" onclick="closeFoodBowlScene()">← 返回</button>
+            <div id="food-bowl-scene" class="hidden scene-container" style="background:#2c1a0e;">
+                <img id="food-bowl-image" src="food_bowl.jpg" alt="食盆" class="scene-image">
+                <button id="food-bowl-back" class="scene-back-btn" onclick="closeFoodBowlScene()">← 返回</button>
             </div>
 
             <!-- 画框谜题场景 -->
-            <div id="painting-scene" class="hidden">
-                <img id="painting-image" src="painting.jpg" alt="画框">
-                <button id="painting-back" onclick="closePaintingScene()">← 返回</button>
+            <div id="painting-scene" class="hidden scene-container" style="background:#1a1a2e;">
+                <img id="painting-image" src="painting.jpg" alt="画框" class="scene-image">
+                <button id="painting-back" class="scene-back-btn" onclick="closePaintingScene()">← 返回</button>
             </div>
 
             <!-- 玩具箱场景 -->
-            <div id="toy-box-scene" class="hidden">
-                <img id="toy-box-image" src="toy_box.jpg" alt="玩具箱">
+            <div id="toy-box-scene" class="hidden scene-container" style="background:#1a1208;">
+                <img id="toy-box-image" src="toy_box.jpg" alt="玩具箱" class="scene-image">
                 <div class="toy-box-label">🔒 图案锁</div>
                 <div class="toy-box-hint">按照正确顺序点击图案</div>
-                <button id="toy-box-back" onclick="closeToyBoxScene()">← 返回</button>
+                <button id="toy-box-back" class="scene-back-btn" onclick="closeToyBoxScene()">← 返回</button>
             </div>
 
             <!-- 记忆相册（彩蛋） -->
-            <div id="album-scene" class="hidden">
+            <div id="album-scene" class="hidden scene-container" style="background:linear-gradient(160deg,#1a0f06 0%,#2c1a0e 100%);overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:60px 20px 40px;box-sizing:border-box;">
                 <div id="album-content"></div>
-                <button id="album-back" onclick="closeAlbumScene()">← 返回</button>
+                <button id="album-back" class="scene-back-btn" onclick="closeAlbumScene()">← 返回</button>
             </div>
             </div>
         </div>
@@ -216,6 +217,6 @@
         </div>
     </div>
 
-    <script src="game.js"></script>
+    <script src="dist/bundle.js"></script>
 </body>
 </html>
