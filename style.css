@@ -67,6 +67,13 @@ body {
         height: 100vh;
         height: 100dvh;
         z-index: 500;
+        touch-action: auto;
+    }
+
+    #title-screen .start-btn,
+    #title-screen .restart-btn {
+        touch-action: auto;
+        -webkit-tap-highlight-color: rgba(0,0,0,0.1);
     }
 
     /* 对话框固定在视口底部 */
@@ -129,6 +136,7 @@ body {
         padding: 5px 10px;
         font-size: 11px;
         z-index: 400;
+        touch-action: auto;
     }
 
     /* 场景返回按钮通用移动端样式 */
