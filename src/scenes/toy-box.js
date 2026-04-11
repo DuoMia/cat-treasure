@@ -153,12 +153,13 @@ function updateCounter() {
     if (counter) counter.textContent = `步数：${moveCount}`;
 }
 
-// ── 手势（挂在 board 上，支持连续滑动）────────────────────────────
-const SWIPE_MIN = 10; // px
-
+// ── 手势（挂在 board 上，跟手拖动 + 超半格 snap）─────────────────
 function bindBoardSwipe(board) {
-    let activeId = null;   // 当前手指按住的方块 id
-    let tx0 = 0, ty0 = 0; // 每次滑动的起点（每格重置）
+    let activeId = null;
+    let activeEl = null;
+    let tx0 = 0, ty0 = 0;   // touchstart 时方块的像素原点
+    let axis = null;         // 'h' | 'v'，锁定后不变
+    let moved = false;       // 是否已经发生过位移
 
     board.addEventListener('touchstart', e => {
         if (gameState.flags.toyBoxSolved) return;
@@ -167,55 +168,138 @@ function bindBoardSwipe(board) {
         const target = document.elementFromPoint(t.clientX, t.clientY);
         const blockEl = target?.closest('.klotski-block');
         const id = blockEl?.dataset.id;
-        if (!id) { activeId = null; return; }
+        if (!id) { activeId = null; activeEl = null; return; }
 
         activeId = id;
+        activeEl = blockEl;
         tx0 = t.clientX;
         ty0 = t.clientY;
+        axis = null;
+        moved = false;
 
-        // 更新选中态，不重建 DOM
+        // 选中高亮
         const prev = selectedId;
         selectedId = id;
         if (prev !== id) {
             if (prev) updateBlockEl(blocks.find(b => b.id === prev));
             updateBlockEl(blocks.find(b => b.id === id));
         }
+        // 拖动期间关闭 transition，让方块跟手
+        activeEl.style.transition = 'none';
     }, { passive: true });
 
     board.addEventListener('touchmove', e => {
         e.preventDefault();
         e.stopPropagation();
-        if (!activeId || gameState.flags.toyBoxSolved) return;
+        if (!activeId || !activeEl || gameState.flags.toyBoxSolved) return;
 
         const t = e.touches[0];
-        const dx = t.clientX - tx0;
-        const dy = t.clientY - ty0;
-        if (Math.abs(dx) < SWIPE_MIN && Math.abs(dy) < SWIPE_MIN) return;
+        const rawDx = t.clientX - tx0;
+        const rawDy = t.clientY - ty0;
 
-        const dir = Math.abs(dx) >= Math.abs(dy)
-            ? (dx > 0 ? 'right' : 'left')
-            : (dy > 0 ? 'down' : 'up');
+        // 确定轴（第一次超过 4px 时锁定）
+        if (!axis) {
+            if (Math.abs(rawDx) < 4 && Math.abs(rawDy) < 4) return;
+            axis = Math.abs(rawDx) >= Math.abs(rawDy) ? 'h' : 'v';
+        }
 
         const b = blocks.find(b => b.id === activeId);
-        if (b && doMove(b, dir)) {
-            // 重置起点，支持连续滑动
-            tx0 = t.clientX;
-            ty0 = t.clientY;
-            selectedId = null;
-            updateBlockEl(b);
-            updateCounter();
-            // 更新其他可能受影响的方块（grid 已重建，位置不变，只需刷新选中态）
-            blocks.forEach(other => {
-                if (other.id !== b.id) updateBlockEl(other);
-            });
-            if (checkWin()) onWin();
+        if (!b) return;
+
+        // 沿锁定轴计算偏移，限制在可移动范围内
+        let offset = axis === 'h' ? rawDx : rawDy;
+        const cellSize = axis === 'h' ? _cellW : _cellH;
+
+        // 限制拖动距离：不能超过可移动的格数
+        const maxForward  = countFree(b, axis === 'h' ? 'right' : 'down');
+        const maxBackward = countFree(b, axis === 'h' ? 'left'  : 'up');
+        offset = Math.max(-maxBackward * cellSize, Math.min(maxForward * cellSize, offset));
+
+        // 实时跟手
+        const baseLeft = b.col * _cellW + 3;
+        const baseTop  = b.row * _cellH + 3;
+        if (axis === 'h') activeEl.style.left = (baseLeft + offset) + 'px';
+        else              activeEl.style.top  = (baseTop  + offset) + 'px';
+        moved = true;
+
+        // 超过半格时 snap
+        const steps = offset / cellSize;
+        if (Math.abs(steps) >= 0.5) {
+            const dir = axis === 'h' ? (steps > 0 ? 'right' : 'left') : (steps > 0 ? 'down' : 'up');
+            if (doMove(b, dir)) {
+                // snap 到新格，重置拖动起点
+                tx0 = t.clientX;
+                ty0 = t.clientY;
+                activeEl.style.transition = 'none';
+                activeEl.style.left = (b.col * _cellW + 3) + 'px';
+                activeEl.style.top  = (b.row * _cellH + 3) + 'px';
+                selectedId = null;
+                updateBlockEl(b);
+                updateCounter();
+                if (checkWin()) { activeId = null; activeEl = null; onWin(); }
+            }
         }
     }, { passive: false });
 
     board.addEventListener('touchend', e => {
         e.stopPropagation();
+        if (activeEl) {
+            // 恢复 transition，snap 回最近格
+            activeEl.style.transition = '';
+            const b = blocks.find(b => b.id === activeId);
+            if (b) {
+                activeEl.style.left = (b.col * _cellW + 3) + 'px';
+                activeEl.style.top  = (b.row * _cellH + 3) + 'px';
+            }
+        }
+        if (!moved && activeId) {
+            // 纯点击：取消选中
+            if (selectedId === activeId) {
+                selectedId = null;
+                if (activeEl) updateBlockEl(blocks.find(b => b.id === activeId));
+            }
+        }
         activeId = null;
+        activeEl = null;
+        axis = null;
     }, { passive: true });
+}
+
+// 计算某方块在某方向上连续空格数
+function countFree(b, dir) {
+    let count = 0;
+    if (dir === 'right') {
+        for (let c = b.col + b.cs; c < COLS; c++) {
+            if (b.row < ROWS && grid[b.row][c] !== null) break;
+            // 检查整列
+            let ok = true;
+            for (let r = b.row; r < b.row + b.rs; r++) if (grid[r][c] !== null) { ok = false; break; }
+            if (!ok) break;
+            count++;
+        }
+    } else if (dir === 'left') {
+        for (let c = b.col - 1; c >= 0; c--) {
+            let ok = true;
+            for (let r = b.row; r < b.row + b.rs; r++) if (grid[r][c] !== null) { ok = false; break; }
+            if (!ok) break;
+            count++;
+        }
+    } else if (dir === 'down') {
+        for (let r = b.row + b.rs; r < ROWS; r++) {
+            let ok = true;
+            for (let c = b.col; c < b.col + b.cs; c++) if (grid[r][c] !== null) { ok = false; break; }
+            if (!ok) break;
+            count++;
+        }
+    } else if (dir === 'up') {
+        for (let r = b.row - 1; r >= 0; r--) {
+            let ok = true;
+            for (let c = b.col; c < b.col + b.cs; c++) if (grid[r][c] !== null) { ok = false; break; }
+            if (!ok) break;
+            count++;
+        }
+    }
+    return count;
 }
 
 // ── 交互（PC 点击）────────────────────────────────────────────────
