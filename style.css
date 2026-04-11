@@ -132,32 +132,34 @@ body {
 
     /* 物品栏面板 - 移动端更紧凑 */
     #inventory-panel {
-        position: fixed;
-        top: 42px;
+        position: fixed !important;
+        top: 52px;
         right: 8px;
-        width: 140px;
+        width: 150px;
         font-size: 11px;
-        max-height: 50vh;
+        max-height: 55vh;
         overflow-y: auto;
-        z-index: 400;
+        z-index: 500;
         padding: 10px;
-        border-radius: 8px;
+        border-radius: 10px;
+        border-width: 1px;
     }
 
     #inventory-panel .inventory-header {
-        font-size: 11px;
+        font-size: 12px;
         margin-bottom: 6px;
         padding-bottom: 4px;
     }
 
     #inventory-panel .inventory-item {
-        padding: 5px 6px;
-        font-size: 10px;
+        padding: 6px 8px;
+        font-size: 12px;
         margin-bottom: 4px;
+        border-radius: 6px;
     }
 
     #inventory-panel .item-icon {
-        font-size: 12px;
+        font-size: 14px;
     }
 
     #debug-toggle {
