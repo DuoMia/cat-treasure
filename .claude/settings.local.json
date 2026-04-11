@@ -12,7 +12,8 @@
       "Bash(awk '{print $9, $5}')",
       "Bash(py --version)",
       "Bash(pip install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(awk '{print $5, $9}')"
     ]
   }
 }
