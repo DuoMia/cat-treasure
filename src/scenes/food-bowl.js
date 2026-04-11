@@ -5,7 +5,7 @@ import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
 import { collectMemoryFragment } from '../notes.js';
 import { PUZZLES, BOWL_ZONES, PAINTING_HINTS } from '../data.js';
-import { isMobileDevice, scrollToZone } from '../utils.js';
+import { isMobileDevice } from '../utils.js';
 
 const BOWL_ORDER = PUZZLES.bowlOrder;
 
@@ -177,25 +177,13 @@ function setupPaintingOverlay() {
 
     // 竖屏移动端：contain 模式下整幅画已可见，无需自动滚动
 
-    // 计算触点在画面内的百分比坐标（兼容 object-fit:contain 的 letterbox 偏移）
+    // 计算触点在画面内的百分比坐标（以图片实际渲染区域为基准）
     function clientToPercent(clientX, clientY) {
         const img = scene.querySelector('.scene-image');
-        const sceneRect = scene.getBoundingClientRect();
-        let refRect = sceneRect;
-        if (img && getComputedStyle(img).objectFit === 'contain') {
-            const natW = img.naturalWidth || 1, natH = img.naturalHeight || 1;
-            const scaleW = sceneRect.width / natW, scaleH = sceneRect.height / natH;
-            const scale = Math.min(scaleW, scaleH);
-            const rw = natW * scale, rh = natH * scale;
-            refRect = {
-                left: sceneRect.left + (sceneRect.width - rw) / 2,
-                top:  sceneRect.top  + (sceneRect.height - rh) / 2,
-                width: rw, height: rh
-            };
-        }
+        const rect = img ? img.getBoundingClientRect() : scene.getBoundingClientRect();
         return {
-            bx: (clientX - refRect.left) / refRect.width * 100,
-            by: (clientY - refRect.top)  / refRect.height * 100
+            bx: (clientX - rect.left) / rect.width * 100,
+            by: (clientY - rect.top)  / rect.height * 100
         };
     }
 
@@ -304,7 +292,6 @@ function updateProgressHud(scene, step) {
 function confirmSymbol(symbol, scene) {
     cleanupBowlListeners(scene);
 
-    const step = gameState.flags.paintingStep;
     gameState.flags.paintingSymbolsFound.push(symbol);
     gameState.flags.paintingStep++;
     saveGame();

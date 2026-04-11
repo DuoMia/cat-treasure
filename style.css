@@ -1930,10 +1930,20 @@ body {
 
 /* 移动端竖屏：画框图片缩小为 contain，让整幅画可见 */
 @media (orientation: portrait) and (max-width: 768px) {
+    #painting-scene {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #1a1a2e;
+    }
     #painting-scene .scene-image {
+        width: auto;
+        height: auto;
+        max-width: 90%;
+        max-height: 70%;
         object-fit: contain;
         object-position: center;
-        background: #1a1a2e;
+        position: relative;
     }
 }
 
