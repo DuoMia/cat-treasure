@@ -106,37 +106,58 @@ body {
         font-size: 13px;
     }
 
-    /* 背包按钮固定在视口右上角 */
-    #inventory-toggle {
+    /* 背包和帮助按钮 - 移动端更紧凑的半透明样式 */
+    #inventory-toggle,
+    #help-toggle {
         position: fixed;
-        top: 10px;
-        right: 10px;
-        width: 34px;
-        height: 34px;
-        font-size: 16px;
+        top: 8px;
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
         z-index: 400;
-        box-shadow: 0 2px 8px rgba(240,147,251,0.35);
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: none;
+        backdrop-filter: blur(4px);
+    }
+
+    #inventory-toggle {
+        right: 8px;
     }
 
     #help-toggle {
-        position: fixed;
-        top: 10px;
-        right: 52px;
-        width: 34px;
-        height: 34px;
-        font-size: 16px;
-        z-index: 400;
+        right: 42px;
     }
 
+    /* 物品栏面板 - 移动端更紧凑 */
     #inventory-panel {
         position: fixed;
-        top: 52px;
-        right: 10px;
-        width: 170px;
-        font-size: 12px;
-        max-height: 60vh;
+        top: 42px;
+        right: 8px;
+        width: 140px;
+        font-size: 11px;
+        max-height: 50vh;
         overflow-y: auto;
         z-index: 400;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    #inventory-panel .inventory-header {
+        font-size: 11px;
+        margin-bottom: 6px;
+        padding-bottom: 4px;
+    }
+
+    #inventory-panel .inventory-item {
+        padding: 5px 6px;
+        font-size: 10px;
+        margin-bottom: 4px;
+    }
+
+    #inventory-panel .item-icon {
+        font-size: 12px;
     }
 
     #debug-toggle {
@@ -652,30 +673,46 @@ body {
         font-size: 13px;
     }
 
+    /* 横屏按钮也缩小 */
+    #inventory-toggle,
+    #help-toggle {
+        width: 32px;
+        height: 32px;
+        font-size: 15px;
+        top: 6px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: none;
+    }
+
     #inventory-toggle {
-        width: 44px;
-        height: 44px;
-        font-size: 20px;
-        top: 10px;
-        right: 10px;
+        right: 6px;
+    }
+
+    #help-toggle {
+        right: 44px;
     }
 
     #inventory-panel {
-        top: 64px;
-        right: 10px;
-        width: 180px;
-        font-size: 12px;
-        max-height: 80vh;
-        overflow-y: auto;
+        top: 44px;
+        right: 6px;
+        width: 150px;
+        font-size: 11px;
+        max-height: 70vh;
+        padding: 8px;
+        border-radius: 8px;
     }
 
     .inventory-header {
-        font-size: 14px;
-        margin-bottom: 8px;
+        font-size: 11px;
+        margin-bottom: 6px;
     }
 
     .inventory-item {
-        padding: 8px;
+        padding: 5px 6px;
+        font-size: 10px;
+    }
         font-size: 12px;
     }
 
