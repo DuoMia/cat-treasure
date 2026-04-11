@@ -117,8 +117,10 @@ export function updateInventory() {
         noteDiv.innerHTML = `${noteText}`;
         noteDiv.style.cursor = 'pointer';
         noteDiv.onclick = () => {
+            document.getElementById('inventory-panel').classList.add('hidden');
+            const mask = document.getElementById('inventory-mask');
+            if (mask) mask.style.display = 'none';
             if (gameState.flags.albumUnlocked) {
-                document.getElementById('inventory-panel').classList.add('hidden');
                 openAlbumScene();
             } else {
                 showDialog(`你已收集 ${noteCount}/5 张便利贴。集齐5张可以解锁记忆相册。`);
@@ -140,11 +142,14 @@ export function updateInventory() {
 }
 
 function handleItemClick(item) {
+    document.getElementById('inventory-panel').classList.add('hidden');
+    const mask = document.getElementById('inventory-mask');
+    if (mask) mask.style.display = 'none';
+
     if (item === '铁盒' && !gameState.flags.solvedPassword) {
         showDialog(
             '突然你注意到了盒子底部有一个猫咪抱着手又咬又踢的图案，有点眼熟，你看向被朵朵咬过的左手，不看不知道，五排数量不规则的圆孔牙印和五排断断续续的爪子道道出现在你的眼前，这朵朵，也太野蛮了！\n\n等等，正好5排？你看向朵朵留下的痕迹，又看向铁盒上的五位密码，突然有一个念头闪过，不会吧？这痕迹越看越像某种密码，要不试试？\n\n（五排痕迹分别为：.--；.-；-；-.-.；....）',
             () => {
-                document.getElementById('inventory-panel').classList.add('hidden');
                 openPasswordModal();
             }
         );
@@ -169,7 +174,6 @@ function handleItemClick(item) {
     } else if (item.startsWith('便利贴')) {
         const count = gameState.flags.stickyNotes.length;
         if (gameState.flags.albumUnlocked) {
-            document.getElementById('inventory-panel').classList.add('hidden');
             openAlbumScene();
         } else {
             showDialog(`你已收集 ${count}/5 张便利贴。\n\n集齐5张可以解锁记忆相册。`);
