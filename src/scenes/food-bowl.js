@@ -192,29 +192,34 @@ function setupPaintingOverlay() {
         moveBowl(bx, by, bowl, scene);
     };
 
-    // 移动端：touchstart 记录起点，touchend 判断点击/滑动
-    let _touchStartX = 0, _touchStartY = 0;
-    bowlTouchHandler = (e) => {
-        if (e.type === 'touchstart') {
-            _touchStartX = e.touches[0].clientX;
-            _touchStartY = e.touches[0].clientY;
-            return;
-        }
-        // touchend
+    // 移动端：touchmove 实时标记"已滑动"，touchend 时未滑动才放置碗
+    let _touchStartX = 0, _touchStartY = 0, _touchMoved = false;
+
+    const _onTouchStart = (e) => {
+        _touchStartX = e.touches[0].clientX;
+        _touchStartY = e.touches[0].clientY;
+        _touchMoved = false;
+    };
+    const _onTouchMove = (e) => {
+        const dx = e.touches[0].clientX - _touchStartX;
+        const dy = e.touches[0].clientY - _touchStartY;
+        if (dx * dx + dy * dy > 64) _touchMoved = true; // 超过 8px 标记为滑动
+    };
+    const _onTouchEnd = (e) => {
+        if (_touchMoved) return; // 滑动过 → 是平移，不放置碗
         const t = e.changedTouches[0];
-        const dx = t.clientX - _touchStartX;
-        const dy = t.clientY - _touchStartY;
-        // 滑动超过 8px 视为平移，不放置碗
-        if (dx * dx + dy * dy > 64) return;
         const rect = scene.getBoundingClientRect();
         const bx = (t.clientX - rect.left) / rect.width * 100;
         const by = (t.clientY - rect.top) / rect.height * 100;
         moveBowl(bx, by, bowl, scene);
     };
 
+    bowlTouchHandler = { start: _onTouchStart, move: _onTouchMove, end: _onTouchEnd };
+
     scene.addEventListener('mousemove', bowlMoveHandler);
-    scene.addEventListener('touchstart', bowlTouchHandler, { passive: true });
-    scene.addEventListener('touchend', bowlTouchHandler, { passive: true });
+    scene.addEventListener('touchstart', _onTouchStart, { passive: true });
+    scene.addEventListener('touchmove', _onTouchMove, { passive: true });
+    scene.addEventListener('touchend', _onTouchEnd, { passive: true });
 }
 
 function moveBowl(bx, by, bowl, scene) {
@@ -260,8 +265,9 @@ function moveBowl(bx, by, bowl, scene) {
 function cleanupBowlListeners(scene) {
     if (bowlMoveHandler) { scene.removeEventListener('mousemove', bowlMoveHandler); bowlMoveHandler = null; }
     if (bowlTouchHandler) {
-        scene.removeEventListener('touchstart', bowlTouchHandler);
-        scene.removeEventListener('touchend', bowlTouchHandler);
+        scene.removeEventListener('touchstart', bowlTouchHandler.start);
+        scene.removeEventListener('touchmove', bowlTouchHandler.move);
+        scene.removeEventListener('touchend', bowlTouchHandler.end);
         bowlTouchHandler = null;
     }
     if (autoConfirmTimer) { clearTimeout(autoConfirmTimer); autoConfirmTimer = null; }
