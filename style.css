@@ -111,15 +111,26 @@ body {
         position: fixed;
         top: 10px;
         right: 10px;
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+        z-index: 400;
+        box-shadow: 0 2px 8px rgba(240,147,251,0.35);
+    }
+
+    #help-toggle {
+        position: fixed;
+        top: 10px;
+        right: 52px;
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
         z-index: 400;
     }
 
     #inventory-panel {
         position: fixed;
-        top: 60px;
+        top: 52px;
         right: 10px;
         width: 170px;
         font-size: 12px;
@@ -130,10 +141,11 @@ body {
 
     #debug-toggle {
         position: fixed;
-        top: 10px;
+        bottom: 16px;
         left: 10px;
-        height: 30px;
-        padding: 5px 10px;
+        top: auto;
+        height: 28px;
+        padding: 4px 10px;
         font-size: 11px;
         z-index: 400;
         touch-action: auto;
@@ -583,17 +595,17 @@ body {
     }
     
     #inventory-toggle {
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
     }
 
     #help-toggle {
-        width: 50px;
-        height: 50px;
-        font-size: 22px;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
         top: 20px;
-        right: 80px;
+        right: 68px;
     }
 
     #inventory-panel {
