@@ -64,6 +64,9 @@ function startGame(isRestart = false) {
         setupPortraitDrag(isHoldingPen);
         centerViewport();
         showDragHint();
+        // 禁止长按弹出系统菜单（微信搜一搜/翻译/放大镜）
+        document.addEventListener('contextmenu', e => e.preventDefault(), { passive: false });
+        document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
     }
 
     // 显示笔筒（钢笔已落地则保持隐藏）

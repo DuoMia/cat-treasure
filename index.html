@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>猫咪神藏 - 密室逃脱</title>
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=13">
     <script>
         (function() {
             const ua = navigator.userAgent;
@@ -23,6 +23,13 @@
 <body>
     <!-- 调试按钮（在 game-container 外，避免继承 touch-action:none） -->
     <button id="debug-toggle" onclick="toggleDebugMode()">🔧 调试模式</button>
+    <!-- 物品栏按钮和面板（在 game-container 外，确保 fixed 定位相对视口） -->
+    <button id="inventory-toggle" class="hidden">🎒</button>
+    <button id="help-toggle" class="hidden" onclick="showHelp()">💡</button>
+    <div id="inventory-panel" class="hidden">
+        <div class="inventory-header">物品栏</div>
+        <div id="inventory-items"></div>
+    </div>
     <!-- 开始画面（在 game-container 外，避免继承 touch-action:none） -->
     <div id="title-screen">
         <h1 class="title-text">🐱 猫咪神藏</h1>
@@ -167,13 +174,7 @@
             <div id="choice-buttons"></div>
         </div>
 
-        <!-- 物品栏（全局，所有场景可见） -->
-        <button id="inventory-toggle" class="hidden">🎒</button>
-        <button id="help-toggle" class="hidden" onclick="showHelp()">💡</button>
-        <div id="inventory-panel" class="hidden">
-            <div class="inventory-header">物品栏</div>
-            <div id="inventory-items"></div>
-        </div>
+        <!-- 物品栏已移至 game-container 外 -->
 
         <!-- 密码输入框 -->
         <div id="password-modal" class="hidden">

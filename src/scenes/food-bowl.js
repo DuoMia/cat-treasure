@@ -141,15 +141,6 @@ function setupPaintingOverlay() {
     // 进度 HUD（常驻，不弹 dialog）
     updateProgressHud(scene, step);
 
-    // 恢复已确认的符号
-    gameState.flags.paintingSymbolsFound.forEach((s, i) => {
-        const el = document.createElement('div');
-        el.className = 'painting-symbol-reveal';
-        el.style.cssText = `position:absolute;bottom:18%;left:${20 + i * 15}%;font-size:28px;z-index:220;pointer-events:none;`;
-        el.textContent = s;
-        scene.appendChild(el);
-    });
-
     // 目标区域微弱提示框
     BOWL_ZONES.forEach(zone => {
         const el = document.createElement('div');
@@ -177,10 +168,9 @@ function setupPaintingOverlay() {
 
     // 竖屏移动端：contain 模式下整幅画已可见，无需自动滚动
 
-    // 计算触点在画面内的百分比坐标（以图片实际渲染区域为基准）
+    // 计算触点在画面内的百分比坐标（以 scene 容器为基准，与热区坐标一致）
     function clientToPercent(clientX, clientY) {
-        const img = scene.querySelector('.scene-image');
-        const rect = img ? img.getBoundingClientRect() : scene.getBoundingClientRect();
+        const rect = scene.getBoundingClientRect();
         return {
             bx: (clientX - rect.left) / rect.width * 100,
             by: (clientY - rect.top)  / rect.height * 100
@@ -298,13 +288,6 @@ function confirmSymbol(symbol, scene) {
 
     // 显示已确认符号
     scene.querySelectorAll('.painting-symbol-reveal').forEach(el => el.remove());
-    gameState.flags.paintingSymbolsFound.forEach((s, i) => {
-        const el = document.createElement('div');
-        el.className = 'painting-symbol-reveal';
-        el.style.cssText = `position:absolute;bottom:18%;left:${20 + i * 15}%;font-size:28px;z-index:220;pointer-events:none;`;
-        el.textContent = s;
-        scene.appendChild(el);
-    });
 
     if (gameState.flags.paintingStep >= 4) {
         setTimeout(() => {
