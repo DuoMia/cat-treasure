@@ -1162,18 +1162,22 @@ body {
 /* 竖屏拖动提示 */
 #drag-hint {
     position: fixed;
-    top: 16px;
+    bottom: 80px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.65);
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 13px;
-    padding: 8px 18px;
-    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 16px;
     z-index: 600;
     pointer-events: none;
     white-space: nowrap;
-    animation: dragHintFadeIn 0.5s ease forwards;
+    animation: dragHintFadeIn 0.5s ease forwards, dragHintFadeOut 0.5s ease 3s forwards;
+}
+
+@keyframes dragHintFadeOut {
+    to { opacity: 0; visibility: hidden; }
 }
 
 @keyframes dragHintFadeIn {
@@ -1850,28 +1854,31 @@ body {
     border-color: rgba(255,220,80,0.45);
 }
 
-/* 进度 HUD */
+/* 进度 HUD - 在对话框上方，避免冲突 */
 .painting-progress-hud {
     position: absolute;
-    top: 8%;
+    bottom: 160px;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
     z-index: 220;
     pointer-events: none;
+    background: rgba(0,0,0,0.35);
+    padding: 6px 16px;
+    border-radius: 16px;
 }
 
 .painting-step-hint {
-    color: rgba(240,192,64,0.9);
-    font-size: 13px;
-    margin-bottom: 8px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    color: rgba(255,255,255,0.85);
+    font-size: 12px;
+    margin-bottom: 4px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
     white-space: nowrap;
 }
 
 .painting-dots {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
 }
 
