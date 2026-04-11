@@ -2156,43 +2156,28 @@ body {
 }
 
 /* 方向键盘 */
-#klotski-dpad {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-}
-
-.dpad-row {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
-
-.dpad-btn, #klotski-reset {
-    width: 42px;
-    height: 42px;
-    background: rgba(40,28,12,0.88);
-    border: 1px solid rgba(200,160,80,0.35);
-    border-radius: 10px;
-    color: rgba(240,192,64,0.9);
-    font-size: 15px;
-    cursor: pointer;
+#klotski-footer {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.1s;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.dpad-btn:active, #klotski-reset:active {
-    background: rgba(90,62,18,0.98);
 }
 
 #klotski-reset {
-    font-size: 20px;
+    padding: 8px 24px;
+    background: rgba(40,28,12,0.88);
+    border: 1px solid rgba(200,160,80,0.35);
+    border-radius: 20px;
     color: rgba(200,140,60,0.85);
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.1s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: 0.05em;
+}
+
+#klotski-reset:active {
+    background: rgba(90,62,18,0.98);
 }
 
 /* ── 竖屏移动端：固定到视口，棋盘最大化 ── */
@@ -2216,9 +2201,8 @@ body {
 
     /* 棋盘：以视口短边为基准，尽量大 */
     #klotski-board {
-        /* 棋盘比例 4:5，高度受限于剩余空间 */
         width: auto;
-        height: min(calc(100dvh - 160px), calc(100vw * 5 / 4));
+        height: min(calc(100dvh - 140px), calc(100vw * 5 / 4));
         aspect-ratio: 4 / 5;
     }
 
@@ -2226,15 +2210,9 @@ body {
         font-size: clamp(20px, 6vmin, 36px);
     }
 
-    .dpad-btn, #klotski-reset {
-        width: 48px;
-        height: 48px;
-        font-size: 17px;
-        border-radius: 12px;
-    }
-
     #klotski-reset {
-        font-size: 22px;
+        font-size: 16px;
+        padding: 10px 32px;
     }
 }
 

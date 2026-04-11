@@ -130,18 +130,68 @@ function renderBoard() {
 
         el.innerHTML = `<span class="klotski-icon">${b.label}</span>`;
 
+        // PC：点击选中 + 点击移动
         el.addEventListener('click', () => onBlockClick(b.id));
-        el.addEventListener('touchend', e => {
-            e.preventDefault();
-            e.stopPropagation();
-            onBlockClick(b.id);
-        }, { passive: false });
+
+        // 移动端：手指滑动移动方块
+        bindSwipe(el, b.id);
 
         board.appendChild(el);
     });
 
     const counter = document.getElementById('klotski-counter');
     if (counter) counter.textContent = `步数：${moveCount}`;
+}
+
+// ── 滑动手势 ──────────────────────────────────────────────────────
+const SWIPE_THRESHOLD = 8; // px，超过此距离才算滑动
+
+function bindSwipe(el, id) {
+    let tx0 = 0, ty0 = 0, swiped = false;
+
+    el.addEventListener('touchstart', e => {
+        e.stopPropagation();
+        tx0 = e.touches[0].clientX;
+        ty0 = e.touches[0].clientY;
+        swiped = false;
+        // 选中高亮
+        if (selectedId !== id) {
+            selectedId = id;
+            renderBoard();
+        }
+    }, { passive: true });
+
+    el.addEventListener('touchmove', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (swiped || gameState.flags.toyBoxSolved) return;
+        const dx = e.touches[0].clientX - tx0;
+        const dy = e.touches[0].clientY - ty0;
+        if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) return;
+
+        const dir = Math.abs(dx) >= Math.abs(dy)
+            ? (dx > 0 ? 'right' : 'left')
+            : (dy > 0 ? 'down' : 'up');
+
+        swiped = true;
+        const b = blocks.find(b => b.id === id);
+        if (b && doMove(b, dir)) {
+            selectedId = null;
+            renderBoard();
+            if (checkWin()) onWin();
+        }
+    }, { passive: false });
+
+    el.addEventListener('touchend', e => {
+        e.stopPropagation();
+        // 没有滑动 → 视为点击（取消选中）
+        if (!swiped) {
+            if (selectedId === id) {
+                selectedId = null;
+                renderBoard();
+            }
+        }
+    }, { passive: true });
 }
 
 // ── 交互 ──────────────────────────────────────────────────────────
@@ -177,16 +227,6 @@ function onBlockClick(id) {
     } else {
         selectedId = id;
         renderBoard();
-    }
-}
-
-function moveSelected(dir) {
-    if (!selectedId || gameState.flags.toyBoxSolved) return;
-    const b = blocks.find(b => b.id === selectedId);
-    if (!b) return;
-    if (doMove(b, dir)) {
-        renderBoard();
-        if (checkWin()) onWin();
     }
 }
 
@@ -273,28 +313,15 @@ function buildBoardDOM(scene) {
     board.id = 'klotski-board';
     wrapper.appendChild(board);
 
-    const dpad = document.createElement('div');
-    dpad.id = 'klotski-dpad';
-    dpad.innerHTML = `
-        <button class="dpad-btn" data-dir="up">▲</button>
-        <div class="dpad-row">
-            <button class="dpad-btn" data-dir="left">◀</button>
-            <button id="klotski-reset" title="重置">↺</button>
-            <button class="dpad-btn" data-dir="right">▶</button>
-        </div>
-        <button class="dpad-btn" data-dir="down">▼</button>
-    `;
-    dpad.querySelectorAll('.dpad-btn').forEach(btn => {
-        const handler = () => moveSelected(btn.dataset.dir);
-        btn.addEventListener('click', handler);
-        btn.addEventListener('touchend', e => { e.preventDefault(); handler(); }, { passive: false });
-    });
-    const resetBtn = dpad.querySelector('#klotski-reset');
+    const footer = document.createElement('div');
+    footer.id = 'klotski-footer';
+    footer.innerHTML = '<button id="klotski-reset" title="重置">↺ 重置</button>';
+    const resetBtn = footer.querySelector('#klotski-reset');
     const resetHandler = () => { initPuzzle(); requestAnimationFrame(() => renderBoard()); };
     resetBtn.addEventListener('click', resetHandler);
     resetBtn.addEventListener('touchend', e => { e.preventDefault(); resetHandler(); }, { passive: false });
 
-    wrapper.appendChild(dpad);
+    wrapper.appendChild(footer);
     scene.appendChild(wrapper);
 
     // 横竖屏切换时重新渲染方块位置
