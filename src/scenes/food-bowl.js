@@ -175,20 +175,33 @@ function setupPaintingOverlay() {
         setTimeout(() => tip.remove(), 3500);
     }
 
-    // 竖屏移动端：自动将当前目标区域滚动到屏幕中央
-    if (isMobileDevice()) {
-        const targetZone = BOWL_ZONES.find(z => z.id === BOWL_ORDER[step]);
-        if (targetZone) {
-            const zoneCenterLeft = parseFloat(targetZone.left) + parseFloat(targetZone.width) / 2;
-            scrollToZone(zoneCenterLeft);
+    // 竖屏移动端：contain 模式下整幅画已可见，无需自动滚动
+
+    // 计算触点在画面内的百分比坐标（兼容 object-fit:contain 的 letterbox 偏移）
+    function clientToPercent(clientX, clientY) {
+        const img = scene.querySelector('.scene-image');
+        const sceneRect = scene.getBoundingClientRect();
+        let refRect = sceneRect;
+        if (img && getComputedStyle(img).objectFit === 'contain') {
+            const natW = img.naturalWidth || 1, natH = img.naturalHeight || 1;
+            const scaleW = sceneRect.width / natW, scaleH = sceneRect.height / natH;
+            const scale = Math.min(scaleW, scaleH);
+            const rw = natW * scale, rh = natH * scale;
+            refRect = {
+                left: sceneRect.left + (sceneRect.width - rw) / 2,
+                top:  sceneRect.top  + (sceneRect.height - rh) / 2,
+                width: rw, height: rh
+            };
         }
+        return {
+            bx: (clientX - refRect.left) / refRect.width * 100,
+            by: (clientY - refRect.top)  / refRect.height * 100
+        };
     }
 
     // 鼠标跟随（PC）
     bowlMoveHandler = (e) => {
-        const rect = scene.getBoundingClientRect();
-        const bx = (e.clientX - rect.left) / rect.width * 100;
-        const by = (e.clientY - rect.top) / rect.height * 100;
+        const { bx, by } = clientToPercent(e.clientX, e.clientY);
         moveBowl(bx, by, bowl, scene);
     };
 
@@ -208,9 +221,7 @@ function setupPaintingOverlay() {
     const _onTouchEnd = (e) => {
         if (_touchMoved) return; // 滑动过 → 是平移，不放置碗
         const t = e.changedTouches[0];
-        const rect = scene.getBoundingClientRect();
-        const bx = (t.clientX - rect.left) / rect.width * 100;
-        const by = (t.clientY - rect.top) / rect.height * 100;
+        const { bx, by } = clientToPercent(t.clientX, t.clientY);
         moveBowl(bx, by, bowl, scene);
     };
 

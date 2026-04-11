@@ -1928,6 +1928,15 @@ body {
 
 /* painting-back 已由 scene-back-btn 覆盖 */
 
+/* 移动端竖屏：画框图片缩小为 contain，让整幅画可见 */
+@media (orientation: portrait) and (max-width: 768px) {
+    #painting-scene .scene-image {
+        object-fit: contain;
+        object-position: center;
+        background: #1a1a2e;
+    }
+}
+
 /* ===================== 玩具箱场景 ===================== */
 /* 容器已由 scene-container 覆盖 */
 
