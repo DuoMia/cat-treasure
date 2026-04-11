@@ -2050,53 +2050,193 @@ body {
 }
 
 /* ===================== 玩具箱场景 ===================== */
-/* 容器已由 scene-container 覆盖 */
+/* ===================== 华容道谜题 ===================== */
 
-.toy-box-label {
+#klotski-wrapper {
     position: absolute;
-    left: 50%; top: 8%;
-    transform: translateX(-50%);
-    font-size: 18px;
-    color: #f0c040;
-    font-weight: bold;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
     z-index: 210;
-    pointer-events: none;
+    padding: 52px 20px 20px;
+    box-sizing: border-box;
 }
 
-.toy-box-hint {
-    position: absolute;
-    left: 50%; top: 15%;
-    transform: translateX(-50%);
-    font-size: 12px;
-    color: rgba(240,192,64,0.75);
-    z-index: 210;
-    pointer-events: none;
-    white-space: nowrap;
+#klotski-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 360px;
+    padding: 0 4px;
 }
 
-.toy-btn {
-    position: absolute;
-    width: 7%;
-    height: 8%;
-    background: transparent;
-    border: none;
+.klotski-title {
+    font-size: 14px;
+    color: rgba(240,192,64,0.85);
+    letter-spacing: 0.06em;
+}
+
+#klotski-counter {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    font-variant-numeric: tabular-nums;
+}
+
+#klotski-board {
+    position: relative;
+    width: min(280px, 52vh);
+    aspect-ratio: 4 / 5;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(240,192,64,0.3);
     border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+/* 出口标记 */
+.klotski-exit-mark {
+    position: absolute;
+    background: rgba(240,192,64,0.07);
+    border: 2px dashed rgba(240,192,64,0.45);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* 方块通用 */
+.klotski-block {
+    position: absolute;
+    background: rgba(55,38,16,0.9);
+    border: 1.5px solid rgba(200,160,80,0.4);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    z-index: 210;
-    transition: box-shadow 0.15s;
+    transition: top 0.13s ease, left 0.13s ease, box-shadow 0.13s, background 0.1s;
+    z-index: 2;
+    box-sizing: border-box;
     user-select: none;
 }
 
-.toy-btn:hover {
-    box-shadow: 0 0 10px rgba(240,192,64,0.4);
+.klotski-block:hover {
+    border-color: rgba(240,192,64,0.65);
+    background: rgba(80,55,22,0.95);
 }
 
-.toy-btn.toy-selected {
-    box-shadow: 0 0 14px 4px rgba(80,255,80,0.7);
+.klotski-block.klotski-selected {
+    border-color: rgba(240,192,64,1);
+    background: rgba(105,72,18,0.98);
+    box-shadow: 0 0 0 2px rgba(240,192,64,0.45), 0 4px 18px rgba(0,0,0,0.55);
+    z-index: 3;
 }
 
-/* toy-box-back 已由 scene-back-btn 覆盖 */
+/* 信：金色高亮 */
+.klotski-letter {
+    background: linear-gradient(145deg, rgba(90,62,12,0.95) 0%, rgba(65,44,8,0.95) 100%);
+    border-color: rgba(240,192,64,0.7);
+    box-shadow: 0 0 16px rgba(240,192,64,0.18);
+}
+
+.klotski-letter.klotski-selected {
+    box-shadow: 0 0 0 2px rgba(240,192,64,0.75), 0 0 24px rgba(240,192,64,0.35);
+}
+
+.klotski-icon {
+    font-size: clamp(18px, 5vmin, 30px);
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* 方向键盘 */
+#klotski-dpad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.dpad-row {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.dpad-btn, #klotski-reset {
+    width: 42px;
+    height: 42px;
+    background: rgba(40,28,12,0.88);
+    border: 1px solid rgba(200,160,80,0.35);
+    border-radius: 10px;
+    color: rgba(240,192,64,0.9);
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.dpad-btn:active, #klotski-reset:active {
+    background: rgba(90,62,18,0.98);
+}
+
+#klotski-reset {
+    font-size: 20px;
+    color: rgba(200,140,60,0.85);
+}
+
+/* ── 竖屏移动端：固定到视口，棋盘最大化 ── */
+@media (orientation: portrait) and (max-width: 768px) {
+    #klotski-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100dvh;
+        padding: 48px 16px 16px;
+        gap: 10px;
+        background: rgba(18, 12, 4, 0.97);
+        z-index: 250;
+    }
+
+    #klotski-header {
+        max-width: 100%;
+        width: min(90vw, calc(100dvh * 4 / 5));
+    }
+
+    /* 棋盘：以视口短边为基准，尽量大 */
+    #klotski-board {
+        /* 棋盘比例 4:5，高度受限于剩余空间 */
+        width: auto;
+        height: min(calc(100dvh - 160px), calc(100vw * 5 / 4));
+        aspect-ratio: 4 / 5;
+    }
+
+    .klotski-icon {
+        font-size: clamp(20px, 6vmin, 36px);
+    }
+
+    .dpad-btn, #klotski-reset {
+        width: 48px;
+        height: 48px;
+        font-size: 17px;
+        border-radius: 12px;
+    }
+
+    #klotski-reset {
+        font-size: 22px;
+    }
+}
 
 /* ===================== 记忆相册 ===================== */
 /* 容器已由 scene-container 覆盖，特有样式用 inline style */

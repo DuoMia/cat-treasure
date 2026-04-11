@@ -9,8 +9,6 @@ export const PUZZLES = {
     bookOrder: ['book1', 'book2', 'book3', 'book4', 'book5'],
     // 音乐盒正确顺序：初来乍到(A) → 慵懒少女(B) → 老猫时光(C)
     musicBoxOrder: ['A', 'B', 'C'],
-    // 玩具箱图案顺序
-    toyBoxOrder: ['fish', 'paw', 'bell', 'ball'],
     // 阳台砖块顺序
     brickOrder: ['moon', 'sun', 'wave', 'star'],
     // 画框食盆区域顺序
@@ -38,15 +36,6 @@ export const BOWL_ZONES = [
     { id: 'noon',    left: '14%', top: '73%',  width: '14%', height: '12%', symbol: '☀️', label: '阳光处' },
     { id: 'evening', left: '58%', top: '61%',  width: '9%',  height: '13%', symbol: '🌿', label: '门边' },
     { id: 'night',   left: '85%', top: '60%',  width: '10%', height: '20%', symbol: '🌙', label: '暗处' },
-];
-
-export const TOY_BOX_ICONS = { fish: '🐟', paw: '🐾', bell: '🔔', ball: '⚽' };
-
-export const TOY_BOX_POSITIONS = [
-    { id: 'fish', left: '20%', top: '55%' },
-    { id: 'paw',  left: '30%', top: '55%' },
-    { id: 'bell', left: '40%', top: '55%' },
-    { id: 'ball', left: '50%', top: '55%' },
 ];
 
 export const BRICK_LABELS = { moon: '🌙', sun: '☀️', wave: '🌊', star: '⭐' };
