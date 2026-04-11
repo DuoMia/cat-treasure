@@ -182,11 +182,22 @@ function handleItemClick(item) {
 export function toggleInventory() {
     const panel = document.getElementById('inventory-panel');
     const isHidden = panel.classList.toggle('hidden');
+
     if (!isHidden) {
+        // 插入遮罩
+        let mask = document.getElementById('inventory-mask');
+        if (!mask) {
+            mask = document.createElement('div');
+            mask.id = 'inventory-mask';
+            document.body.appendChild(mask);
+        }
+        mask.style.display = 'block';
+
         setTimeout(() => {
             function onOutsideClick(e) {
                 if (!e.target.closest('#inventory-panel') && !e.target.closest('#inventory-toggle')) {
                     panel.classList.add('hidden');
+                    if (mask) mask.style.display = 'none';
                     document.removeEventListener('click', onOutsideClick, true);
                     document.removeEventListener('touchend', onOutsideClick, true);
                 }
@@ -194,6 +205,9 @@ export function toggleInventory() {
             document.addEventListener('click', onOutsideClick, true);
             document.addEventListener('touchend', onOutsideClick, true);
         }, 0);
+    } else {
+        const mask = document.getElementById('inventory-mask');
+        if (mask) mask.style.display = 'none';
     }
 }
 

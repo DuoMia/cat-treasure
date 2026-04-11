@@ -11,6 +11,11 @@ function getVH() {
     return window.visualViewport?.height ?? window.innerHeight;
 }
 
+// 竖屏拖动锁：书本拖拽期间禁止画面横移
+let _portraitDragLocked = false;
+export function lockPortraitDrag()   { _portraitDragLocked = true;  }
+export function unlockPortraitDrag() { _portraitDragLocked = false; }
+
 /** 竖屏时将容器滚动到水平居中位置 */
 export function centerViewport() {
     const vh = getVH();
@@ -96,6 +101,7 @@ export function setupPortraitDrag(isHoldingGetter) {
     }, { passive: true });
 
     container.addEventListener('touchmove', function(e) {
+        if (_portraitDragLocked) return;
         if (!active || window.innerWidth >= getVH()) return;
         if (isHoldingGetter()) { active = false; return; }
         if (!document.getElementById('dialog-box').classList.contains('hidden')) { active = false; return; }

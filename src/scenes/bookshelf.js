@@ -5,6 +5,7 @@ import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
 import { collectStickyNote, collectMemoryFragment } from '../notes.js';
 import { PUZZLES, MUSIC_BOX_PHASES } from '../data.js';
+import { lockPortraitDrag, unlockPortraitDrag } from '../utils.js';
 
 // ── 书脊拼图 ────────────────────────────────────────────────
 // cat.jpg (960×1280) 取中间 4:3 横向区域 (960×720, y从280开始)
@@ -58,6 +59,7 @@ function makePieceEl(seg) {
     // 触摸拖拽
     let touchClone;
     el.addEventListener('touchstart', e => {
+        lockPortraitDrag();
         dragSrcId = seg.id;
         const t = e.touches[0];
         touchClone = el.cloneNode(true);
@@ -79,6 +81,7 @@ function makePieceEl(seg) {
         e.preventDefault();
     }, { passive: false });
     el.addEventListener('touchend', e => {
+        unlockPortraitDrag();
         if (touchClone) { touchClone.remove(); touchClone = null; }
         el.style.opacity = '';
         const t = e.changedTouches[0];
