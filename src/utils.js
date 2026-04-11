@@ -57,6 +57,19 @@ export function setTapHandler(el, handler, once) {
     }
 }
 
+/** 竖屏时将容器滚动，使指定百分比位置（0-100）出现在屏幕中央 */
+export function scrollToZone(leftPercent) {
+    const vh = getVH();
+    if (window.innerWidth >= vh) return;
+    const container = document.getElementById('game-container');
+    const containerW = vh * 14 / 9;
+    const screenW = window.innerWidth;
+    const zoneCenterPx = containerW * leftPercent / 100;
+    const targetLeft = -(zoneCenterPx - screenW / 2);
+    const minOffset = -(containerW - screenW);
+    container.style.left = Math.min(0, Math.max(minOffset, targetLeft)) + 'px';
+}
+
 /** 竖屏拖动支持：让玩家拖动 game-container 查看画面两侧 */
 export function setupPortraitDrag(isHoldingGetter) {
     const container = document.getElementById('game-container');

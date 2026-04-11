@@ -5,6 +5,7 @@ import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
 import { collectMemoryFragment } from '../notes.js';
 import { PUZZLES, BOWL_ZONES, PAINTING_HINTS } from '../data.js';
+import { isMobileDevice, scrollToZone } from '../utils.js';
 
 const BOWL_ORDER = PUZZLES.bowlOrder;
 
@@ -169,22 +170,42 @@ function setupPaintingOverlay() {
     if (step === 0 && gameState.flags.paintingSymbolsFound.length === 0) {
         const tip = document.createElement('div');
         tip.className = 'painting-guide-tip';
-        tip.textContent = '移动食盆，找到朵朵吃饭的位置';
+        tip.textContent = isMobileDevice() ? '点击画面放置食盆' : '移动食盆，找到朵朵吃饭的位置';
         scene.appendChild(tip);
         setTimeout(() => tip.remove(), 3500);
     }
 
-    // 鼠标跟随
+    // 竖屏移动端：自动将当前目标区域滚动到屏幕中央
+    if (isMobileDevice()) {
+        const targetZone = BOWL_ZONES.find(z => z.id === BOWL_ORDER[step]);
+        if (targetZone) {
+            const zoneCenterLeft = parseFloat(targetZone.left) + parseFloat(targetZone.width) / 2;
+            scrollToZone(zoneCenterLeft);
+        }
+    }
+
+    // 鼠标跟随（PC）
     bowlMoveHandler = (e) => {
         const rect = scene.getBoundingClientRect();
         const bx = (e.clientX - rect.left) / rect.width * 100;
         const by = (e.clientY - rect.top) / rect.height * 100;
         moveBowl(bx, by, bowl, scene);
     };
-    // 触摸跟随
+
+    // 移动端：touchstart 记录起点，touchend 判断点击/滑动
+    let _touchStartX = 0, _touchStartY = 0;
     bowlTouchHandler = (e) => {
-        e.preventDefault();
-        const t = e.touches[0];
+        if (e.type === 'touchstart') {
+            _touchStartX = e.touches[0].clientX;
+            _touchStartY = e.touches[0].clientY;
+            return;
+        }
+        // touchend
+        const t = e.changedTouches[0];
+        const dx = t.clientX - _touchStartX;
+        const dy = t.clientY - _touchStartY;
+        // 滑动超过 8px 视为平移，不放置碗
+        if (dx * dx + dy * dy > 64) return;
         const rect = scene.getBoundingClientRect();
         const bx = (t.clientX - rect.left) / rect.width * 100;
         const by = (t.clientY - rect.top) / rect.height * 100;
@@ -192,7 +213,8 @@ function setupPaintingOverlay() {
     };
 
     scene.addEventListener('mousemove', bowlMoveHandler);
-    scene.addEventListener('touchmove', bowlTouchHandler, { passive: false });
+    scene.addEventListener('touchstart', bowlTouchHandler, { passive: true });
+    scene.addEventListener('touchend', bowlTouchHandler, { passive: true });
 }
 
 function moveBowl(bx, by, bowl, scene) {
@@ -224,7 +246,7 @@ function moveBowl(bx, by, bowl, scene) {
             autoConfirmTimer = setTimeout(() => {
                 autoConfirmTimer = null;
                 confirmSymbol(expectedZone.symbol, scene);
-            }, 700);
+            }, isMobileDevice() ? 300 : 700);
         }
     } else {
         bowl.classList.remove('correct');
@@ -237,7 +259,11 @@ function moveBowl(bx, by, bowl, scene) {
 
 function cleanupBowlListeners(scene) {
     if (bowlMoveHandler) { scene.removeEventListener('mousemove', bowlMoveHandler); bowlMoveHandler = null; }
-    if (bowlTouchHandler) { scene.removeEventListener('touchmove', bowlTouchHandler); bowlTouchHandler = null; }
+    if (bowlTouchHandler) {
+        scene.removeEventListener('touchstart', bowlTouchHandler);
+        scene.removeEventListener('touchend', bowlTouchHandler);
+        bowlTouchHandler = null;
+    }
     if (autoConfirmTimer) { clearTimeout(autoConfirmTimer); autoConfirmTimer = null; }
 }
 
