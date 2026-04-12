@@ -2058,6 +2058,53 @@ body.debug-mode #food-bowl-record-hotspot {
 }
 
 /* ===================== 玩具箱场景 ===================== */
+
+/* 图案锁 UI */
+.toy-lock-ui {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    z-index: 210;
+}
+
+.toy-lock-hint {
+    color: rgba(255, 230, 160, 0.9);
+    font-size: 15px;
+    letter-spacing: 0.04em;
+}
+
+.toy-lock-buttons {
+    display: flex;
+    gap: 16px;
+}
+
+.toy-lock-btn {
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1.5px solid rgba(255, 210, 100, 0.35);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.toy-lock-btn:hover {
+    background: rgba(255, 200, 60, 0.15);
+    border-color: rgba(255, 210, 100, 0.7);
+    transform: scale(1.08);
+}
+
+.toy-lock-btn-correct {
+    background: rgba(80, 200, 100, 0.25) !important;
+    border-color: rgba(100, 220, 130, 0.8) !important;
+    box-shadow: 0 0 10px rgba(100, 220, 130, 0.4);
+}
+
 /* ===================== 华容道谜题 ===================== */
 
 #klotski-wrapper {
@@ -2127,11 +2174,15 @@ body.debug-mode #food-bowl-record-hotspot {
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
+    cursor: grab;
     transition: top 0.13s ease, left 0.13s ease, box-shadow 0.13s, background 0.1s;
     z-index: 2;
     box-sizing: border-box;
     user-select: none;
+}
+
+.klotski-block:active {
+    cursor: grabbing;
 }
 
 .klotski-block:hover {
@@ -2221,6 +2272,36 @@ body.debug-mode #food-bowl-record-hotspot {
     #klotski-reset {
         font-size: 16px;
         padding: 10px 32px;
+    }
+}
+
+/* ── PC 端：固定到视口，棋盘自适应高度 ── */
+@media (min-width: 769px) {
+    #klotski-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        padding: 52px 20px 20px;
+        gap: 12px;
+        background: rgba(18, 12, 4, 0.97);
+        z-index: 250;
+    }
+
+    #klotski-header {
+        max-width: 100%;
+        width: min(90vw, calc(100vh * 4 / 5));
+    }
+
+    #klotski-board {
+        width: auto;
+        height: min(calc(100vh - 150px), calc(100vw * 5 / 4), 520px);
+        aspect-ratio: 4 / 5;
+    }
+
+    .klotski-icon {
+        font-size: clamp(22px, 4vmin, 40px);
     }
 }
 

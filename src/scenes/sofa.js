@@ -79,6 +79,7 @@ function setupBumpInteraction() {
                 {
                     text: '✂️ 用钢笔划开沙发',
                     callback: () => {
+                        if (gameState.flags.hasBox) return;
                         gameState.inventory.push('铁盒');
                         gameState.flags.hasBox = true;
                         saveGame();

@@ -33,6 +33,7 @@ const INITIAL_FLAGS = {
     bowlZone: 0,
     paintingSymbolsFound: [],
     toyBoxSeen: false,
+    toyLockSolved: false,
     toyBoxSolved: false,
     toyBoxStep: 0,
     hasCatLetter: false,

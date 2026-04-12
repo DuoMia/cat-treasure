@@ -192,7 +192,7 @@ export function interactToyBox() {
         } else if (gameState.flags.toyBoxSolved) {
             showDialog('玩具箱已经打开了，朵朵的信已经取走了。', next);
         } else {
-            showDialog('小木箱上有四个图案按钮：🐟 🐾 🔔 ⚽\n\n日记里写过：先闻了闻小鱼，用爪子确认了铃铛，然后把球推给我……\n\n🐟 → 🐾 → 🔔 → ⚽，试试这个顺序？', () => {
+            showDialog('小木箱上有四个图案按钮：🐟 🐾 🔔 ⚽\n\n日记里好像写过朵朵玩玩具的顺序……', () => {
                 openToyBoxScene();
             });
         }

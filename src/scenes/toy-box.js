@@ -19,6 +19,9 @@ import { gameState, saveGame } from '../state.js';
 import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
 import { collectStickyNote, collectMemoryFragment } from '../notes.js';
+import { PUZZLES } from '../data.js';
+
+const TOY_LOCK_ORDER = PUZZLES.toyLockOrder;
 
 const ROWS = 5, COLS = 4;
 
@@ -157,79 +160,55 @@ function updateCounter() {
 function bindBoardSwipe(board) {
     let activeId = null;
     let activeEl = null;
-    let tx0 = 0, ty0 = 0;   // touchstart 时方块的像素原点
-    let axis = null;         // 'h' | 'v'，锁定后不变
-    let moved = false;       // 是否已经发生过位移
+    let tx0 = 0, ty0 = 0;
+    let axis = null;
+    let moved = false;
 
-    board.addEventListener('touchstart', e => {
-        if (gameState.flags.toyBoxSolved) return;
-        e.stopPropagation();
-        const t = e.touches[0];
-        const target = document.elementFromPoint(t.clientX, t.clientY);
-        const blockEl = target?.closest('.klotski-block');
+    // ── 公共逻辑（touch 和 mouse 共用）────────────────────────────
+    function onDragStart(clientX, clientY, blockEl) {
         const id = blockEl?.dataset.id;
         if (!id) { activeId = null; activeEl = null; return; }
-
         activeId = id;
         activeEl = blockEl;
-        tx0 = t.clientX;
-        ty0 = t.clientY;
+        tx0 = clientX;
+        ty0 = clientY;
         axis = null;
         moved = false;
-
-        // 选中高亮
         const prev = selectedId;
         selectedId = id;
         if (prev !== id) {
             if (prev) updateBlockEl(blocks.find(b => b.id === prev));
             updateBlockEl(blocks.find(b => b.id === id));
         }
-        // 拖动期间关闭 transition，让方块跟手
         activeEl.style.transition = 'none';
-    }, { passive: true });
+    }
 
-    board.addEventListener('touchmove', e => {
-        e.preventDefault();
-        e.stopPropagation();
+    function onDragMove(clientX, clientY) {
         if (!activeId || !activeEl || gameState.flags.toyBoxSolved) return;
-
-        const t = e.touches[0];
-        const rawDx = t.clientX - tx0;
-        const rawDy = t.clientY - ty0;
-
-        // 确定轴（第一次超过 4px 时锁定）
+        const rawDx = clientX - tx0;
+        const rawDy = clientY - ty0;
         if (!axis) {
             if (Math.abs(rawDx) < 4 && Math.abs(rawDy) < 4) return;
             axis = Math.abs(rawDx) >= Math.abs(rawDy) ? 'h' : 'v';
         }
-
         const b = blocks.find(b => b.id === activeId);
         if (!b) return;
-
-        // 沿锁定轴计算偏移，限制在可移动范围内
         let offset = axis === 'h' ? rawDx : rawDy;
         const cellSize = axis === 'h' ? _cellW : _cellH;
-
-        // 限制拖动距离：不能超过可移动的格数
         const maxForward  = countFree(b, axis === 'h' ? 'right' : 'down');
         const maxBackward = countFree(b, axis === 'h' ? 'left'  : 'up');
         offset = Math.max(-maxBackward * cellSize, Math.min(maxForward * cellSize, offset));
-
-        // 实时跟手
         const baseLeft = b.col * _cellW + 3;
         const baseTop  = b.row * _cellH + 3;
         if (axis === 'h') activeEl.style.left = (baseLeft + offset) + 'px';
         else              activeEl.style.top  = (baseTop  + offset) + 'px';
         moved = true;
-
-        // 超过半格时 snap
         const steps = offset / cellSize;
         if (Math.abs(steps) >= 0.5) {
             const dir = axis === 'h' ? (steps > 0 ? 'right' : 'left') : (steps > 0 ? 'down' : 'up');
             if (doMove(b, dir)) {
-                // snap 到新格，重置拖动起点
-                tx0 = t.clientX;
-                ty0 = t.clientY;
+                tx0 = clientX;
+                ty0 = clientY;
                 activeEl.style.transition = 'none';
                 activeEl.style.left = (b.col * _cellW + 3) + 'px';
                 activeEl.style.top  = (b.row * _cellH + 3) + 'px';
@@ -239,12 +218,10 @@ function bindBoardSwipe(board) {
                 if (checkWin()) { activeId = null; activeEl = null; onWin(); }
             }
         }
-    }, { passive: false });
+    }
 
-    board.addEventListener('touchend', e => {
-        e.stopPropagation();
+    function onDragEnd() {
         if (activeEl) {
-            // 恢复 transition，snap 回最近格
             activeEl.style.transition = '';
             const b = blocks.find(b => b.id === activeId);
             if (b) {
@@ -253,7 +230,6 @@ function bindBoardSwipe(board) {
             }
         }
         if (!moved && activeId) {
-            // 纯点击：取消选中
             if (selectedId === activeId) {
                 selectedId = null;
                 if (activeEl) updateBlockEl(blocks.find(b => b.id === activeId));
@@ -262,7 +238,45 @@ function bindBoardSwipe(board) {
         activeId = null;
         activeEl = null;
         axis = null;
+    }
+
+    // ── Touch ──────────────────────────────────────────────────────
+    board.addEventListener('touchstart', e => {
+        if (gameState.flags.toyBoxSolved) return;
+        e.stopPropagation();
+        const t = e.touches[0];
+        const target = document.elementFromPoint(t.clientX, t.clientY);
+        onDragStart(t.clientX, t.clientY, target?.closest('.klotski-block'));
     }, { passive: true });
+
+    board.addEventListener('touchmove', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDragMove(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: false });
+
+    board.addEventListener('touchend', e => {
+        e.stopPropagation();
+        onDragEnd();
+    }, { passive: true });
+
+    // ── Mouse ──────────────────────────────────────────────────────
+    board.addEventListener('mousedown', e => {
+        if (gameState.flags.toyBoxSolved) return;
+        e.preventDefault();
+        const blockEl = e.target.closest('.klotski-block');
+        onDragStart(e.clientX, e.clientY, blockEl);
+    });
+
+    window.addEventListener('mousemove', e => {
+        if (!activeId) return;
+        onDragMove(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (!activeId) return;
+        onDragEnd();
+    });
 }
 
 // 计算某方块在某方向上连续空格数
@@ -380,6 +394,61 @@ function onWin() {
     }, 700);
 }
 
+// ── 图案锁谜题 ────────────────────────────────────────────────────
+const TOY_LOCK_BUTTONS = [
+    { id: 'fish', label: '🐟' },
+    { id: 'paw',  label: '🐾' },
+    { id: 'bell', label: '🔔' },
+    { id: 'ball', label: '⚽' },
+];
+
+function setupToyLock(scene, onUnlock) {
+    scene.querySelectorAll('.toy-lock-ui').forEach(el => el.remove());
+
+    let step = 0;
+
+    const ui = document.createElement('div');
+    ui.className = 'toy-lock-ui';
+
+    const hint = document.createElement('div');
+    hint.className = 'toy-lock-hint';
+    hint.textContent = '按正确顺序点击图案';
+    ui.appendChild(hint);
+
+    const btnRow = document.createElement('div');
+    btnRow.className = 'toy-lock-buttons';
+
+    TOY_LOCK_BUTTONS.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = 'toy-lock-btn';
+        btn.dataset.id = b.id;
+        btn.textContent = b.label;
+        btn.addEventListener('click', () => {
+            if (b.id === TOY_LOCK_ORDER[step]) {
+                btn.classList.add('toy-lock-btn-correct');
+                step++;
+                if (step >= TOY_LOCK_ORDER.length) {
+                    hint.textContent = '✓ 图案锁弹开了！';
+                    setTimeout(() => {
+                        ui.remove();
+                        onUnlock();
+                    }, 600);
+                }
+            } else {
+                // 错误：重置
+                step = 0;
+                btnRow.querySelectorAll('.toy-lock-btn').forEach(el => el.classList.remove('toy-lock-btn-correct'));
+                hint.textContent = '顺序不对，再试试……';
+                setTimeout(() => { hint.textContent = '按正确顺序点击图案'; }, 1000);
+            }
+        });
+        btnRow.appendChild(btn);
+    });
+
+    ui.appendChild(btnRow);
+    scene.appendChild(ui);
+}
+
 // ── 场景入口 ──────────────────────────────────────────────────────
 export function openToyBoxScene() {
     sceneManager.open('toy-box-scene', () => {
@@ -408,10 +477,26 @@ export function openToyBoxScene() {
             return;
         }
 
+        if (!gameState.flags.toyLockSolved) {
+            setupToyLock(scene, () => {
+                gameState.flags.toyLockSolved = true;
+                saveGame();
+                if (!scene.querySelector('#klotski-wrapper')) {
+                    buildBoardDOM(scene);
+                }
+                initPuzzle();
+                requestAnimationFrame(() => renderBoard());
+                showDialog('咔哒——图案锁弹开了！\n\n箱子里好像有封信，被玩具压住了，要不把它拿出来看看？\n\n选中一个方块，再点击旁边的方块来决定移动方向，把信从底部出口滑出来。');
+            });
+            return;
+        }
+
+        if (!scene.querySelector('#klotski-wrapper')) {
+            buildBoardDOM(scene);
+        }
         initPuzzle();
         requestAnimationFrame(() => renderBoard());
-
-        showDialog('咔哒——图案锁弹开了！\n\n箱子里好像有封信，被玩具压住了，要不把它拿出来看看？\n\n选中一个方块，再点击旁边的方块来决定移动方向，把信从底部出口滑出来。');
+        showDialog('箱子里好像有封信，被玩具压住了，要不把它拿出来看看？\n\n选中一个方块，再点击旁边的方块来决定移动方向，把信从底部出口滑出来。');
     });
 }
 
