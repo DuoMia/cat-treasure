@@ -161,24 +161,33 @@ function checkJigsawSolution() {
         setTimeout(() => {
             gameState.flags.bookPuzzleSolved = true;
             saveGame();
-            showDialog('咔哒——书架背板弹开了一个小格子！\n\n格子里静静躺着一条猫咪项圈，项圈上刻着"朵朵"，旁边还有一行小字：2022.03.15。\n\n项圈旁边，还有一个小小的音乐盒。', () => {
+            showDialog('咔哒——书架背板弹开了一个小格子！\n\n格子里静静躺着一条猫咪项圈，项圈上刻着"朵朵"，旁边还有一行小字：2021.08.29。\n\n项圈旁边，还有一个小小的音乐盒。', () => {
                 if (!gameState.inventory.includes('项圈')) {
                     gameState.flags.hasCollar = true;
                     gameState.inventory.push('项圈');
                     saveGame();
                     updateInventory();
                 }
-                showDialog('你获得了朵朵的项圈。\n\n2022.03.15……那是朵朵来家的日子。', () => {
-                    collectStickyNote('note4');
-                    collectMemoryFragment(0);
+                showDialog('你获得了朵朵的项圈。\n\n2021.08.29……那是朵朵来家的日子。', () => {
+                    // 在书架场景生成可点击便利贴
+                    if (!gameState.flags.stickyNotes.includes('note4') && !scene.querySelector('#sticky-note4')) {
+                        const note = document.createElement('div');
+                        note.id = 'sticky-note4';
+                        note.textContent = '📝';
+                        note.style.cssText = 'position:absolute;left:6%;top:12%;font-size:28px;cursor:pointer;z-index:210;';
+                        note.addEventListener('click', () => { note.remove(); collectStickyNote('note4'); });
+                        scene.appendChild(note);
+                    }
                     scene.querySelectorAll('.jigsaw-overlay, .jigsaw-slots, .jigsaw-tray, .jigsaw-label').forEach(el => el.remove());
                     document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
                     simonRound = 0;
                     simonLitButtons = 0;
                     simonPlaying = false;
-                    showDialog('音乐盒上有三个按钮，各代表一个音阶。\n\n它会先播放一段旋律，你来复现——主人常哼给朵朵听的那几个音。', () => {
-                        setupMusicBoxHotspots();
-                        startSimonRound();
+                    collectMemoryFragment(0, () => {
+                        showDialog('音乐盒上有三个按钮，各代表一个音阶。\n\n它会先播放一段旋律，你来复现——主人常哼给朵朵听的那几个音。', () => {
+                            setupMusicBoxHotspots();
+                            startSimonRound();
+                        });
                     });
                 });
             });
@@ -320,8 +329,13 @@ function handleMusicBoxBtn(key) {
             if (simonRound >= 3) {
                 gameState.flags.musicBoxSolved = true;
                 saveGame();
-                showDialog('叮——三个按钮全部亮起，音乐盒缓缓打开了。\n\n里面躺着一张小纸片，上面写着：\n"抽屉里的密码，是她陪我的年数。"', () => {
-                    showDialog('朵朵2022年来，2026年……她陪了主人4年。\n\n你记下了这个数字。', () => {
+                showDialog('叮——三个按钮全部亮起，音乐盒缓缓打开了。\n\n里面躺着一张小纸片，上面写着：\n"那天下午，她第一次跳上窗台，坐在那里望了很久。我没有打扰她。"', () => {
+                    if (!gameState.inventory.includes('音乐盒纸条')) {
+                        gameState.inventory.push('音乐盒纸条');
+                        saveGame();
+                        updateInventory();
+                    }
+                    showDialog('你轻轻合上音乐盒，心里有什么东西悄悄松动了。', () => {
                         collectMemoryFragment(1);
                     });
                 });
@@ -359,6 +373,16 @@ export function openBookshelfScene() {
             document.getElementById('bookshelf-puzzle-ui').classList.add('hidden');
             showDialog('音乐盒已经打开过了，里面空空如也。');
             setupMusicBoxHotspots();
+            // 便利贴未收集时重新显示
+            const scene = document.getElementById('bookshelf-scene');
+            if (!gameState.flags.stickyNotes.includes('note4') && !scene.querySelector('#sticky-note4')) {
+                const note = document.createElement('div');
+                note.id = 'sticky-note4';
+                note.textContent = '📝';
+                note.style.cssText = 'position:absolute;left:6%;top:12%;font-size:28px;cursor:pointer;z-index:210;';
+                note.addEventListener('click', () => { note.remove(); collectStickyNote('note4'); });
+                scene.appendChild(note);
+            }
         }
     });
 }

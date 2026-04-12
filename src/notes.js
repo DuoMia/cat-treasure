@@ -11,8 +11,8 @@ function checkTrueEnding() {
     }
 }
 
-export function collectMemoryFragment(index) {
-    if (gameState.flags.memoryFragments.includes(index)) return;
+export function collectMemoryFragment(index, onDone) {
+    if (gameState.flags.memoryFragments.includes(index)) { onDone?.(); return; }
     gameState.flags.memoryFragments.push(index);
     saveGame();
     const count = gameState.flags.memoryFragments.length;
@@ -27,8 +27,11 @@ export function collectMemoryFragment(index) {
                 if (balconyScene && !balconyScene.classList.contains('hidden')) {
                     balconyScene.classList.add('hidden');
                 }
+                onDone?.();
                 checkTrueEnding();
             });
+        } else {
+            onDone?.();
         }
     });
 }

@@ -32,7 +32,10 @@ export function openBalconyScene() {
 
         const clockTime = gameState.flags.clockTime;
         if (!clockTime) {
-            showDialog('你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n阳光平淡，什么都看不出来。也许光线的角度很重要……', () => {
+            const intro = gameState.flags.musicBoxSolved && isFirstVisit
+                ? '你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n你想起了那张纸片——她当时就是从这扇窗跳出来的吧，然后坐在这里，望着外面。\n\n阳光平淡，什么都看不出来。也许光线的角度很重要……'
+                : '你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n阳光平淡，什么都看不出来。也许光线的角度很重要……';
+            showDialog(intro, () => {
                 if (isFirstVisit) {
                     showDialog('地板上有四块刻着符号的砖，顺序似乎很重要……', () => setupBalconyHotspots());
                 } else {
@@ -40,11 +43,11 @@ export function openBalconyScene() {
                 }
             });
         } else if (clockTime === '10') {
-            showDialog('上午的阳光从左侧斜射进来，光线柔和。\n\n仙人掌的影子被拉得很长，影子末端压着地板上的一条砖缝……', () => {
+            showDialog('上午的阳光从左侧斜射进来，光线柔和。\n\n仙人掌的影子被拉得很长，影子末端压着地板上的一条砖缝……就像信里写的那样。', () => {
                 setupBalconyHotspots();
             });
         } else if (clockTime === '15') {
-            showDialog('下午的阳光从右侧低低地照进来，光线橙红。\n\n绿植的影子斜斜地落在地板上，影子末端也压着一条砖缝……', () => {
+            showDialog('下午的阳光从右侧低低地照进来，光线橙红。\n\n绿植的影子斜斜地落在地板上，影子末端也压着一条砖缝……就像信里写的那样。', () => {
                 setupBalconyHotspots();
             });
         } else {
@@ -109,7 +112,7 @@ function setupBalconyHotspots() {
                 gameState.inventory.push('信');
                 saveGame();
                 updateInventory();
-                showDialog('你获得了一封信。\n\n"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我四年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"', () => {
+                showDialog('你获得了一封信。\n\n"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我五年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"', () => {
                     showDialog('你握着这封信，心里涌起一股说不清的情绪。\n\n时钟……一切线索都指向那里。', () => {
                         collectMemoryFragment(4);
                     });

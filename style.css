@@ -718,8 +718,6 @@ body {
         padding: 5px 6px;
         font-size: 10px;
     }
-        font-size: 12px;
-    }
 
     .item-icon {
         font-size: 18px;
@@ -1824,34 +1822,35 @@ body {
     left: 35%; top: 45%;
     width: 30%; height: 25%;
     cursor: pointer;
-    border: 2px dashed rgba(255,220,80,0.5);
-    border-radius: 8px;
-    transition: border-color 0.2s, background 0.2s;
+    border: none;
+    background: none;
     z-index: 210;
 }
 
-#food-bowl-record-hotspot:hover {
-    border-color: #f0c040;
-    background: rgba(240,192,64,0.1);
+body.debug-mode #food-bowl-record-hotspot {
+    border: 2px dashed rgba(255,220,80,0.5);
+    border-radius: 8px;
+    background: rgba(255,220,80,0.05);
 }
 
 #food-bowl-pickup {
     position: absolute;
     cursor: pointer;
-    border: 2px dashed rgba(200,168,130,0.5);
+    border: none;
     border-radius: 50%;
     z-index: 210;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 28px;
-    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    filter: drop-shadow(0 2px 6px rgba(180, 130, 60, 0.3));
 }
 
 #food-bowl-pickup:hover {
-    border-color: rgba(240,192,64,0.8);
-    background: rgba(240,192,64,0.08);
-    transform: scale(1.06);
+    background: rgba(240, 192, 64, 0.1);
+    transform: scale(1.08);
+    filter: drop-shadow(0 4px 12px rgba(240, 192, 64, 0.5));
 }
 
 .pickup-toast {
@@ -1883,46 +1882,55 @@ body {
 /* 碗跟随指示器 */
 .painting-bowl-indicator {
     position: absolute;
-    width: 7%;
-    height: 9%;
-    border: 2px solid rgba(255, 255, 255, 0.5);
-    border-radius: 12px;
+    width: 9%;
+    height: 11%;
+    border: none;
+    border-radius: 0;
     pointer-events: none;
     z-index: 215;
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    transition: opacity 0.2s, filter 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    background: rgba(0, 0, 0, 0.25);
-    backdrop-filter: blur(2px);
+    background: none;
+    opacity: 0.75;
+}
+
+.painting-bowl-indicator::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 90'%3E%3Cellipse cx='45' cy='68' rx='30' ry='16' fill='none' stroke='%23ffd76e' stroke-opacity='0.7' stroke-width='2.5'/%3E%3Cellipse cx='18' cy='28' rx='10' ry='12' fill='none' stroke='%23ffd76e' stroke-opacity='0.7' stroke-width='2.5'/%3E%3Cellipse cx='38' cy='14' rx='10' ry='12' fill='none' stroke='%23ffd76e' stroke-opacity='0.7' stroke-width='2.5'/%3E%3Cellipse cx='58' cy='14' rx='10' ry='12' fill='none' stroke='%23ffd76e' stroke-opacity='0.7' stroke-width='2.5'/%3E%3Cellipse cx='74' cy='28' rx='10' ry='12' fill='none' stroke='%23ffd76e' stroke-opacity='0.7' stroke-width='2.5'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .painting-bowl-indicator.correct {
-    border-color: rgba(120, 255, 160, 0.9);
-    background: rgba(80, 200, 100, 0.2);
-    box-shadow: 0 0 12px 3px rgba(100, 220, 130, 0.45);
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(100, 220, 130, 0.8));
     animation: bowl-pulse 0.5s ease infinite alternate;
 }
 
 @keyframes bowl-pulse {
-    from { box-shadow: 0 0 8px 2px rgba(100, 220, 130, 0.35); }
-    to   { box-shadow: 0 0 18px 6px rgba(100, 220, 130, 0.6); }
+    from { filter: drop-shadow(0 0 5px rgba(100, 220, 130, 0.5)); }
+    to   { filter: drop-shadow(0 0 14px rgba(100, 220, 130, 0.9)); }
 }
 
 /* 目标区域微弱提示 */
 .painting-zone {
     position: absolute;
     cursor: none;
-    border: 1px dashed rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    transition: border-color 0.25s, background 0.25s;
+    border: none;
+    border-radius: 50% 45% 50% 45% / 45% 50% 45% 50%;
+    transition: background 0.3s, box-shadow 0.3s;
     z-index: 212;
 }
 
 .painting-zone.near {
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 200, 100, 0.06);
+    box-shadow: inset 0 0 10px rgba(255, 200, 100, 0.08);
 }
 
 /* 进度 HUD - 在对话框上方，避免冲突 */

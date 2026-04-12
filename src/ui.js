@@ -123,10 +123,22 @@ export function updateInventory() {
             if (gameState.flags.albumUnlocked) {
                 openAlbumScene();
             } else {
-                showDialog(`你已收集 ${noteCount}/5 张便利贴。集齐5张可以解锁记忆相册。`);
+                const collected = gameState.flags.stickyNotes;
+                const lines = collected.map((id, n) => `【${n + 1}】${STICKY_NOTE_TEXTS[id]}`).join('\n\n');
+                showDialog(`便利贴（${noteCount}/5）\n\n${lines}\n\n集齐5张可以解锁记忆相册。`);
             }
         };
         inventoryItems.appendChild(noteDiv);
+    }
+
+    const fragCount = gameState.flags.memoryFragments.length;
+    if (fragCount > 0) {
+        const fragDiv = document.createElement('div');
+        fragDiv.className = 'inventory-item';
+        fragDiv.innerHTML = `记忆碎片 ${fragCount}/5`;
+        fragDiv.style.cursor = 'pointer';
+        fragDiv.onclick = () => handleItemClick('记忆碎片');
+        inventoryItems.appendChild(fragDiv);
     }
 
     gameState.inventory.forEach(item => {
@@ -153,6 +165,11 @@ function handleItemClick(item) {
                 openPasswordModal();
             }
         );
+    } else if (item === '记忆碎片') {
+        const frags = gameState.flags.memoryFragments;
+        const texts = MEMORY_FRAGMENT_TEXTS;
+        const lines = frags.map((i, n) => `【${n + 1}】${texts[i]}`).join('\n\n');
+        showDialog(`记忆碎片（${frags.length}/5）\n\n${lines}`);
     } else if (item === '钥匙') {
         showDialog('你有一把钥匙，可以用来开门。');
     } else if (item === '铁盒') {
@@ -160,15 +177,17 @@ function handleItemClick(item) {
     } else if (item === '地图') {
         openMapModal();
     } else if (item === '纸条') {
-        showDialog('纸条上写着：\n"朵朵的秘密\n\n她陪我走过的岁月，是第一把钥匙。\n她留在这里的印记，是第二把钥匙。\n她最爱的那些小东西，是第三把钥匙。\n\n三把钥匙，从大到小。"');
+        showDialog('纸条上写着：\n"抽屉里藏着朵朵的秘密\n\n她陪我走过的岁月，是第一个数字。\n她留在这里的印记，是第二个数字。\n她最爱的那些小东西，是第三个数字。\n\n三把钥匙，从大到小。"');
+    } else if (item === '音乐盒纸条') {
+        showDialog('"那天下午，她第一次跳上窗台，坐在那里望了很久。我没有打扰她。"');
     } else if (item === '日记') {
-        showDialog('日记封面上写着"献给朵朵"。\n\n── 2022年3月15日 ──\n\n朵朵来了。她很小，一直躲在沙发角落不出来。我把她的第一个项圈和一个小音乐盒一起放进了书架最里面的格子，5本书按厚薄排好就能打开。\n\n── 关于吃饭 ──\n\n她有自己的规律。早7点、午12点、晚6点、夜10点，从不迟到。我把这些记在食盆旁边的卡片上，怕自己忘。\n\n── 关于玩具 ──\n\n她最后一次玩玩具是离开前的那个傍晚。先闻了闻小鱼，用爪子确认了铃铛，然后把球推给我。我把那个顺序锁进了玩具箱。\n\n── 关于秘密 ──\n\n我把最重要的东西藏在了她每天下午都会凝视的地方。那里，时间从不停歇。');
+        showDialog('日记封面上写着"献给朵朵"。\n\n── 2021年8月29日 ──\n\n朵朵来了。她很小，一直躲在沙发角落不出来。我把她的第一个项圈和一个小音乐盒一起放进了书架最里面的格子，我最喜欢将5本书按朵朵的样子摆放。\n\n── 关于吃饭 ──\n\n她有自己的规律。早7点、午12点、晚6点、夜10点，从不迟到，她还有自己的吃饭习惯。我把这些记在食盆旁边的卡片上，怕自己忘。\n\n── 关于玩具 ──\n\n她最后一次玩玩具是离开前的那个傍晚。先闻了闻小鱼，用爪子确认了铃铛，然后把球推给我。我把那个顺序锁进了玩具箱。\n\n── 关于阳台 ──\n\n朵朵没事干最喜欢在阳台发呆了，不同时间会待在不同的地方。');
     } else if (item === '项圈') {
-        showDialog('朵朵的项圈，上面刻着她的名字。\n\n项圈上刻着 2022.03.15，那是朵朵来家的日子。\n\n项圈内侧还刻着一串数字：4-4-3。\n\n这串数字……好像在哪里用得上。');
+        showDialog('朵朵的项圈，上面刻着她的名字。\n\n项圈上刻着 2021.08.29，那是朵朵来家的日子。\n\n项圈内侧还刻着一串数字：5-4-3。\n\n这串数字……好像在哪里用得上。');
     } else if (item === '主人的信') {
-        showDialog('"朵朵，\n\n你总是在下午三点坐到时钟下面，一动不动地盯着那根指针。我问你在看什么，你只是眯起眼睛。\n\n后来我明白了——你是在替我数时间。\n\n我把最重要的东西藏在了那里，就像你每天守着它一样。\n\n——主人"');
+        showDialog('"朵朵，\n\n每天上午十点，我把她的早饭端到阳台，她总是先不吃，坐在仙人掌旁边，等那道光爬过来，才低头吃第一口。\n\n我不知道她在等什么。也许是影子，也许是什么只有她看得见的东西。\n\n我把一些东西藏在了那道光照不到的地方。\n\n——主人"');
     } else if (item === '朵朵的信') {
-        showDialog('"喵——\n\n你找到这里了。我知道你会来的。\n\n主人把最重要的东西藏在了时钟里，那是我们在一起的每一天。\n\n猫咪神藏，不是宝贝，是时光。\n\n——朵朵 🐾"');
+        showDialog('"喵——\n\n你找到这里了。我知道你会来的。\n\n每天下午三点，我会跑到阳台，把玩具推到绿植旁边，等那道橙色的光把影子拉得很长很长。\n\n那是我最喜欢的时候。主人总是站在门口看着我，不说话。\n\n去那里看看吧。\n\n——朵朵 🐾"');
     } else if (item === '信') {
         showDialog('"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我四年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"');
     } else if (item.startsWith('便利贴')) {
@@ -322,7 +341,7 @@ export function showHelp() {
     } else if (!f.hasOwnerLetter) {
         hint = '画框已经弹开了，里面应该有什么东西。';
     } else if (!f.toyBoxSolved) {
-        hint = '日记里写了朵朵最后一次玩玩具的顺序。桌子下面有个玩具箱，按那个顺序试试？';
+        hint = '日记里写了朵朵最后一次玩玩具的顺序。桌子下面有个玩具箱，按那个顺序试试图案锁？';
     } else if (!f.hasCatLetter) {
         hint = '玩具箱打开了！里面应该有朵朵留下的东西，看看里面。';
     } else if (!f.musicBoxSolved) {

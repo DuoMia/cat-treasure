@@ -153,7 +153,7 @@ function setupPaintingOverlay() {
     // 碗指示器（跟随鼠标/触摸）
     const bowl = document.createElement('div');
     bowl.className = 'painting-bowl-indicator';
-    bowl.textContent = '🍜';
+    bowl.textContent = '🥣';
     bowl.style.cssText = 'left:-20%;top:-20%;'; // 初始隐藏在画面外
     scene.appendChild(bowl);
 
@@ -298,7 +298,7 @@ function confirmSymbol(symbol, scene) {
                 gameState.inventory.push('主人的信');
                 saveGame();
                 updateInventory();
-                showDialog('你获得了主人写给朵朵的信。\n\n"朵朵，\n\n你总是在下午三点坐到时钟下面，一动不动地盯着那根指针。我问你在看什么，你只是眯起眼睛。\n\n后来我明白了——你是在替我数时间。\n\n我把最重要的东西藏在了那里，就像你每天守着它一样。\n\n——主人"', () => {
+                showDialog('你获得了主人写给朵朵的信。\n\n"朵朵，\n\n每天上午十点，我把她的早饭端到阳台，她总是先不吃，坐在仙人掌旁边，等那道光爬过来，才低头吃第一口。\n\n我不知道她在等什么。也许是影子，也许是什么只有她看得见的东西。\n\n我把一些东西藏在了那道光照不到的地方。\n\n——主人"', () => {
                     showDialog('先闻味道（鱼）→爪子确认（爪印）→铃铛→球……\n\n这个顺序……好像可以用在什么地方。', () => {
                         collectMemoryFragment(2);
                     });

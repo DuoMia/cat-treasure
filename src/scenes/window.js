@@ -21,7 +21,10 @@ export function openWindowScene() {
             scene.appendChild(note);
         }
 
-        showDialog('窗台上有朵朵留下的毛发和爪印。窗户虚掩着，外面是阳台……', () => {
+        const windowDesc = gameState.flags.musicBoxSolved
+            ? '窗台上还留着她的爪印。\n\n你想起了那张纸片——她第一次跳上来的时候，就是这样坐着，望着外面，一动不动。'
+            : '窗台上有朵朵留下的毛发和爪印。窗户虚掩着，外面是阳台……';
+        showDialog(windowDesc, () => {
             showChoices([
                 {
                     text: '🌿 推开窗户去阳台',

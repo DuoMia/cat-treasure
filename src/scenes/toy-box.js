@@ -357,8 +357,21 @@ function onWin() {
             gameState.inventory.push('朵朵的信');
             saveGame();
             updateInventory();
-            showDialog('你获得了朵朵的信。\n\n爪印排列成文字：\n\n"喵——\n\n你找到这里了。我知道你会来的。\n\n主人把最重要的东西藏在了时钟里，那是我们在一起的每一天。\n\n猫咪神藏，不是宝贝，是时光。\n\n——朵朵 🐾"', () => {
-                collectStickyNote('note5');
+            showDialog('你获得了朵朵的信。\n\n爪印排列成文字：\n\n"喵——\n\n你找到这里了。我知道你会来的。\n\n每天下午三点，我会跑到阳台，把玩具推到绿植旁边，等那道橙色的光把影子拉得很长很长。\n\n那是我最喜欢的时候。主人总是站在门口看着我，不说话。\n\n去那里看看吧。\n\n——朵朵 🐾"', () => {
+                if (!gameState.flags.balconyClue2) {
+                    gameState.flags.balconyClue2 = true;
+                    saveGame();
+                }
+                // 在玩具箱场景生成可点击便利贴
+                const scene = document.getElementById('toy-box-scene');
+                if (!gameState.flags.stickyNotes.includes('note5') && scene && !scene.querySelector('#sticky-note5')) {
+                    const note = document.createElement('div');
+                    note.id = 'sticky-note5';
+                    note.textContent = '📝';
+                    note.style.cssText = 'position:absolute;right:6%;top:12%;font-size:28px;cursor:pointer;z-index:220;';
+                    note.addEventListener('click', () => { note.remove(); collectStickyNote('note5'); });
+                    scene.appendChild(note);
+                }
                 showDialog('你握着这封信，眼眶有些湿润。\n\n时钟……一切线索都指向那里。', () => {
                     collectMemoryFragment(3);
                 });
@@ -375,22 +388,7 @@ export function openToyBoxScene() {
 
         const scene = document.getElementById('toy-box-scene');
 
-        // 阳台线索纸条
-        if (!gameState.flags.balconyClue2 && !scene.querySelector('#balcony-note-b')) {
-            const noteB = document.createElement('div');
-            noteB.id = 'balcony-note-b';
-            noteB.style.cssText = 'position:absolute;left:4%;bottom:8%;width:6%;height:8%;cursor:pointer;z-index:220;font-size:20px;display:flex;align-items:center;justify-content:center;';
-            noteB.textContent = '📄';
-            noteB.addEventListener('click', () => {
-                gameState.flags.balconyClue2 = true;
-                saveGame();
-                noteB.remove();
-                showDialog('你在玩具箱底部发现了一张夹着的纸条。\n\n"下午三点，她会挪到阳台右边，把脸埋进那盆绿植里，等影子爬过来。"', () => {
-                    showDialog('下午三点……影子……\n\n你想起了墙上的那个时钟。');
-                });
-            });
-            scene.appendChild(noteB);
-        }
+        // 阳台线索纸条已移至朵朵的信，此处不再生成
 
         if (!scene.querySelector('#klotski-wrapper')) {
             buildBoardDOM(scene);
@@ -398,13 +396,22 @@ export function openToyBoxScene() {
 
         if (gameState.flags.toyBoxSolved) {
             showDialog('玩具箱已经打开了，信已经取出来了。');
+            // 便利贴未收集时重新显示
+            if (!gameState.flags.stickyNotes.includes('note5') && !scene.querySelector('#sticky-note5')) {
+                const note = document.createElement('div');
+                note.id = 'sticky-note5';
+                note.textContent = '📝';
+                note.style.cssText = 'position:absolute;right:6%;top:12%;font-size:28px;cursor:pointer;z-index:220;';
+                note.addEventListener('click', () => { note.remove(); collectStickyNote('note5'); });
+                scene.appendChild(note);
+            }
             return;
         }
 
         initPuzzle();
         requestAnimationFrame(() => renderBoard());
 
-        showDialog('玩具箱里有一封信，被玩具压住了。\n\n选中一个方块，再点击旁边的方块来决定移动方向，把信从底部出口滑出来。');
+        showDialog('咔哒——图案锁弹开了！\n\n箱子里好像有封信，被玩具压住了，要不把它拿出来看看？\n\n选中一个方块，再点击旁边的方块来决定移动方向，把信从底部出口滑出来。');
     });
 }
 

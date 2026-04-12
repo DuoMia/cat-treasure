@@ -143,7 +143,7 @@ export function interactBookshelf() {
         if (!gameState.flags.hasDiary) {
             showDialog('书架上摆满了书，还有一些小摆件。角落里有个精致的音乐盒，盒盖上落了一层薄薄的灰尘，好像很久没人碰过了。', next);
         } else if (!gameState.flags.bookPuzzleSolved) {
-            showDialog('日记里提到过书架……5本书，按厚薄排好。', () => {
+            showDialog('日记里提到过书架……5本书，按朵朵样子排好。', () => {
                 openBookshelfScene();
             });
         } else if (!gameState.flags.musicBoxSolved) {
@@ -188,11 +188,11 @@ export function interactToyBox() {
     if (tickExploreAfterBite()) return;
     trackObjectClick('toy-box', (next) => {
         if (!gameState.flags.hasDiary) {
-            showDialog('桌子下面好像有个小木箱，但上面有个图案锁，暂时打不开。', next);
+            showDialog('桌子下面好像有个小木箱，上面有个图案锁，暂时打不开。', next);
         } else if (gameState.flags.toyBoxSolved) {
             showDialog('玩具箱已经打开了，朵朵的信已经取走了。', next);
         } else {
-            showDialog('小木箱上有四个图案按钮：🐟 🐾 🔔 ⚽\n\n日记里写过：先闻了闻小鱼，用爪子确认了铃铛，然后把球推给我……', () => {
+            showDialog('小木箱上有四个图案按钮：🐟 🐾 🔔 ⚽\n\n日记里写过：先闻了闻小鱼，用爪子确认了铃铛，然后把球推给我……\n\n🐟 → 🐾 → 🔔 → ⚽，试试这个顺序？', () => {
                 openToyBoxScene();
             });
         }
