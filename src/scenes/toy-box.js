@@ -457,15 +457,9 @@ export function openToyBoxScene() {
 
         const scene = document.getElementById('toy-box-scene');
 
-        // 阳台线索纸条已移至朵朵的信，此处不再生成
-
-        if (!scene.querySelector('#klotski-wrapper')) {
-            buildBoardDOM(scene);
-        }
-
         if (gameState.flags.toyBoxSolved) {
+            if (!scene.querySelector('#klotski-wrapper')) buildBoardDOM(scene);
             showDialog('玩具箱已经打开了，信已经取出来了。');
-            // 便利贴未收集时重新显示
             if (!gameState.flags.stickyNotes.includes('note5') && !scene.querySelector('#sticky-note5')) {
                 const note = document.createElement('div');
                 note.id = 'sticky-note5';
@@ -481,9 +475,7 @@ export function openToyBoxScene() {
             setupToyLock(scene, () => {
                 gameState.flags.toyLockSolved = true;
                 saveGame();
-                if (!scene.querySelector('#klotski-wrapper')) {
-                    buildBoardDOM(scene);
-                }
+                if (!scene.querySelector('#klotski-wrapper')) buildBoardDOM(scene);
                 initPuzzle();
                 requestAnimationFrame(() => renderBoard());
                 showDialog('咔哒——图案锁弹开了！\n\n箱子里好像有封信，被玩具压住了，要不把它拿出来看看？\n\n选中一个方块，再点击旁边的方块来决定移动方向，把信从底部出口滑出来。');
@@ -491,9 +483,7 @@ export function openToyBoxScene() {
             return;
         }
 
-        if (!scene.querySelector('#klotski-wrapper')) {
-            buildBoardDOM(scene);
-        }
+        if (!scene.querySelector('#klotski-wrapper')) buildBoardDOM(scene);
         initPuzzle();
         requestAnimationFrame(() => renderBoard());
         showDialog('箱子里好像有封信，被玩具压住了，要不把它拿出来看看？\n\n选中一个方块，再点击旁边的方块来决定移动方向，把信从底部出口滑出来。');
