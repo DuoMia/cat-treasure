@@ -494,16 +494,17 @@ body {
 
 #debug-toggle {
     position: fixed;
-    top: 20px;
-    left: 20px;
+    bottom: 16px;
+    top: auto;
+    left: 16px;
     width: auto;
-    height: 40px;
-    padding: 10px 20px;
+    height: 28px;
+    padding: 4px 10px;
     background: rgba(0, 0, 0, 0.7);
     border: 2px solid rgba(255, 255, 255, 0.5);
-    border-radius: 20px;
+    border-radius: 14px;
     color: white;
-    font-size: 14px;
+    font-size: 11px;
     cursor: pointer;
     z-index: 1000;
     transition: all 0.3s ease;
@@ -1862,6 +1863,8 @@ body {
     border: none;
     background: none;
     z-index: 210;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body.debug-mode #food-bowl-record-hotspot {
@@ -1877,6 +1880,8 @@ body.debug-mode #food-bowl-record-hotspot {
     z-index: 210;
     background: none;
     filter: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #food-bowl-pickup:hover {
