@@ -33,10 +33,12 @@ export function openFoodBowlScene() {
                 const dy = e.changedTouches[0].clientY - _ty;
                 if (dx * dx + dy * dy > 64) return;
                 e.preventDefault();
+                e.stopPropagation();
                 _touchFired = true;
                 onCardActivate();
             }, { passive: false });
-            card.addEventListener('click', () => {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
                 if (_touchFired) { _touchFired = false; return; }
                 onCardActivate();
             });
