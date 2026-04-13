@@ -52,7 +52,7 @@ function initClockFace() {
         hotspot.dataset = {};
         hotspot.setAttribute('data-hour', h === 0 ? 12 : h);
         const hourVal = h === 0 ? 12 : h;
-        hotspot.addEventListener('click', () => onClockHourClick(hourVal));
+        let _touchFired = false;
         let _tx = 0, _ty = 0;
         hotspot.addEventListener('touchstart', (e) => {
             _tx = e.touches[0].clientX; _ty = e.touches[0].clientY;
@@ -62,8 +62,13 @@ function initClockFace() {
             const dy = e.changedTouches[0].clientY - _ty;
             if (dx * dx + dy * dy > 64) return;
             e.preventDefault();
+            _touchFired = true;
             onClockHourClick(hourVal);
         }, { passive: false });
+        hotspot.addEventListener('click', () => {
+            if (_touchFired) { _touchFired = false; return; }
+            onClockHourClick(hourVal);
+        });
         document.getElementById('clock-hotspots').appendChild(hotspot);
     }
 

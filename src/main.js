@@ -167,6 +167,7 @@ function startGame(isRestart = false) {
         }, { passive: false });
 
         document.getElementById('game-play').addEventListener('click', function(e) {
+            if (e.target.closest('.scene-back-btn')) return;
             const dialogBox = document.getElementById('dialog-box');
             if (!dialogBox.classList.contains('hidden')) {
                 handleDialogClick();
