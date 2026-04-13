@@ -6,6 +6,7 @@ import { showDialog, updateInventory } from '../ui.js';
 import { collectStickyNote, collectMemoryFragment } from '../notes.js';
 import { PUZZLES, MUSIC_BOX_PHASES } from '../data.js';
 import { lockPortraitDrag, unlockPortraitDrag } from '../utils.js';
+import { registerAudioCtx } from '../gesture-lock.js';
 
 /** 竖屏时将视口水平对准目标百分比位置 */
 function scrollToX(pct) {
@@ -321,6 +322,7 @@ let _audioCtx = null;
 function getAudioCtx() {
     if (!_audioCtx) {
         _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        registerAudioCtx(_audioCtx);
     }
     if (_audioCtx.state === 'suspended') {
         _audioCtx.resume();
@@ -350,7 +352,7 @@ function playNote(key, duration = 400) {
         gain.connect(ctx.destination);
         osc.frequency.value = NOTE_FREQS[key];
         osc.type = 'sine';
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.setValueAtTime(0.7, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + duration / 1000);

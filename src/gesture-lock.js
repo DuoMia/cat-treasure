@@ -1,20 +1,31 @@
 /**
  * gesture-lock.js
  * 禁用移动端系统级手势，不影响游戏内触摸交互和 AudioContext 解锁。
- *
- * 长按 callout / 文字选中 / -webkit-touch-callout 已在 CSS 全局 * 规则里处理，
- * 这里只处理 JS 层面必须拦截的手势。
  */
+
+// 供外部（bookshelf.js）注册 AudioContext，以便在手势内 resume
+let _registeredAudioCtx = null;
+export function registerAudioCtx(ctx) { _registeredAudioCtx = ctx; }
 
 export function installGestureLock() {
     // ── 1. 右键菜单 ──────────────────────────────────────────────────
     document.addEventListener('contextmenu', e => e.preventDefault(), { passive: false });
 
-    // ── 2. 多指捏合缩放 ──────────────────────────────────────────────
-    // 注意：不对单指 touchstart 调用 preventDefault，否则会阻止
-    // AudioContext 的用户手势解锁（浏览器安全策略）
+    // ── 2. 单指 / 多指 touchstart ────────────────────────────────────
+    // 在游戏容器内：先 resume AudioContext（保证手势可信），再 preventDefault
+    // 阻止长按 callout / 放大镜 / 翻译气泡。
     document.addEventListener('touchstart', e => {
-        if (e.touches.length > 1) e.preventDefault();
+        if (e.touches.length > 1) {
+            e.preventDefault();
+            return;
+        }
+        if (e.target.closest('#game-container')) {
+            // 先 resume，再 preventDefault，顺序不能反
+            if (_registeredAudioCtx && _registeredAudioCtx.state === 'suspended') {
+                _registeredAudioCtx.resume();
+            }
+            e.preventDefault();
+        }
     }, { passive: false });
 
     // ── 3. 双击缩放 ──────────────────────────────────────────────────
