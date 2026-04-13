@@ -20,9 +20,11 @@ export function openFoodBowlScene() {
         if (!scene.querySelector('#food-bowl-record-hotspot')) {
             const card = document.createElement('div');
             card.id = 'food-bowl-record-hotspot';
-            card.addEventListener('click', () => {
+            const onCardActivate = () => {
                 showDialog('你凑近看那张泛黄的记录卡……\n\n"她吃早饭的时候，总喜欢待在毯子上，并且要离柜子最近。\n\n中午的阳光最烈，她会找最亮的地方，正对着光吃。\n\n傍晚她有点困，歪在离门最近的角落，有时候吃到一半就打盹。\n\n夜里安静，她会躲到最暗的地方，专心吃完再出来。"');
-            });
+            };
+            card.addEventListener('click', onCardActivate);
+            card.addEventListener('touchend', (e) => { e.preventDefault(); onCardActivate(); }, { passive: false });
             scene.appendChild(card);
         }
 

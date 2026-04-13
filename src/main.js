@@ -34,6 +34,14 @@ initHotspotCallbacks(createRoomHotspots, interactSofa);
 // 页面加载时立即锁定所有系统级手势
 installGestureLock();
 
+// 移动端：给所有返回按钮绑定 touchend，消除 300ms 延迟
+document.querySelectorAll('.scene-back-btn').forEach(btn => {
+    btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        btn.click();
+    }, { passive: false });
+});
+
 let _listenersSetup = false;
 
 // 页面加载时：有存档则显示"重新开始"按钮
@@ -61,6 +69,18 @@ function startGame(isRestart = false) {
                 document.getElementById('pen-image').classList.remove('hidden');
                 document.getElementById('pen-image').classList.add('fallen');
             }
+        }
+    }
+
+    // 同步调试按钮文案（存档可能保存了 debugMode 状态）
+    const debugBtn = document.getElementById('debug-toggle');
+    if (debugBtn) {
+        if (gameState.debugMode) {
+            document.body.classList.add('debug-mode');
+            debugBtn.textContent = '🔧 关闭调试';
+        } else {
+            document.body.classList.remove('debug-mode');
+            debugBtn.textContent = '🔧 调试模式';
         }
     }
 

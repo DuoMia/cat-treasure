@@ -51,7 +51,9 @@ function initClockFace() {
         hotspot.setAttribute('cursor', 'pointer');
         hotspot.dataset = {};
         hotspot.setAttribute('data-hour', h === 0 ? 12 : h);
-        hotspot.addEventListener('click', () => onClockHourClick(h === 0 ? 12 : h));
+        const hourVal = h === 0 ? 12 : h;
+        hotspot.addEventListener('click', () => onClockHourClick(hourVal));
+        hotspot.addEventListener('touchend', (e) => { e.preventDefault(); onClockHourClick(hourVal); }, { passive: false });
         document.getElementById('clock-hotspots').appendChild(hotspot);
     }
 

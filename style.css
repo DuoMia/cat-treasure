@@ -1309,6 +1309,8 @@ body {
     backdrop-filter: blur(4px);
     transition: background 0.2s;
     z-index: 9999;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .scene-back-btn:hover {
@@ -1404,6 +1406,7 @@ body {
     width: min(60vw, 60vh);
     height: min(60vw, 60vh);
     filter: drop-shadow(0 4px 24px rgba(0,0,0,0.6));
+    touch-action: manipulation;
 }
 
 #clock-time-label {
