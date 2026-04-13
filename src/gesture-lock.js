@@ -31,8 +31,10 @@ export function installGestureLock() {
         _lastTap = now;
     }, { passive: false });
 
-    // ── 4. 长按拖动图片 / 元素（系统拖拽预览） ──────────────────────
-    document.addEventListener('dragstart', e => e.preventDefault(), { passive: false });
+    // ── 4. 长按拖动图片 / 元素（系统拖拽预览，仅移动端） ────────────
+    document.addEventListener('dragstart', e => {
+        if (!e.target.closest('[draggable="true"]')) e.preventDefault();
+    }, { passive: false });
 
     // ── 5. 文字选中（touchmove 期间） ───────────────────────────────
     document.addEventListener('selectstart', e => e.preventDefault(), { passive: false });

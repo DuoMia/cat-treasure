@@ -49,7 +49,7 @@ function setupBumpInteraction() {
 
     if (gameState.flags.hasBox) {
         setTapHandler(bump, function() {
-            showDialog('沙发角落已经被你打开过了，没有什么新的发现了。');
+            showDialog('铁盒已经被你拿走了。');
         });
         return;
     }
@@ -95,7 +95,6 @@ function setupBumpInteraction() {
                                 showDialog(
                                     '你把铁盒拿了出来，发现铁盒被一个五位字母密码的锁锁住了，你觉得出去的钥匙可能就在这个盒子里面，于是便开始调查盒子的四周，看看有什么线索。',
                                     () => {
-                                        bump.onclick = null;
                                         showDialog('就在这时，你听到抽屉那边好像有动静……', () => createRoomHotspots());
                                     }
                                 );

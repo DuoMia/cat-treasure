@@ -26,6 +26,65 @@ const CORRECT_ORDER = ['seg1', 'seg2', 'seg3', 'seg4', 'seg5'];
 let dragSrcId = null;
 let jigsawSlots = [null, null, null, null, null];
 
+// 鼠标拖拽状态
+let mouseDragSeg = null;
+let mouseDragClone = null;
+
+function startMouseDrag(seg, clientX, clientY) {
+    mouseDragSeg = seg;
+    dragSrcId = seg.id;
+    mouseDragClone = document.createElement('div');
+    mouseDragClone.className = 'jigsaw-piece jigsaw-drag-clone';
+    mouseDragClone.style.cssText = `
+        background-image: url('cat.jpg');
+        background-size: 260px 200px;
+        background-position: -${seg.bgX}px -76px;
+        background-repeat: no-repeat;
+        position: fixed; z-index: 9999; pointer-events: none;
+        width: 52px; height: 200px;
+        opacity: 0.85; cursor: grabbing;
+        transform: rotate(-2deg) scale(1.05);
+        box-shadow: 4px 8px 24px rgba(0,0,0,0.7);
+        left: ${clientX - 26}px; top: ${clientY - 100}px;
+    `;
+    document.body.appendChild(mouseDragClone);
+}
+
+function onMouseMove(e) {
+    if (!mouseDragClone) return;
+    mouseDragClone.style.left = `${e.clientX - 26}px`;
+    mouseDragClone.style.top = `${e.clientY - 100}px`;
+    // 高亮悬停的 slot
+    document.querySelectorAll('.jigsaw-slot').forEach(s => s.classList.remove('drag-over'));
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    el?.closest('.jigsaw-slot')?.classList.add('drag-over');
+}
+
+function onMouseUp(e) {
+    if (!mouseDragClone) return;
+    mouseDragClone.remove();
+    mouseDragClone = null;
+    document.querySelectorAll('.jigsaw-slot').forEach(s => s.classList.remove('drag-over'));
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const slot = el?.closest('.jigsaw-slot');
+    if (slot) {
+        handleDropOnSlot(slot);
+    } else if (el?.closest('.jigsaw-tray')) {
+        // 拖回托盘
+        const srcSlotIdx = jigsawSlots.indexOf(dragSrcId);
+        if (srcSlotIdx >= 0) {
+            jigsawSlots[srcSlotIdx] = null;
+            renderJigsawSlots();
+        }
+        dragSrcId = null;
+    } else {
+        dragSrcId = null;
+    }
+    mouseDragSeg = null;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+}
+
 function shuffleArray(arr) {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -39,8 +98,6 @@ function makePieceEl(seg) {
     const el = document.createElement('div');
     el.className = 'jigsaw-piece';
     el.dataset.segId = seg.id;
-    el.draggable = true;
-    // 用 background-image 显示猫咪图片的对应竖条
     el.style.cssText = `
         background-image: url('cat.jpg');
         background-size: 260px 200px;
@@ -48,15 +105,9 @@ function makePieceEl(seg) {
         background-repeat: no-repeat;
     `;
 
-    // 桌面拖拽
-    el.addEventListener('dragstart', e => {
-        dragSrcId = seg.id;
-        e.dataTransfer.effectAllowed = 'move';
-        setTimeout(() => el.classList.add('dragging'), 0);
-    });
-    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    // 鼠标拖拽由 scene 层事件委托处理（见 setupBookPuzzleHotspots）
 
-    // 触摸拖拽
+    // 触摸拖拽（移动端）
     let touchClone;
     el.addEventListener('touchstart', e => {
         lockPortraitDrag();
@@ -99,15 +150,6 @@ function makeSlotEl(idx) {
     el.className = 'jigsaw-slot';
     el.dataset.slotIdx = idx;
     el.dataset.num = idx + 1;
-
-    el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-    el.addEventListener('dragenter', e => { e.preventDefault(); el.classList.add('drag-over'); });
-    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
-    el.addEventListener('drop', e => {
-        e.preventDefault();
-        el.classList.remove('drag-over');
-        handleDropOnSlot(el);
-    });
     return el;
 }
 
@@ -132,7 +174,6 @@ function renderJigsawSlots() {
             const seg = JIGSAW_SEGMENTS.find(s => s.id === segId);
             if (seg) slotEl.appendChild(makePieceEl(seg));
         }
-        // 状态类
         slotEl.classList.toggle('filled', !!segId);
         slotEl.classList.toggle('correct', segId === CORRECT_ORDER[idx]);
     });
@@ -222,6 +263,31 @@ function setupBookPuzzleHotspots() {
     tray.className = 'jigsaw-tray';
     shuffleArray(JIGSAW_SEGMENTS).forEach(seg => tray.appendChild(makePieceEl(seg)));
     scene.appendChild(tray);
+
+    // 事件委托：在 scene 层用 capture 捕获 mousedown，确保不被子元素覆盖拦截
+    if (scene._jigsawMouseDown) {
+        scene.removeEventListener('mousedown', scene._jigsawMouseDown, true);
+    }
+    scene._jigsawMouseDown = (e) => {
+        if (e.button !== 0) return;
+        const piece = e.target.closest('.jigsaw-piece');
+        if (!piece) return;
+        const segId = piece.dataset.segId;
+        const seg = JIGSAW_SEGMENTS.find(s => s.id === segId);
+        if (!seg) return;
+        e.preventDefault();
+        e.stopPropagation();
+        startMouseDrag(seg, e.clientX, e.clientY);
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+    scene.addEventListener('mousedown', scene._jigsawMouseDown, true);
+
+    // 临时调试：document 级别捕获所有 mousedown
+    document._jigsawDebug = (e) => {
+        console.log('[jigsaw-debug] mousedown target:', e.target, 'classes:', e.target.className, 'coords:', e.clientX, e.clientY);
+    };
+    document.addEventListener('mousedown', document._jigsawDebug, true);
 
     const hint = document.getElementById('book-puzzle-hint');
     if (hint) hint.textContent = '拖拽书脊图案，拼出朵朵走路的样子';
@@ -320,10 +386,6 @@ function handleMusicBoxBtn(key) {
         simonPlayerIdx++;
         if (simonPlayerIdx >= simonSequence.length) {
             simonRound++;
-            simonLitButtons = simonRound;
-            document.querySelectorAll('.music-btn').forEach((btn, idx) => {
-                if (idx < simonLitButtons) btn.classList.add('lit');
-            });
             updateSimonHud();
 
             if (simonRound >= 3) {
@@ -404,10 +466,19 @@ function setupMusicBoxHotspots() {
         btn.id = p.id;
         btn.dataset.phase = p.key;
         btn.dataset.idx = idx;
-        if (idx < simonLitButtons) btn.classList.add('lit');
         btn.style.cssText = `left:${p.x};top:${p.y};`;
         btn.innerHTML = `<span class="music-btn-label">${p.label}</span>`;
-        btn.addEventListener('click', () => handleMusicBoxBtn(p.key));
+        let touchHandled = false;
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touchHandled = true;
+            if (navigator.vibrate) navigator.vibrate(30);
+            handleMusicBoxBtn(p.key);
+        }, { passive: false });
+        btn.addEventListener('click', () => {
+            if (touchHandled) { touchHandled = false; return; }
+            handleMusicBoxBtn(p.key);
+        });
         scene.appendChild(btn);
     });
 }
