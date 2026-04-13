@@ -352,7 +352,7 @@ function playNote(key, duration = 400) {
         gain.connect(ctx.destination);
         osc.frequency.value = NOTE_FREQS[key];
         osc.type = 'sine';
-        gain.gain.setValueAtTime(0.7, ctx.currentTime);
+        gain.gain.setValueAtTime(1.2, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + duration / 1000);
@@ -377,6 +377,19 @@ function updateSimonHud() {
         return `<span class="simon-dot ${cls}">${inner}</span>`;
     }).join('');
     hud.innerHTML = `<div class="simon-round-label">第 ${Math.min(simonRound + 1, 3)} / 3 轮</div><div class="simon-dots">${dots}</div>`;
+
+    // 竖屏移动端：HUD 跟随视口中心
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+    if (window.innerWidth < vh) {
+        const container = document.getElementById('game-container');
+        const containerLeft = parseFloat(container?.style.left) || 0;
+        const centerInContainer = -containerLeft + window.innerWidth / 2;
+        hud.style.left = centerInContainer + 'px';
+        hud.style.transform = 'translateX(-50%)';
+    } else {
+        hud.style.left = '';
+        hud.style.transform = '';
+    }
 }
 
 function playSequence(seq, onDone) {
