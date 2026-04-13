@@ -6,7 +6,6 @@ import { showDialog, updateInventory } from '../ui.js';
 import { collectStickyNote, collectMemoryFragment } from '../notes.js';
 import { PUZZLES, MUSIC_BOX_PHASES } from '../data.js';
 import { lockPortraitDrag, unlockPortraitDrag } from '../utils.js';
-import { registerAudioCtx } from '../gesture-lock.js';
 
 /** 竖屏时将视口水平对准目标百分比位置 */
 function scrollToX(pct) {
@@ -319,24 +318,64 @@ let simonPlayerIdx = 0;
 let simonPlaying = false;
 let simonLitButtons = 0;
 
-// 全局共享 AudioContext，移动端需在用户手势内 resume
-let _audioCtx = null;
-function getAudioCtx() {
-    if (!_audioCtx) {
-        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        registerAudioCtx(_audioCtx);
-    }
-    if (_audioCtx.state === 'suspended') {
-        _audioCtx.resume();
-    }
-    return _audioCtx;
+// ── 音频：离线渲染为 Blob URL，用 <audio> 元素播放（绕过 iOS 静音开关）──
+const _noteBlobs = {};
+let _blobsReady = false;
+
+function renderNoteToBlob(freq, duration = 0.5) {
+    const sampleRate = 44100;
+    const length = Math.ceil(sampleRate * duration);
+    const offCtx = new OfflineAudioContext(1, length, sampleRate);
+    const osc = offCtx.createOscillator();
+    const gain = offCtx.createGain();
+    osc.connect(gain);
+    gain.connect(offCtx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(1.0, 0);
+    gain.gain.exponentialRampToValueAtTime(0.001, duration);
+    osc.start(0);
+    osc.stop(duration);
+    return offCtx.startRendering().then(buf => {
+        const numSamples = buf.length;
+        const arrayBuf = new ArrayBuffer(44 + numSamples * 2);
+        const view = new DataView(arrayBuf);
+        const writeStr = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+        writeStr(0, 'RIFF');
+        view.setUint32(4, 36 + numSamples * 2, true);
+        writeStr(8, 'WAVE');
+        writeStr(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeStr(36, 'data');
+        view.setUint32(40, numSamples * 2, true);
+        const samples = buf.getChannelData(0);
+        for (let i = 0; i < numSamples; i++) {
+            view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, samples[i])) * 0x7fff, true);
+        }
+        return URL.createObjectURL(new Blob([arrayBuf], { type: 'audio/wav' }));
+    });
 }
-// 在第一次用户交互时解锁 AudioContext
-function unlockAudioCtx() {
-    getAudioCtx();
+
+async function initNoteBlobs() {
+    if (_blobsReady) return;
+    try {
+        await Promise.all(Object.entries(NOTE_FREQS).map(async ([key, freq]) => {
+            _noteBlobs[key] = await renderNoteToBlob(freq, 0.5);
+        }));
+        _blobsReady = true;
+    } catch (e) {
+        console.warn('Note blob init failed:', e);
+    }
 }
-document.addEventListener('touchstart', unlockAudioCtx, { capture: true, once: true, passive: true });
-document.addEventListener('click',      unlockAudioCtx, { capture: true, once: true, passive: true });
+
+document.addEventListener('touchstart', initNoteBlobs, { capture: true, once: true, passive: true });
+document.addEventListener('click',      initNoteBlobs, { capture: true, once: true, passive: true });
 
 function generateSequence(length) {
     const keys = ['A', 'B', 'C'];
@@ -345,16 +384,27 @@ function generateSequence(length) {
     return seq;
 }
 
-function playNote(key, duration = 400) {
+function playNote(key) {
+    if (_blobsReady && _noteBlobs[key]) {
+        const audio = new Audio(_noteBlobs[key]);
+        audio.setAttribute('playsinline', '');
+        audio.volume = 1.0;
+        audio.play().catch(() => _playNoteFallback(key));
+    } else {
+        _playNoteFallback(key);
+    }
+}
+
+function _playNoteFallback(key, duration = 400) {
     try {
-        const ctx = getAudioCtx();
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.frequency.value = NOTE_FREQS[key];
         osc.type = 'sine';
-        gain.gain.setValueAtTime(1.2, ctx.currentTime);
+        gain.gain.setValueAtTime(1.0, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + duration / 1000);
@@ -395,10 +445,6 @@ function updateSimonHud() {
 }
 
 function playSequence(seq, onDone) {
-    // 确保 AudioContext 已 resume（定时器内无法触发用户手势，必须提前解锁）
-    if (_audioCtx && _audioCtx.state === 'suspended') {
-        _audioCtx.resume();
-    }
     simonPlaying = true;
     const scene = document.getElementById('bookshelf-scene');
     if (scene) scene.classList.add('simon-playing');
@@ -431,8 +477,6 @@ function handleMusicBoxBtn(key) {
     if (gameState.flags.musicBoxSolved) { showDialog('音乐盒已经打开过了。'); return; }
     if (simonPlaying) return;
 
-    // 用户手势内 resume AudioContext（移动端关键）
-    getAudioCtx();
     playNote(key, 300);
     highlightBtn(key, 300);
 
