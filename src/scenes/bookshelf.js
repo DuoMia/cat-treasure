@@ -310,7 +310,7 @@ function setupBookPuzzleHotspots() {
 
 // ── Simon Says 音乐盒 ──────────────────────────────────────────
 const NOTE_FREQS = { A: 330, B: 440, C: 550 };
-const ROUND_LENGTHS = [2, 3, 4];
+const ROUND_LENGTHS = [3, 4, 5, 6];
 
 let simonSequence = [];
 let simonRound = 0;
@@ -421,14 +421,14 @@ function highlightBtn(key, duration = 400) {
 function updateSimonHud() {
     const hud = document.getElementById('simon-hud');
     if (!hud) return;
-    const dots = [0, 1, 2].map(i => {
+    const dots = [0, 1, 2, 3].map(i => {
         let cls = '';
         if (i < simonLitButtons) cls = 'done';
         else if (i === simonRound) cls = 'active';
         const inner = i < simonLitButtons ? '✓' : '●';
         return `<span class="simon-dot ${cls}">${inner}</span>`;
     }).join('');
-    hud.innerHTML = `<div class="simon-round-label">第 ${Math.min(simonRound + 1, 3)} / 3 轮</div><div class="simon-dots">${dots}</div>`;
+    hud.innerHTML = `<div class="simon-round-label">第 ${Math.min(simonRound + 1, 4)} / 4 轮</div><div class="simon-dots">${dots}</div>`;
 
     // 竖屏移动端：HUD 跟随视口中心
     const vh = window.visualViewport?.height ?? window.innerHeight;
@@ -459,7 +459,7 @@ function playSequence(seq, onDone) {
         const key = seq[i++];
         playNote(key, 400);
         highlightBtn(key, 400);
-        setTimeout(next, 550);
+        setTimeout(next, 480);
     }
     setTimeout(next, 400);
 }
@@ -486,10 +486,10 @@ function handleMusicBoxBtn(key) {
             simonRound++;
             updateSimonHud();
 
-            if (simonRound >= 3) {
+            if (simonRound >= 4) {
                 gameState.flags.musicBoxSolved = true;
                 saveGame();
-                showDialog('叮——三个按钮全部亮起，音乐盒缓缓打开了。\n\n里面躺着一张小纸片，上面写着：\n"那天下午，她第一次跳上窗台，坐在那里望了很久。我没有打扰她。"', () => {
+                showDialog('叮——四个按钮全部亮起，音乐盒缓缓打开了。\n\n里面躺着一张小纸片，上面写着：\n"那天下午，她第一次跳上窗台，坐在那里望了很久。我没有打扰她。"', () => {
                     if (!gameState.inventory.includes('音乐盒纸条')) {
                         gameState.inventory.push('音乐盒纸条');
                         saveGame();

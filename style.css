@@ -2178,6 +2178,24 @@ body.debug-mode #food-bowl-record-hotspot {
     box-shadow: 0 0 10px rgba(100, 220, 130, 0.4);
 }
 
+.toy-lock-zone {
+    position: absolute;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+    z-index: 210;
+}
+
+.toy-lock-zone-correct {
+    box-shadow: 0 0 14px 4px rgba(100, 220, 130, 0.7);
+    background: rgba(80, 200, 100, 0.15) !important;
+}
+
+.debug-mode .toy-lock-zone {
+    background: rgba(255, 0, 0, 0.25) !important;
+    border: 2px solid red !important;
+}
+
 /* ===================== 华容道谜题 ===================== */
 
 #klotski-wrapper {

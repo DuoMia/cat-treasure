@@ -397,58 +397,44 @@ function onWin() {
 }
 
 // ── 图案锁谜题 ────────────────────────────────────────────────────
-const TOY_LOCK_BUTTONS = [
-    { id: 'fish', label: '🐟' },
-    { id: 'paw',  label: '🐾' },
-    { id: 'bell', label: '🔔' },
-    { id: 'ball', label: '⚽' },
+// 热区坐标（占位，调试模式下可见，按需调整）
+const TOY_LOCK_ZONES = [
+    { id: 'fish', left: '10%', top: '20%', width: '18%', height: '25%' },
+    { id: 'paw',  left: '32%', top: '20%', width: '18%', height: '25%' },
+    { id: 'bell', left: '54%', top: '20%', width: '18%', height: '25%' },
+    { id: 'ball', left: '76%', top: '20%', width: '18%', height: '25%' },
 ];
 
 function setupToyLock(scene, onUnlock) {
-    scene.querySelectorAll('.toy-lock-ui').forEach(el => el.remove());
+    scene.querySelectorAll('.toy-lock-zone').forEach(el => el.remove());
 
     let step = 0;
 
-    const ui = document.createElement('div');
-    ui.className = 'toy-lock-ui';
+    TOY_LOCK_ZONES.forEach(z => {
+        const zone = document.createElement('div');
+        zone.className = 'toy-lock-zone';
+        zone.dataset.id = z.id;
+        zone.style.cssText = `position:absolute;left:${z.left};top:${z.top};width:${z.width};height:${z.height};cursor:pointer;border-radius:8px;`;
 
-    const hint = document.createElement('div');
-    hint.className = 'toy-lock-hint';
-    hint.textContent = '按正确顺序点击图案';
-    ui.appendChild(hint);
-
-    const btnRow = document.createElement('div');
-    btnRow.className = 'toy-lock-buttons';
-
-    TOY_LOCK_BUTTONS.forEach(b => {
-        const btn = document.createElement('button');
-        btn.className = 'toy-lock-btn';
-        btn.dataset.id = b.id;
-        btn.textContent = b.label;
-        btn.addEventListener('click', () => {
-            if (b.id === TOY_LOCK_ORDER[step]) {
-                btn.classList.add('toy-lock-btn-correct');
+        zone.addEventListener('click', () => {
+            if (z.id === TOY_LOCK_ORDER[step]) {
+                zone.classList.add('toy-lock-zone-correct');
                 step++;
                 if (step >= TOY_LOCK_ORDER.length) {
-                    hint.textContent = '✓ 图案锁弹开了！';
                     setTimeout(() => {
-                        ui.remove();
+                        scene.querySelectorAll('.toy-lock-zone').forEach(el => el.remove());
                         onUnlock();
-                    }, 600);
+                    }, 500);
                 }
             } else {
-                // 错误：重置
+                // 错误：清空所有已点亮状态
                 step = 0;
-                btnRow.querySelectorAll('.toy-lock-btn').forEach(el => el.classList.remove('toy-lock-btn-correct'));
-                hint.textContent = '顺序不对，再试试……';
-                setTimeout(() => { hint.textContent = '按正确顺序点击图案'; }, 1000);
+                scene.querySelectorAll('.toy-lock-zone').forEach(el => el.classList.remove('toy-lock-zone-correct'));
             }
         });
-        btnRow.appendChild(btn);
-    });
 
-    ui.appendChild(btnRow);
-    scene.appendChild(ui);
+        scene.appendChild(zone);
+    });
 }
 
 // ── 场景入口 ──────────────────────────────────────────────────────
