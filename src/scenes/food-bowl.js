@@ -97,24 +97,6 @@ export function openPaintingPuzzle() {
             scene.addEventListener('click', scene._debugClickBound, true);
         }
 
-        // 墙缝纸条线索
-        if (!gameState.flags.balconyClue1) {
-            const noteA = document.createElement('div');
-            noteA.id = 'balcony-note-a';
-            noteA.style.cssText = 'position:absolute;right:4%;top:12%;width:6%;height:8%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;z-index:210;';
-            noteA.title = '墙缝里的纸条';
-            noteA.textContent = '📄';
-            noteA.addEventListener('click', () => {
-                gameState.flags.balconyClue1 = true;
-                saveGame();
-                noteA.remove();
-                showDialog('你从画框旁边的墙缝里抽出一张折叠的纸条。\n\n"朵朵最爱上午的阳光。那时候她会坐在阳台左边，一动不动，直到影子把什么东西盖住。"', () => {
-                    showDialog('上午的阳光……影子……\n\n你想起了墙上的那个时钟。');
-                });
-            });
-            scene.appendChild(noteA);
-        }
-
         setupPaintingOverlay();
     });
 }

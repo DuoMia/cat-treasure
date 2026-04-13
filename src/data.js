@@ -34,11 +34,11 @@ export const MUSIC_BOX_PHASES = [
 ];
 
 export const BOWL_ZONES = [
-    { id: 'morning', left: '54.5%', top: '80.1%', width: '8%', height: '8%', symbol: '🌸', label: '毯子边' },
-    { id: 'noon',    left: '32.3%', top: '75.4%', width: '8%', height: '8%', symbol: '☀️', label: '阳光处' },
-    { id: 'evening', left: '56.9%', top: '63.7%', width: '8%', height: '8%', symbol: '🌿', label: '门边' },
-    { id: 'night',   left: '64.7%', top: '70.9%', width: '8%', height: '8%', symbol: '🌙', label: '暗处' },
-    { id: 'night2',  left: '78.0%', top: '84.0%', width: '8%', height: '8%', symbol: '🌙', label: '暗处2' },
+    { id: 'morning', left: '54.5%', top: '77%',   width: '8%', height: '8%', symbol: '🌸', label: '毯子边' },
+    { id: 'noon',    left: '19%',   top: '71%',   width: '8%', height: '8%', symbol: '☀️', label: '阳光处' },
+    { id: 'evening', left: '56.9%', top: '61%',   width: '8%', height: '8%', symbol: '🌿', label: '门边' },
+    { id: 'night',   left: '70%',   top: '67%',   width: '8%', height: '8%', symbol: '🌙', label: '暗处' },
+    { id: 'night2',  left: '91%',   top: '79%',   width: '8%', height: '8%', symbol: '🌙', label: '暗处2' },
 ];
 
 export const BRICK_LABELS = { moon: '🌙', sun: '☀️', wave: '🌊', star: '⭐' };
@@ -90,7 +90,7 @@ export const MEMORY_FRAGMENT_TEXTS = [
 // ===================== 画框谜题提示 =====================
 
 export const PAINTING_HINTS = [
-    '把食盆对准画里朵朵早饭的位置……',
+    '点击画面把食盆对准画里朵朵早饭的位置……',
     '对准她中午吃饭的地方……',
     '对准傍晚她打盹的角落……',
     '最后，找到她夜里躲着吃饭的暗处……'
