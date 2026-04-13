@@ -112,6 +112,8 @@ function setupBalconyHotspots() {
                 gameState.inventory.push('信');
                 saveGame();
                 updateInventory();
+                const scene = document.getElementById('balcony-scene');
+                if (scene) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得信'; scene.appendChild(t); setTimeout(() => t.remove(), 1300); }
                 showDialog('你获得了一封信。\n\n"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我五年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"', () => {
                     showDialog('你握着这封信，心里涌起一股说不清的情绪。\n\n时钟……一切线索都指向那里。', () => {
                         collectMemoryFragment(4);

@@ -18,6 +18,8 @@ export function openDrawerScene() {
                     if (!gameState.inventory.includes('日记')) {
                         gameState.inventory.push('日记');
                         updateInventory();
+                        const scene = document.getElementById('drawer-scene');
+                        if (scene) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得日记'; scene.appendChild(t); setTimeout(() => t.remove(), 1300); }
                     }
                     showDialog('日记已拾取，可以在背包里随时查看。');
                     hotspot.onclick = function() {

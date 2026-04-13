@@ -31,8 +31,7 @@ export function openFoodBowlScene() {
             if (!scene.querySelector('#food-bowl-pickup')) {
                 const bowl = document.createElement('div');
                 bowl.id = 'food-bowl-pickup';
-                bowl.style.cssText = 'left:15%;top:45%;width:35%;height:40%;';
-                bowl.textContent = '🍜';
+                bowl.style.cssText = 'left:25%;top:50%;width:20%;height:25%;';
                 bowl.addEventListener('click', () => {
                     gameState.flags.hasBowl = true;
                     saveGame();
@@ -123,7 +122,7 @@ export function openPaintingPuzzle() {
 function setupPaintingOverlay() {
     const scene = document.getElementById('painting-scene');
     // 清理旧元素
-    scene.querySelectorAll('.painting-zone, .painting-symbol-reveal, .painting-bowl-indicator, .painting-progress-hud, .painting-guide-tip').forEach(el => el.remove());
+    scene.querySelectorAll('.painting-zone, .painting-symbol-reveal, .painting-bowl-indicator, .painting-progress-hud, .painting-guide-tip, #painting-img-overlay').forEach(el => el.remove());
     cleanupBowlListeners(scene);
 
     if (gameState.flags.paintingPuzzleSolved) {
@@ -138,24 +137,54 @@ function setupPaintingOverlay() {
 
     const step = gameState.flags.paintingStep || 0;
 
+    // 创建与图片渲染区域对齐的覆盖层
+    const overlay = document.createElement('div');
+    overlay.id = 'painting-img-overlay';
+    overlay.style.cssText = 'position:absolute;pointer-events:none;z-index:211;';
+    scene.appendChild(overlay);
+
+    // 等图片加载完成后定位 overlay
+    function positionOverlay() {
+        const img = scene.querySelector('.scene-image');
+        if (!img || !img.naturalWidth) return;
+        const rect = scene.getBoundingClientRect();
+        const scale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+        const rendW = img.naturalWidth * scale;
+        const rendH = img.naturalHeight * scale;
+        const offX = (rect.width - rendW) / 2;
+        const offY = (rect.height - rendH) / 2;
+        overlay.style.left = offX + 'px';
+        overlay.style.top = offY + 'px';
+        overlay.style.width = rendW + 'px';
+        overlay.style.height = rendH + 'px';
+    }
+    const img = scene.querySelector('.scene-image');
+    if (img && img.complete && img.naturalWidth) {
+        positionOverlay();
+    } else if (img) {
+        img.addEventListener('load', positionOverlay, { once: true });
+    }
+    window.addEventListener('resize', positionOverlay);
+    scene._cleanupOverlay = () => window.removeEventListener('resize', positionOverlay);
+
     // 进度 HUD（常驻，不弹 dialog）
     updateProgressHud(scene, step);
 
-    // 目标区域微弱提示框
+    // 目标区域微弱提示框（放入 overlay）
     BOWL_ZONES.forEach(zone => {
         const el = document.createElement('div');
         el.className = 'painting-zone';
         el.dataset.zoneId = zone.id;
         el.style.cssText = `left:${zone.left};top:${zone.top};width:${zone.width};height:${zone.height};`;
-        scene.appendChild(el);
+        overlay.appendChild(el);
     });
 
-    // 碗指示器（跟随鼠标/触摸）
+    // 碗指示器（放入 overlay）
     const bowl = document.createElement('div');
     bowl.className = 'painting-bowl-indicator';
     bowl.textContent = '🥣';
     bowl.style.cssText = 'left:-20%;top:-20%;'; // 初始隐藏在画面外
-    scene.appendChild(bowl);
+    overlay.appendChild(bowl);
 
     // 初始引导提示（首次进入时显示）
     if (step === 0 && gameState.flags.paintingSymbolsFound.length === 0) {
@@ -168,12 +197,21 @@ function setupPaintingOverlay() {
 
     // 竖屏移动端：contain 模式下整幅画已可见，无需自动滚动
 
-    // 计算触点在画面内的百分比坐标（以 scene 容器为基准，与热区坐标一致）
+    // 计算触点在图片实际渲染区域内的百分比坐标（contain 模式下图片可能有黑边）
     function clientToPercent(clientX, clientY) {
         const rect = scene.getBoundingClientRect();
+        const img = scene.querySelector('.scene-image');
+        if (!img) return { bx: 0, by: 0 };
+        const natW = img.naturalWidth || rect.width;
+        const natH = img.naturalHeight || rect.height;
+        const scale = Math.min(rect.width / natW, rect.height / natH);
+        const rendW = natW * scale;
+        const rendH = natH * scale;
+        const offX = (rect.width - rendW) / 2;
+        const offY = (rect.height - rendH) / 2;
         return {
-            bx: (clientX - rect.left) / rect.width * 100,
-            by: (clientY - rect.top)  / rect.height * 100
+            bx: (clientX - rect.left - offX) / rendW * 100,
+            by: (clientY - rect.top  - offY) / rendH * 100
         };
     }
 
@@ -219,10 +257,15 @@ function moveBowl(bx, by, bowl, scene) {
     if (step >= 4) return;
 
     const expectedId = BOWL_ORDER[step];
-    const expectedZone = BOWL_ZONES.find(z => z.id === expectedId);
-    const ezCx = parseFloat(expectedZone.left) + parseFloat(expectedZone.width) / 2;
-    const ezCy = parseFloat(expectedZone.top) + parseFloat(expectedZone.height) / 2;
-    const dist = Math.sqrt((bx - ezCx) ** 2 + (by - ezCy) ** 2);
+    // 夜里支持两个热区（night / night2），任一匹配即可
+    const expectedZones = BOWL_ZONES.filter(z => z.id === expectedId || (expectedId === 'night' && z.id === 'night2'));
+    const dists = expectedZones.map(z => {
+        const cx = parseFloat(z.left) + parseFloat(z.width) / 2;
+        const cy = parseFloat(z.top) + parseFloat(z.height) / 2;
+        return Math.sqrt((bx - cx) ** 2 + (by - cy) ** 2);
+    });
+    const dist = Math.min(...dists);
+    const matchedZone = expectedZones[dists.indexOf(dist)];
 
     // 更新所有区域的 near 状态
     scene.querySelectorAll('.painting-zone').forEach(el => {
@@ -239,7 +282,7 @@ function moveBowl(bx, by, bowl, scene) {
         if (!autoConfirmTimer) {
             autoConfirmTimer = setTimeout(() => {
                 autoConfirmTimer = null;
-                confirmSymbol(expectedZone.symbol, scene);
+                confirmSymbol(matchedZone.symbol, scene);
             }, isMobileDevice() ? 300 : 700);
         }
     } else {
@@ -260,6 +303,7 @@ function cleanupBowlListeners(scene) {
         bowlTouchHandler = null;
     }
     if (autoConfirmTimer) { clearTimeout(autoConfirmTimer); autoConfirmTimer = null; }
+    if (scene._cleanupOverlay) { scene._cleanupOverlay(); scene._cleanupOverlay = null; }
 }
 
 function updateProgressHud(scene, step) {
@@ -298,6 +342,8 @@ function confirmSymbol(symbol, scene) {
                 gameState.inventory.push('主人的信');
                 saveGame();
                 updateInventory();
+                const scene2 = document.getElementById('painting-scene');
+                if (scene2) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得主人的信'; scene2.appendChild(t); setTimeout(() => t.remove(), 1300); }
                 showDialog('你获得了主人写给朵朵的信。\n\n"朵朵，\n\n每天上午十点，我把她的早饭端到阳台，她总是先不吃，坐在仙人掌旁边，等那道光爬过来，才低头吃第一口。\n\n我不知道她在等什么。也许是影子，也许是什么只有她看得见的东西。\n\n我把一些东西藏在了那道光照不到的地方。\n\n——主人"', () => {
                     showDialog('先闻味道（鱼）→爪子确认（爪印）→铃铛→球……\n\n这个顺序……好像可以用在什么地方。', () => {
                         collectMemoryFragment(2);

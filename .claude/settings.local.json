@@ -18,7 +18,10 @@
       "Bash(awk 'NR>=660 && NR<=670' style.css)",
       "Bash(awk 'NR>=1998 && NR<=2100' style.css)",
       "Bash(awk 'NR>=565 && NR<=620' style.css)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(awk 'NR>=2000 && NR<=2090 && /@media/' style.css)",
+      "Bash(awk 'NR>=1990 && NR<=2000' style.css)",
+      "Bash(awk 'NR>=2025 && NR<=2075' style.css)"
     ]
   }
 }

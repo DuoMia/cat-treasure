@@ -34,10 +34,11 @@ export const MUSIC_BOX_PHASES = [
 ];
 
 export const BOWL_ZONES = [
-    { id: 'morning', left: '47%', top: '74%',  width: '9%',  height: '12%', symbol: '🌸', label: '毯子边' },
-    { id: 'noon',    left: '14%', top: '73%',  width: '14%', height: '12%', symbol: '☀️', label: '阳光处' },
-    { id: 'evening', left: '58%', top: '61%',  width: '9%',  height: '13%', symbol: '🌿', label: '门边' },
-    { id: 'night',   left: '85%', top: '60%',  width: '10%', height: '20%', symbol: '🌙', label: '暗处' },
+    { id: 'morning', left: '54.5%', top: '80.1%', width: '8%', height: '8%', symbol: '🌸', label: '毯子边' },
+    { id: 'noon',    left: '32.3%', top: '75.4%', width: '8%', height: '8%', symbol: '☀️', label: '阳光处' },
+    { id: 'evening', left: '56.9%', top: '63.7%', width: '8%', height: '8%', symbol: '🌿', label: '门边' },
+    { id: 'night',   left: '64.7%', top: '70.9%', width: '8%', height: '8%', symbol: '🌙', label: '暗处' },
+    { id: 'night2',  left: '78.0%', top: '84.0%', width: '8%', height: '8%', symbol: '🌙', label: '暗处2' },
 ];
 
 export const BRICK_LABELS = { moon: '🌙', sun: '☀️', wave: '🌊', star: '⭐' };

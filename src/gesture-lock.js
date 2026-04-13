@@ -20,6 +20,10 @@ export function installGestureLock() {
             return;
         }
         if (e.target.closest('#game-container')) {
+            // 按钮类元素不拦截，保证 click 事件正常触发
+            const tag = e.target.tagName;
+            if (tag === 'BUTTON' || e.target.closest('button') || e.target.onclick || e.target.closest('[onclick]')) return;
+
             // 先 resume，再 preventDefault，顺序不能反
             if (_registeredAudioCtx && _registeredAudioCtx.state === 'suspended') {
                 _registeredAudioCtx.resume();

@@ -84,6 +84,8 @@ function setupBumpInteraction() {
                         gameState.flags.hasBox = true;
                         saveGame();
                         updateInventory();
+                        const scene = document.getElementById('sofa-scene');
+                        if (scene) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得铁盒'; scene.appendChild(t); setTimeout(() => t.remove(), 1300); }
                         setTapHandler(bump, function() {
                             showDialog('沙发角落已经被你打开过了，没有什么新的发现了。');
                         });
