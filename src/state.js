@@ -77,8 +77,9 @@ export function saveGame() {
 
 function _doSave() {
     try {
+        const { debugMode, ...rest } = gameState;
         const data = {
-            ...gameState,
+            ...rest,
             clickedObjects: [...gameState.clickedObjects],
             flags: {
                 ...gameState.flags,
@@ -102,7 +103,6 @@ export function loadGame() {
         gameState.searchCount = data.searchCount || 0;
         gameState.penFallen = data.penFallen || false;
         gameState.clickedObjects = new Set(data.clickedObjects || []);
-        gameState.debugMode = data.debugMode || false;
         gameState.flags = { ...gameState.flags, ...data.flags };
         if (!Array.isArray(gameState.flags.memoryFragments)) gameState.flags.memoryFragments = [];
         if (!Array.isArray(gameState.flags.paintingSymbolsFound)) gameState.flags.paintingSymbolsFound = [];

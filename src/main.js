@@ -34,9 +34,17 @@ initHotspotCallbacks(createRoomHotspots, interactSofa);
 // 页面加载时立即锁定所有系统级手势
 installGestureLock();
 
-// 移动端：给所有返回按钮绑定 touchend，消除 300ms 延迟
+// 移动端：给所有返回按钮绑定 touchend，消除 300ms 延迟，滑动不触发
 document.querySelectorAll('.scene-back-btn').forEach(btn => {
+    let _tx = 0, _ty = 0;
+    btn.addEventListener('touchstart', (e) => {
+        _tx = e.touches[0].clientX;
+        _ty = e.touches[0].clientY;
+    }, { passive: true });
     btn.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - _tx;
+        const dy = e.changedTouches[0].clientY - _ty;
+        if (dx * dx + dy * dy > 64) return;
         e.preventDefault();
         btn.click();
     }, { passive: false });
@@ -103,6 +111,7 @@ function startGame(isRestart = false) {
 
     // 全局拦截：对话框或选项框开着时，阻止所有其他元素的点击/触摸
     function blockWhenOverlay(e) {
+        if (e.target.closest('.scene-back-btn')) return;
         const dialogBox = document.getElementById('dialog-box');
         const choiceBox = document.getElementById('choice-box');
         const dialogOpen = !dialogBox.classList.contains('hidden');
@@ -125,6 +134,8 @@ function startGame(isRestart = false) {
 
         // 全局拦截：对话框或选项框开着时，阻止所有其他元素的点击/触摸
         function blockWhenOverlay(e) {
+            // 返回按钮始终直通，不被对话框拦截
+            if (e.target.closest('.scene-back-btn')) return;
             const dialogBox = document.getElementById('dialog-box');
             const choiceBox = document.getElementById('choice-box');
             const dialogOpen = !dialogBox.classList.contains('hidden');
