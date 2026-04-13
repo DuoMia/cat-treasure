@@ -1502,8 +1502,8 @@ body {
 
 .bookshelf-hotspot.music-btn {
     position: absolute;
-    width: 9%;
-    height: 7.5%;
+    width: 6%;
+    height: 15%;
     background: transparent;
     border: none;
     cursor: pointer;

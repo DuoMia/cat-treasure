@@ -28,9 +28,9 @@ export const BOOK_CONFIG = [
 ];
 
 export const MUSIC_BOX_PHASES = [
-    { id: 'btn-phase-b', label: '慵懒少女', key: 'B', x: '35.33%', y: '59.13%' },
-    { id: 'btn-phase-c', label: '老猫时光', key: 'C', x: '46%',    y: '59.13%' },
-    { id: 'btn-phase-a', label: '初来乍到', key: 'A', x: '56.67%', y: '59.13%' },
+    { id: 'btn-phase-b', label: '慵懒少女', key: 'B', x: '35.3%', y: '57.1%' },
+    { id: 'btn-phase-c', label: '老猫时光', key: 'C', x: '46.0%', y: '57.1%' },
+    { id: 'btn-phase-a', label: '初来乍到', key: 'A', x: '56.7%', y: '57.1%' },
 ];
 
 export const BOWL_ZONES = [
