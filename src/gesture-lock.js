@@ -1,50 +1,55 @@
 /**
  * gesture-lock.js
  * 彻底禁用移动端系统级手势，不影响游戏内触摸交互。
- *
- * 覆盖范围：
- *  - 长按系统菜单（微信搜一搜 / Safari 复制 / 放大镜）
- *  - 长按拖动图片/链接（系统拖拽预览）
- *  - 双击缩放（iOS Safari / Android WebView）
- *  - 多指捏合缩放
- *  - 下拉刷新 / 橡皮筋回弹
- *  - 文字选中
- *  - 系统 callout（iOS 气泡菜单）
  */
 
 export function installGestureLock() {
-    // ── 1. 长按系统菜单 & 右键菜单 ──────────────────────────────────
+    // ── 1. 右键 / 长按系统菜单 ──────────────────────────────────────
     document.addEventListener('contextmenu', e => e.preventDefault(), { passive: false });
 
-    // ── 2. 多指 / 捏合缩放 ──────────────────────────────────────────
+    // ── 2. 多指捏合缩放 ──────────────────────────────────────────────
     document.addEventListener('touchstart', e => {
         if (e.touches.length > 1) e.preventDefault();
     }, { passive: false });
 
-    // ── 3. 双击缩放（300ms 内连续两次 tap） ─────────────────────────
+    // ── 3. 双击缩放 + 长按图片/文字系统菜单 ─────────────────────────
+    //   在游戏容器内，touchend 时阻止双击；同时对所有非输入元素
+    //   在 touchstart 里 preventDefault 以阻止长按 callout。
+    //   注意：这里只针对 #game-container 内部，避免影响页面其他滚动。
     let _lastTap = 0;
-    document.addEventListener('touchend', e => {
+    const gameEl = () => document.getElementById('game-container') || document.body;
+
+    gameEl().addEventListener('touchend', e => {
         const now = Date.now();
-        if (now - _lastTap < 300) {
-            e.preventDefault(); // 阻止双击缩放
-        }
+        if (now - _lastTap < 350) e.preventDefault();
         _lastTap = now;
     }, { passive: false });
 
-    // ── 4. 长按拖动图片 / 元素（系统拖拽预览，仅移动端） ────────────
+    // 长按 callout：对游戏容器内的 img / canvas / button / div 阻止
+    document.addEventListener('touchstart', e => {
+        const tag = e.target.tagName;
+        if (['IMG', 'CANVAS', 'BUTTON', 'DIV', 'SPAN'].includes(tag)) {
+            // 只在游戏容器内阻止
+            if (e.target.closest('#game-container')) {
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
+
+    // ── 4. 长按拖动图片 ──────────────────────────────────────────────
     document.addEventListener('dragstart', e => {
         if (!e.target.closest('[draggable="true"]')) e.preventDefault();
     }, { passive: false });
 
-    // ── 5. 文字选中（touchmove 期间） ───────────────────────────────
+    // ── 5. 文字选中 ──────────────────────────────────────────────────
     document.addEventListener('selectstart', e => e.preventDefault(), { passive: false });
 
-    // ── 6. gesturestart / gesturechange（iOS Safari 原生手势） ───────
+    // ── 6. iOS Safari 原生手势 ───────────────────────────────────────
     document.addEventListener('gesturestart',  e => e.preventDefault(), { passive: false });
     document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
     document.addEventListener('gestureend',    e => e.preventDefault(), { passive: false });
 
-    // ── 7. wheel 缩放（PC 触控板 Ctrl+滚轮） ────────────────────────
+    // ── 7. PC 触控板 Ctrl+滚轮缩放 ──────────────────────────────────
     document.addEventListener('wheel', e => {
         if (e.ctrlKey) e.preventDefault();
     }, { passive: false });

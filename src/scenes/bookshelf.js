@@ -7,6 +7,19 @@ import { collectStickyNote, collectMemoryFragment } from '../notes.js';
 import { PUZZLES, MUSIC_BOX_PHASES } from '../data.js';
 import { lockPortraitDrag, unlockPortraitDrag } from '../utils.js';
 
+/** 竖屏时将视口水平对准目标百分比位置 */
+function scrollToX(pct) {
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+    if (window.innerWidth >= vh) return; // 横屏/PC 不处理
+    const container = document.getElementById('game-container');
+    const containerW = vh * 14 / 9;
+    const screenW = window.innerWidth;
+    // 目标点在容器内的像素位置，减去半屏宽使其居中
+    const targetLeft = -(containerW * pct - screenW / 2);
+    const minLeft = -(containerW - screenW);
+    container.style.left = Math.min(0, Math.max(minLeft, targetLeft)) + 'px';
+}
+
 // ── 书脊拼图 ────────────────────────────────────────────────
 // cat.jpg (960×1280) 取中间 4:3 横向区域 (960×720, y从280开始)
 // 缩放到 260×200 后纵向分5份，每份宽52px
@@ -303,6 +316,26 @@ let simonPlayerIdx = 0;
 let simonPlaying = false;
 let simonLitButtons = 0;
 
+// 全局共享 AudioContext，移动端需在用户手势内 resume
+let _audioCtx = null;
+function getAudioCtx() {
+    if (!_audioCtx) {
+        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (_audioCtx.state === 'suspended') {
+        _audioCtx.resume();
+    }
+    return _audioCtx;
+}
+// 在第一次用户交互时解锁 AudioContext
+function unlockAudioCtx() {
+    getAudioCtx();
+    document.removeEventListener('touchstart', unlockAudioCtx, true);
+    document.removeEventListener('click', unlockAudioCtx, true);
+}
+document.addEventListener('touchstart', unlockAudioCtx, { capture: true, once: true, passive: true });
+document.addEventListener('click', unlockAudioCtx, { capture: true, once: true, passive: true });
+
 function generateSequence(length) {
     const keys = ['A', 'B', 'C'];
     const seq = [];
@@ -312,7 +345,7 @@ function generateSequence(length) {
 
 function playNote(key, duration = 400) {
     try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = getAudioCtx();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -379,6 +412,8 @@ function handleMusicBoxBtn(key) {
     if (gameState.flags.musicBoxSolved) { showDialog('音乐盒已经打开过了。'); return; }
     if (simonPlaying) return;
 
+    // 用户手势内 resume AudioContext（移动端关键）
+    getAudioCtx();
     playNote(key, 300);
     highlightBtn(key, 300);
 
@@ -418,6 +453,9 @@ export function openBookshelfScene() {
     sceneManager.open('bookshelf-scene', () => {
         gameState.flags.bookshelfSeen = true;
         saveGame();
+
+        // 竖屏时对准音乐盒水平中心（图片 46% 处）
+        scrollToX(0.46);
 
         if (!gameState.flags.bookPuzzleSolved) {
             document.getElementById('bookshelf-puzzle-ui').classList.remove('hidden');
