@@ -46,7 +46,8 @@ document.querySelectorAll('.scene-back-btn').forEach(btn => {
         const dy = e.changedTouches[0].clientY - _ty;
         if (dx * dx + dy * dy > 64) return;
         e.preventDefault();
-        btn.click();
+        e.stopPropagation();
+        if (typeof btn.onclick === 'function') btn.onclick(e);
     }, { passive: false });
 });
 
@@ -190,6 +191,7 @@ function startGame(isRestart = false) {
 
         // 移动端触摸事件处理
         document.getElementById('game-play').addEventListener('touchend', function(e) {
+            if (e.target.closest('.scene-back-btn')) return;
             if (e.target.closest('#pen-holder-hotspot')) {
                 return;
             }
