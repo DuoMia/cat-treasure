@@ -492,6 +492,56 @@ body {
     z-index: 1000;
 }
 
+/* 阳台热区 */
+.debug-mode .balcony-hotspot {
+    background: rgba(255, 0, 0, 0.25) !important;
+    border: 2px solid red !important;
+}
+
+/* 阳台砖块 */
+.debug-mode .balcony-brick {
+    background: rgba(255, 100, 0, 0.35) !important;
+    border: 2px solid orangered !important;
+}
+
+/* 便利贴热区 */
+.debug-mode .sticky-note-hotspot {
+    background: rgba(255, 220, 0, 0.3) !important;
+    border: 2px solid gold !important;
+    border-radius: 4px;
+}
+
+/* 书架热区 */
+.debug-mode .bookshelf-hotspot {
+    background: rgba(255, 0, 0, 0.25) !important;
+    border: 2px solid red !important;
+}
+
+/* 食盆场景热区 */
+body.debug-mode #food-bowl-record-hotspot {
+    border: 2px dashed rgba(255,220,80,0.5) !important;
+    border-radius: 8px !important;
+    background: rgba(255,220,80,0.05) !important;
+}
+
+body.debug-mode #food-bowl-pickup {
+    background: rgba(255, 0, 0, 0.25) !important;
+    border: 2px solid red !important;
+    border-radius: 8px !important;
+}
+
+/* 抽屉日记热区 */
+.debug-mode #drawer-diary-hotspot {
+    background: rgba(255, 0, 0, 0.25) !important;
+    border: 2px solid red !important;
+}
+
+/* 窗户点击层 */
+.debug-mode .window-click-overlay {
+    background: rgba(0, 200, 255, 0.2) !important;
+    border: 2px solid cyan !important;
+}
+
 #debug-toggle {
     position: fixed;
     bottom: 16px;
