@@ -160,7 +160,7 @@ function handleItemClick(item) {
 
     if (item === '铁盒' && !gameState.flags.solvedPassword) {
         showDialog(
-            '突然你注意到了盒子底部有一个猫咪抱着手又咬又踢的图案，有点眼熟，你看向被朵朵咬过的左手，不看不知道，五排数量不规则的圆孔牙印和五排断断续续的爪子道道出现在你的眼前，这朵朵，也太野蛮了！\n\n等等，正好5排？你看向朵朵留下的痕迹，又看向铁盒上的五位密码，突然有一个念头闪过，不会吧？这痕迹越看越像某种密码，要不试试？\n\n（五排痕迹分别为：.--；.-；-；-.-.；....）',
+            '突然你注意到了盒子底部有一个猫咪抱着手又咬又踢的图案，有点眼熟，你看向被朵朵咬过的左手，不看不知道，五排数量不规则的圆孔牙印和五排断断续续的爪子道道出现在你的眼前，这朵朵，也太野蛮了！\n\n等等，正好5排？你看向朵朵留下的痕迹，又看向铁盒上的五位密码，突然有一个念头闪过，不会吧？这痕迹越看越像某种密码，要不试试？\n\n（五排痕迹分别为：-.-.；.-..；---；-.-.；-.-）',
             () => {
                 openPasswordModal();
             }
@@ -250,11 +250,11 @@ export function submitPassword() {
     const input = document.getElementById('password-input');
     const password = input.value.toLowerCase();
 
-    if (password === 'watch') {
+    if (password === 'clock') {
         closePasswordModal();
         gameState.flags.solvedPassword = true;
         saveGame();
-        showDialog('你在密码锁上输入了正确密码：watch。噶哒一声，盒子打开了，里面有一张折叠的纸条，还有一张手绘的房间地图。', () => {
+        showDialog('你在密码锁上输入了正确密码：clock。噶哒一声，盒子打开了，里面有一张折叠的纸条，还有一张手绘的房间地图。', () => {
             showDialog('地图上用细细的笔迹标注了五个位置，每个位置旁边画着一个小小的便利贴图案。\n\n主人把什么东西藏在了这五个地方……');
         });
         if (!gameState.inventory.includes('纸条')) {
@@ -325,7 +325,7 @@ export function showHelp() {
             hint = '你有了钢笔。沙发下面好像有什么东西，试着去沙发那边看看。';
         }
     } else if (!f.solvedPassword) {
-        hint = '你找到了一个铁盒，五位字母密码锁。看看铁盒底部的图案，再对照一下手上朵朵留下的咬痕和抓痕——那些断断续续的点和线，像不像某种密码？';
+        hint = '你找到了一个铁盒，五位字母密码锁。看看铁盒底部的图案，再对照一下手上朵朵留下的咬痕和抓痕——那些断断续续的点和线，像不像某种密码？答案是一个和时间有关的单词。';
     } else if (!f.bookPuzzleSolved) {
         if (!f.hasNote) {
             hint = '铁盒打开了，里面有钥匙和一张纸条，先把纸条拿出来看看。';

@@ -2,7 +2,7 @@
 
 export const PUZZLES = {
     // 铁盒密码
-    password: { answer: 'watch' },
+    password: { answer: 'clock' },
     // 抽屉密码
     drawer: { answer: '543' },
     // 书架5本书顺序（按朵朵照片排序）
