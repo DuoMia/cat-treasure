@@ -1,39 +1,28 @@
 /**
  * gesture-lock.js
- * 彻底禁用移动端系统级手势，不影响游戏内触摸交互。
+ * 禁用移动端系统级手势，不影响游戏内触摸交互和 AudioContext 解锁。
+ *
+ * 长按 callout / 文字选中 / -webkit-touch-callout 已在 CSS 全局 * 规则里处理，
+ * 这里只处理 JS 层面必须拦截的手势。
  */
 
 export function installGestureLock() {
-    // ── 1. 右键 / 长按系统菜单 ──────────────────────────────────────
+    // ── 1. 右键菜单 ──────────────────────────────────────────────────
     document.addEventListener('contextmenu', e => e.preventDefault(), { passive: false });
 
     // ── 2. 多指捏合缩放 ──────────────────────────────────────────────
+    // 注意：不对单指 touchstart 调用 preventDefault，否则会阻止
+    // AudioContext 的用户手势解锁（浏览器安全策略）
     document.addEventListener('touchstart', e => {
         if (e.touches.length > 1) e.preventDefault();
     }, { passive: false });
 
-    // ── 3. 双击缩放 + 长按图片/文字系统菜单 ─────────────────────────
-    //   在游戏容器内，touchend 时阻止双击；同时对所有非输入元素
-    //   在 touchstart 里 preventDefault 以阻止长按 callout。
-    //   注意：这里只针对 #game-container 内部，避免影响页面其他滚动。
+    // ── 3. 双击缩放 ──────────────────────────────────────────────────
     let _lastTap = 0;
-    const gameEl = () => document.getElementById('game-container') || document.body;
-
-    gameEl().addEventListener('touchend', e => {
+    document.addEventListener('touchend', e => {
         const now = Date.now();
         if (now - _lastTap < 350) e.preventDefault();
         _lastTap = now;
-    }, { passive: false });
-
-    // 长按 callout：对游戏容器内的 img / canvas / button / div 阻止
-    document.addEventListener('touchstart', e => {
-        const tag = e.target.tagName;
-        if (['IMG', 'CANVAS', 'BUTTON', 'DIV', 'SPAN'].includes(tag)) {
-            // 只在游戏容器内阻止
-            if (e.target.closest('#game-container')) {
-                e.preventDefault();
-            }
-        }
     }, { passive: false });
 
     // ── 4. 长按拖动图片 ──────────────────────────────────────────────

@@ -330,11 +330,9 @@ function getAudioCtx() {
 // 在第一次用户交互时解锁 AudioContext
 function unlockAudioCtx() {
     getAudioCtx();
-    document.removeEventListener('touchstart', unlockAudioCtx, true);
-    document.removeEventListener('click', unlockAudioCtx, true);
 }
 document.addEventListener('touchstart', unlockAudioCtx, { capture: true, once: true, passive: true });
-document.addEventListener('click', unlockAudioCtx, { capture: true, once: true, passive: true });
+document.addEventListener('click',      unlockAudioCtx, { capture: true, once: true, passive: true });
 
 function generateSequence(length) {
     const keys = ['A', 'B', 'C'];
@@ -380,6 +378,10 @@ function updateSimonHud() {
 }
 
 function playSequence(seq, onDone) {
+    // 确保 AudioContext 已 resume（定时器内无法触发用户手势，必须提前解锁）
+    if (_audioCtx && _audioCtx.state === 'suspended') {
+        _audioCtx.resume();
+    }
     simonPlaying = true;
     const scene = document.getElementById('bookshelf-scene');
     if (scene) scene.classList.add('simon-playing');
