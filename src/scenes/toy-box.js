@@ -399,10 +399,10 @@ function onWin() {
 // ── 图案锁谜题 ────────────────────────────────────────────────────
 // 热区坐标（占位，调试模式下可见，按需调整）
 const TOY_LOCK_ZONES = [
-    { id: 'fish', left: '10%', top: '20%', width: '18%', height: '25%' },
-    { id: 'paw',  left: '32%', top: '20%', width: '18%', height: '25%' },
-    { id: 'bell', left: '54%', top: '20%', width: '18%', height: '25%' },
-    { id: 'ball', left: '76%', top: '20%', width: '18%', height: '25%' },
+    { id: 'fish', left: '34.5%', top: '62%', width: '5.6%', height: '10%' },
+    { id: 'paw',  left: '43%', top: '62%', width: '5.6%', height: '10%' },
+    { id: 'bell', left: '51.5%', top: '62%', width: '5.6%', height: '10%' },
+    { id: 'ball', left: '60%', top: '62%', width: '5.6%', height: '10%' },
 ];
 
 function setupToyLock(scene, onUnlock) {
@@ -427,9 +427,10 @@ function setupToyLock(scene, onUnlock) {
                     }, 500);
                 }
             } else {
-                // 错误：清空所有已点亮状态
+                // 错误：文案提示，清空已点亮状态
                 step = 0;
                 scene.querySelectorAll('.toy-lock-zone').forEach(el => el.classList.remove('toy-lock-zone-correct'));
+                showDialog('顺序不对，再想想……');
             }
         });
 

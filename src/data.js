@@ -13,8 +13,8 @@ export const PUZZLES = {
     brickOrder: ['moon', 'sun', 'wave', 'star'],
     // 画框食盆区域顺序
     bowlOrder: ['morning', 'noon', 'evening', 'night'],
-    // 玩具箱图案锁顺序：鱼→爪→铃铛→球
-    toyLockOrder: ['fish', 'paw', 'bell', 'ball'],
+    // 玩具箱图案锁顺序：球→鱼→铃铛→爪
+    toyLockOrder: ['ball', 'fish', 'bell', 'paw'],
 };
 
 // ===================== 谜题常量 =====================

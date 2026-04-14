@@ -35,6 +35,19 @@ export function openWindowScene() {
                 note.remove();
                 collectStickyNote('note2');
             });
+            let _ntx = 0, _nty = 0;
+            note.addEventListener('touchstart', (e) => {
+                _ntx = e.touches[0].clientX; _nty = e.touches[0].clientY;
+            }, { passive: true });
+            note.addEventListener('touchend', (e) => {
+                const dx = e.changedTouches[0].clientX - _ntx;
+                const dy = e.changedTouches[0].clientY - _nty;
+                if (dx * dx + dy * dy > 64) return;
+                e.preventDefault();
+                e.stopPropagation();
+                note.remove();
+                collectStickyNote('note2');
+            }, { passive: false });
             scene.appendChild(note);
         }
 
@@ -43,9 +56,26 @@ export function openWindowScene() {
             const overlay = document.createElement('div');
             overlay.className = 'window-click-overlay';
             overlay.style.cssText = 'position:absolute;inset:0;z-index:200;cursor:pointer;';
-            overlay.addEventListener('click', () => {
+            const onOverlayTap = () => {
                 closeWindowScene();
                 openBalconyScene();
+            };
+            let _touchFired = false, _tx = 0, _ty = 0;
+            overlay.addEventListener('touchstart', (e) => {
+                _tx = e.touches[0].clientX; _ty = e.touches[0].clientY;
+            }, { passive: true });
+            overlay.addEventListener('touchend', (e) => {
+                const dx = e.changedTouches[0].clientX - _tx;
+                const dy = e.changedTouches[0].clientY - _ty;
+                if (dx * dx + dy * dy > 64) return;
+                e.preventDefault();
+                e.stopPropagation();
+                _touchFired = true;
+                onOverlayTap();
+            }, { passive: false });
+            overlay.addEventListener('click', () => {
+                if (_touchFired) { _touchFired = false; return; }
+                onOverlayTap();
             });
             scene.appendChild(overlay);
         }
