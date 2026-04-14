@@ -22,7 +22,8 @@
       "Bash(awk 'NR>=2000 && NR<=2090 && /@media/' style.css)",
       "Bash(awk 'NR>=1990 && NR<=2000' style.css)",
       "Bash(awk 'NR>=2025 && NR<=2075' style.css)",
-      "Bash(awk 'NR>=720 && NR<=760' style.css)"
+      "Bash(awk 'NR>=720 && NR<=760' style.css)",
+      "Bash(rm:*)"
     ]
   }
 }

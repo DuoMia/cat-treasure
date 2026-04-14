@@ -101,7 +101,7 @@ body {
     /* 对话框固定在视口底部 */
     .game-panel {
         position: fixed;
-        bottom: max(10px, env(safe-area-inset-bottom));
+        bottom: max(10px, env(safe-are
         left: 50%;
         transform: translateX(-50%);
         width: 92%;

@@ -44,10 +44,10 @@ export const BOWL_ZONES = [
 export const BRICK_LABELS = { moon: '🌙', sun: '☀️', wave: '🌊', star: '⭐' };
 
 export const BRICK_POSITIONS = [
-    { key: 'moon',  left: '21%', top: '78%' },
-    { key: 'sun',   left: '36%', top: '78%' },
-    { key: 'wave',  left: '52%', top: '78%' },
-    { key: 'star',  left: '68%', top: '78%' },
+    { key: 'moon',  left: '18.7%', top: '83.1%' },
+    { key: 'sun',   left: '33.7%', top: '83.1%' },
+    { key: 'wave',  left: '59.7%', top: '83.1%' },
+    { key: 'star',  left: '74.7%', top: '83.1%' },
 ];
 
 // ===================== 热区位置 =====================
