@@ -118,11 +118,31 @@ function renderBoard() {
     _cellW = bw / COLS;
     _cellH = bh / ROWS;
 
-    // 出口指示
-    const exitMark = document.createElement('div');
-    exitMark.className = 'klotski-exit-mark';
-    exitMark.style.cssText = `left:${WIN_COL * _cellW}px;top:${WIN_ROW * _cellH}px;width:${2 * _cellW}px;height:${_cellH}px;`;
-    board.appendChild(exitMark);
+    // 出口指示：贴在棋盘底边外侧
+    const wrapper = board.closest('#klotski-wrapper');
+    let exitMark = wrapper?.querySelector('.klotski-exit-mark');
+    if (!exitMark && wrapper) {
+        exitMark = document.createElement('div');
+        exitMark.className = 'klotski-exit-mark';
+        wrapper.appendChild(exitMark);
+    }
+    if (exitMark) {
+        // 计算出口在 wrapper 坐标系中的位置
+        const boardOffsetLeft = board.offsetLeft;
+        const boardOffsetTop  = board.offsetTop;
+        const exitLeft = boardOffsetLeft + WIN_COL * _cellW;
+        const exitWidth = 2 * _cellW;
+        const exitTop = boardOffsetTop + board.offsetHeight;
+        exitMark.style.cssText = `left:${exitLeft}px;top:${exitTop}px;width:${exitWidth}px;`;
+    }
+    // 棋盘底边缺口遮罩（盖住边框线，制造开口效果）
+    let gapMask = board.querySelector('.klotski-gap-mask');
+    if (!gapMask) {
+        gapMask = document.createElement('div');
+        gapMask.className = 'klotski-gap-mask';
+        board.appendChild(gapMask);
+    }
+    gapMask.style.cssText = `left:${WIN_COL * _cellW + 1}px;width:${2 * _cellW - 2}px;`;
 
     blocks.forEach(b => {
         const el = document.createElement('div');
@@ -389,9 +409,7 @@ function onWin() {
                     note.addEventListener('click', () => { note.remove(); collectStickyNote('note5'); });
                     scene.appendChild(note);
                 }
-                showDialog('你握着这封信，眼眶有些湿润。\n\n时钟……一切线索都指向那里。', () => {
-                    collectMemoryFragment(3);
-                });
+                collectMemoryFragment(3);
             });
         });
     }, 700);
@@ -450,8 +468,6 @@ export function openToyBoxScene() {
         const scene = document.getElementById('toy-box-scene');
 
         if (gameState.flags.toyBoxSolved) {
-            if (!scene.querySelector('#klotski-wrapper')) buildBoardDOM(scene);
-            showDialog('玩具箱已经打开了，信已经取出来了。');
             if (!gameState.flags.stickyNotes.includes('note5') && !scene.querySelector('#sticky-note5')) {
                 const note = document.createElement('div');
                 note.id = 'sticky-note5';
@@ -470,7 +486,7 @@ export function openToyBoxScene() {
                 if (!scene.querySelector('#klotski-wrapper')) buildBoardDOM(scene);
                 initPuzzle();
                 requestAnimationFrame(() => renderBoard());
-                showDialog('咔哒——图案锁弹开了！\n\n箱子里好像有封信，被玩具压住了，要不把它拿出来看看？\n\n选中一个方块，再点击旁边的方块来决定移动方向，把信从底部出口滑出来。');
+                showDialog('咔哒——图案锁弹开了！\n\n箱子里好像有封信，被玩具压住了，要不把它拿出来看看？\n\n合理移动方块，把信从底部出口滑出来。');
             });
             return;
         }
@@ -478,7 +494,7 @@ export function openToyBoxScene() {
         if (!scene.querySelector('#klotski-wrapper')) buildBoardDOM(scene);
         initPuzzle();
         requestAnimationFrame(() => renderBoard());
-        showDialog('箱子里好像有封信，被玩具压住了，要不把它拿出来看看？\n\n选中一个方块，再点击旁边的方块来决定移动方向，把信从底部出口滑出来。');
+        showDialog('箱子里好像有封信，被玩具压住了，要不把它拿出来看看？\n\n合理移动方块，把信从底部出口滑出来。');
     });
 }
 

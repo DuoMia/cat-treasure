@@ -15,6 +15,7 @@ export function collectMemoryFragment(index, onDone) {
     if (gameState.flags.memoryFragments.includes(index)) { onDone?.(); return; }
     gameState.flags.memoryFragments.push(index);
     saveGame();
+    updateInventory();
     const count = gameState.flags.memoryFragments.length;
     showDialog(`✨ 记忆碎片（${count}/5）：\n\n"${MEMORY_FRAGMENT_TEXTS[index]}"`, () => {
         if (count >= 5) {

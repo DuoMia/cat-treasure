@@ -3,7 +3,7 @@
 import { gameState, saveGame } from '../state.js';
 import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
-import { collectStickyNote, collectMemoryFragment } from '../notes.js';
+import { collectMemoryFragment } from '../notes.js';
 import { PUZZLES, BRICK_POSITIONS } from '../data.js';
 import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
 
@@ -28,7 +28,11 @@ export function openBalconyScene() {
         }
 
         const isFirstVisit = !gameState.flags.balconySeen;
+        const clockTime = gameState.flags.clockTime;
+        const seenKey = clockTime ? `balconySeenAt_${clockTime}` : 'balconySeenNoTime';
+        const isFirstAtThisTime = !gameState.flags[seenKey];
         gameState.flags.balconySeen = true;
+        gameState.flags[seenKey] = true;
         saveGame();
 
         if (gameState.flags.hasLetter) {
@@ -37,30 +41,41 @@ export function openBalconyScene() {
             return;
         }
 
-        const clockTime = gameState.flags.clockTime;
         if (!clockTime) {
-            const intro = gameState.flags.musicBoxSolved && isFirstVisit
-                ? '你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n你想起了那张纸片——她当时就是从这扇窗跳出来的吧，然后坐在这里，望着外面。\n\n阳光平淡，什么都看不出来。也许光线的角度很重要……'
-                : '你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n阳光平淡，什么都看不出来。也许光线的角度很重要……';
-            showDialog(intro, () => {
-                if (isFirstVisit) {
+            if (isFirstVisit) {
+                const intro = gameState.flags.musicBoxSolved
+                    ? '你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n你想起了那张纸片——她当时就是从这扇窗跳出来的吧，然后坐在这里，望着外面。\n\n阳光平淡，什么都看不出来。也许光线的角度很重要……'
+                    : '你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n阳光平淡，什么都看不出来。也许光线的角度很重要……';
+                showDialog(intro, () => {
                     showDialog('地板上有四块刻着符号的砖，顺序似乎很重要……', () => setupBalconyHotspots());
-                } else {
-                    setupBalconyHotspots();
-                }
-            });
+                });
+            } else {
+                setupBalconyHotspots();
+            }
         } else if (clockTime === '10') {
-            showDialog('上午的阳光从左侧斜射进来，光线柔和。\n\n仙人掌的影子被拉得很长，影子末端压着地板上的一条砖缝……就像信里写的那样。', () => {
+            if (isFirstAtThisTime) {
+                showDialog('上午的阳光从左侧斜射进来，光线柔和。\n\n仙人掌的影子被拉得很长，影子末端压着地板上的一条砖缝……就像信里写的那样。', () => {
+                    setupBalconyHotspots();
+                });
+            } else {
                 setupBalconyHotspots();
-            });
+            }
         } else if (clockTime === '15') {
-            showDialog('下午的阳光从右侧低低地照进来，光线橙红。\n\n绿植的影子斜斜地落在地板上，影子末端也压着一条砖缝……就像信里写的那样。', () => {
+            if (isFirstAtThisTime) {
+                showDialog('下午的阳光从右侧低低地照进来，光线橙红。\n\n绿植的影子斜斜地落在地板上，影子末端也压着一条砖缝……就像信里写的那样。', () => {
+                    setupBalconyHotspots();
+                });
+            } else {
                 setupBalconyHotspots();
-            });
+            }
         } else {
-            showDialog('你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n阳光平淡，什么都看不出来。', () => {
+            if (isFirstVisit) {
+                showDialog('你踏上阳台。\n\n地板上有一串细小的爪印，还有几块刻着奇怪符号的砖。\n\n阳光平淡，什么都看不出来。', () => {
+                    setupBalconyHotspots();
+                });
+            } else {
                 setupBalconyHotspots();
-            });
+            }
         }
     });
 }
@@ -133,18 +148,6 @@ function setupBalconyHotspots() {
             });
         });
         scene.appendChild(base);
-    }
-
-    if (!gameState.flags.stickyNotes.includes('note5')) {
-        const note = document.createElement('div');
-        note.className = 'sticky-note-hotspot';
-        note.style.cssText = 'position:absolute;right:6%;top:10%;font-size:28px;cursor:pointer;z-index:210;';
-        note.textContent = '📝';
-        note.addEventListener('click', () => {
-            note.remove();
-            collectStickyNote('note5');
-        });
-        scene.appendChild(note);
     }
 }
 

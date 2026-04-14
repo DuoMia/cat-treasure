@@ -1,7 +1,7 @@
 // ===================== UI 组件 =====================
 
 import { gameState, saveGame } from './state.js';
-import { STICKY_NOTE_TEXTS, MEMORY_FRAGMENT_TEXTS, ROOM_HOTSPOTS, ENDING_ACTS } from './data.js';
+import { STICKY_NOTE_TEXTS, MEMORY_FRAGMENT_TEXTS, ROOM_HOTSPOTS, ENDING_ACTS, PUZZLES } from './data.js';
 import { sceneManager } from './scene-manager.js';
 import { clearHotspots, createHotspot } from './hotspots.js';
 import { collectStickyNote, collectMemoryFragment, allFragmentsCollected } from './notes.js';
@@ -112,8 +112,9 @@ export function updateInventory() {
     if (noteCount > 0) {
         const noteDiv = document.createElement('div');
         noteDiv.className = 'inventory-item';
-        const isMobile = window.innerWidth <= 768;
-        const noteText = isMobile ? `便利贴${noteCount}/5` : `便利贴 ${noteCount}/5${gameState.flags.albumUnlocked ? ' ✨' : ''}`;
+        const noteText = gameState.flags.albumUnlocked
+            ? '记忆相册 ✨'
+            : (window.innerWidth <= 768 ? `便利贴${noteCount}/5` : `便利贴 ${noteCount}/5`);
         noteDiv.innerHTML = `${noteText}`;
         noteDiv.style.cursor = 'pointer';
         noteDiv.onclick = () => {
@@ -183,11 +184,13 @@ function handleItemClick(item) {
     } else if (item === '日记') {
         showDialog('日记封面上写着"献给朵朵"。\n\n── 2021年8月29日 ──\n\n朵朵来了。她很小，一直躲在沙发角落不出来。我把她的第一个项圈和一个小音乐盒一起放进了书架最里面的格子，我最喜欢将5本书按朵朵的样子摆放。\n\n── 关于吃饭 ──\n\n她有自己的规律。早7点、午12点、晚6点、夜10点，从不迟到，她还有自己的吃饭习惯。我把这些记在食盆旁边的卡片上，怕自己忘。\n\n── 关于玩具 ──\n\n她最后一次玩玩具是离开前的那个傍晚。先把球滚到我脚边，再去闻了闻小鱼，然后用爪子拨了拨铃铛。我把那个顺序锁进了玩具箱。\n\n── 关于阳台 ──\n\n朵朵没事干最喜欢在阳台发呆了，不同时间会待在不同的地方。');
     } else if (item === '项圈') {
-        showDialog('朵朵的项圈，上面刻着她的名字。\n\n项圈上刻着 2021.08.29，那是朵朵来家的日子。\n\n项圈内侧还刻着一串数字：5-4-3。\n\n这串数字……好像在哪里用得上。');
+        showDialog('朵朵的项圈，上面刻着她的名字。\n\n项圈上刻着 2021.08.29，那是朵朵来家的日子。');
     } else if (item === '主人的信') {
         showDialog('"朵朵，\n\n每天上午十点，我把她的早饭端到阳台，她总是先不吃，坐在仙人掌旁边，等那道光爬过来，才低头吃第一口。\n\n我不知道她在等什么。也许是影子，也许是什么只有她看得见的东西。\n\n我把一些东西藏在了那道光照不到的地方。\n\n——主人"');
     } else if (item === '朵朵的信') {
         showDialog('"喵——\n\n你找到这里了。我知道你会来的。\n\n每天下午三点，我会跑到阳台，把玩具推到绿植旁边，等那道橙色的光把影子拉得很长很长。\n\n那是我最喜欢的时候。主人总是站在门口看着我，不说话。\n\n去那里看看吧。\n\n——朵朵 🐾"');
+    } else if (item === '食盆') {
+        showDialog('底部有猫爪样式的镂空花纹，应该可以用在哪里。');
     } else if (item === '信') {
         showDialog('"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我四年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"');
     } else if (item.startsWith('便利贴')) {
@@ -288,11 +291,11 @@ export function closeDrawerModal() {
 export function submitDrawerPassword() {
     const input = document.getElementById('drawer-input');
     const password = input.value.trim();
-    if (password === '443') {
+    if (password === PUZZLES.drawer.answer) {
         closeDrawerModal();
         gameState.flags.drawerOpened = true;
         saveGame();
-        showDialog('你输入了密码443，抽屉缓缓打开了……', () => openDrawerScene());
+        showDialog(`你输入了密码${PUZZLES.drawer.answer}，抽屉缓缓打开了……`, () => openDrawerScene());
     } else {
         showDialog('密码错误，请再试一次');
         input.value = '';

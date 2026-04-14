@@ -22,10 +22,7 @@ function scrollToX(pct) {
 }
 
 // ── 书脊拼图 ────────────────────────────────────────────────
-// cat.jpg (960×1280) 取中间 4:3 横向区域 (960×720, y从280开始)
-// 缩放到 260×200 后纵向分5份，每份宽52px
-// background-size: 260px 200px
-// background-position-y: -76px (对应原图 y=280 的缩放偏移)
+// catbook.jpg (1280×960) 缩放到 260×195（保持4:3比例）后纵向分5份，每份宽52px
 // 正确顺序：seg1(最左) → seg5(最右)
 const JIGSAW_SEGMENTS = [
     { id: 'seg1', bgX:   0 },
@@ -50,12 +47,12 @@ function startMouseDrag(seg, clientX, clientY) {
     mouseDragClone = document.createElement('div');
     mouseDragClone.className = 'jigsaw-piece jigsaw-drag-clone';
     mouseDragClone.style.cssText = `
-        background-image: url('cat.jpg');
-        background-size: 260px 200px;
-        background-position: -${seg.bgX}px -76px;
+        background-image: url('catbook.jpg');
+        background-size: 260px 195px;
+        background-position: -${seg.bgX}px 0px;
         background-repeat: no-repeat;
         position: fixed; z-index: 9999; pointer-events: none;
-        width: 52px; height: 200px;
+        width: 52px; height: 195px;
         opacity: 0.85; cursor: grabbing;
         transform: rotate(-2deg) scale(1.05);
         box-shadow: 4px 8px 24px rgba(0,0,0,0.7);
@@ -113,9 +110,9 @@ function makePieceEl(seg) {
     el.className = 'jigsaw-piece';
     el.dataset.segId = seg.id;
     el.style.cssText = `
-        background-image: url('cat.jpg');
-        background-size: 260px 200px;
-        background-position: -${seg.bgX}px -76px;
+        background-image: url('catbook.jpg');
+        background-size: 260px 195px;
+        background-position: -${seg.bgX}px 0px;
         background-repeat: no-repeat;
     `;
 
@@ -130,7 +127,7 @@ function makePieceEl(seg) {
         touchClone = el.cloneNode(true);
         touchClone.style.cssText += `
             position:fixed;opacity:0.85;pointer-events:none;z-index:9999;
-            width:52px;height:200px;left:${t.clientX - 26}px;top:${t.clientY - 100}px;
+            width:52px;height:195px;left:${t.clientX - 26}px;top:${t.clientY - 97}px;
             transform:rotate(-4deg) scale(1.05);
             box-shadow:4px 8px 24px rgba(0,0,0,0.7);border-radius:2px;`;
         document.body.appendChild(touchClone);
@@ -311,7 +308,7 @@ function setupBookPuzzleHotspots() {
 
 // ── Simon Says 音乐盒 ──────────────────────────────────────────
 const NOTE_FREQS = { A: 330, B: 440, C: 550 };
-const ROUND_LENGTHS = [3, 4, 5, 6];
+const ROUND_LENGTHS = [1, 1, 1, 1];
 
 let simonSequence = [];
 let simonRound = 0;
@@ -488,6 +485,8 @@ function handleMusicBoxBtn(key) {
             updateSimonHud();
 
             if (simonRound >= 4) {
+                const sceneEl = document.getElementById('bookshelf-scene');
+                if (sceneEl) sceneEl.querySelectorAll('.music-btn, #simon-hud').forEach(el => el.remove());
                 gameState.flags.musicBoxSolved = true;
                 saveGame();
                 showDialog('叮——四个按钮全部亮起，音乐盒缓缓打开了。\n\n里面躺着一张小纸片，上面写着：\n"那天下午，她第一次跳上窗台，坐在那里望了很久。我没有打扰她。"', () => {
@@ -556,6 +555,8 @@ export function openBookshelfScene() {
 function setupMusicBoxHotspots() {
     const scene = document.getElementById('bookshelf-scene');
     scene.querySelectorAll('.bookshelf-hotspot, #simon-hud').forEach(el => el.remove());
+
+    if (gameState.flags.musicBoxSolved) return;
 
     // Simon HUD
     const hud = document.createElement('div');

@@ -6,13 +6,26 @@ import { showDialog, showChoices, updateInventory } from '../ui.js';
 import { setTapHandler } from '../utils.js';
 import { createRoomHotspots } from '../interactions.js';
 import { collectStickyNote } from '../notes.js';
+import { imgCoordsToContainer } from '../scene-hotspot.js';
 
 export function openSofaCornerScene() {
     sceneManager.open('sofa-corner-scene', () => {
         closeCornerUI();
+        const scene = document.getElementById('sofa-corner-scene');
         const catImg = document.getElementById('sofa-corner-cat');
         const bump = document.getElementById('sofa-corner-bump');
         const scratch = document.getElementById('sofa-corner-scratch');
+
+        // 动态定位热区（sofa_corner.jpg 1200×800）
+        const posMap = {
+            cat:     imgCoordsToContainer(scene, 1200, 800, 0.58, 0.50, 0.14, 0.30),
+            bump:    imgCoordsToContainer(scene, 1200, 800, 0.62, 0.62, 0.08, 0.08),
+            scratch: imgCoordsToContainer(scene, 1200, 800, 0.51, 0.52, 0.06, 0.11),
+        };
+        const applyPos = (el, p) => { el.style.left = p.left; el.style.top = p.top; el.style.width = p.width; el.style.height = p.height; };
+        applyPos(catImg, posMap.cat);
+        applyPos(bump,   posMap.bump);
+        applyPos(scratch, posMap.scratch);
 
         scratch.classList.remove('hidden');
         setTapHandler(scratch, function() {

@@ -21,6 +21,8 @@ export function openFoodBowlScene() {
         if (!scene.querySelector('#food-bowl-record-hotspot')) {
             const card = document.createElement('div');
             card.id = 'food-bowl-record-hotspot';
+            const cardPos = imgCoordsToContainer(scene, 1200, 800, parsePct('56.5%'), parsePct('43%'), parsePct('30%'), parsePct('37%'));
+            card.style.cssText = `position:absolute;left:${cardPos.left};top:${cardPos.top};width:${cardPos.width};height:${cardPos.height};cursor:pointer;z-index:210;touch-action:manipulation;-webkit-tap-highlight-color:transparent;`;
             const onCardActivate = () => {
                 showDialog('你凑近看那张泛黄的记录卡……\n\n"她吃早饭的时候，总喜欢待在毯子上，并且要离柜子最近。\n\n中午的阳光最烈，她会找最亮的地方，正对着光吃。\n\n傍晚她有点困，歪在离门最近的角落，有时候吃到一半就打盹。\n\n夜里安静，她会躲到最暗的地方，专心吃完再出来。"');
             };
@@ -51,7 +53,7 @@ export function openFoodBowlScene() {
             if (!scene.querySelector('#food-bowl-pickup')) {
                 const bowl = document.createElement('div');
                 bowl.id = 'food-bowl-pickup';
-                const pos = imgCoordsToContainer(scene, 1200, 800, parsePct('25%'), parsePct('50%'), parsePct('20%'), parsePct('25%'));
+                const pos = imgCoordsToContainer(scene, 1200, 800, parsePct('25%'), parsePct('45%'), parsePct('20%'), parsePct('25%'));
                 bowl.style.cssText = `left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};`;
                 bowl.addEventListener('click', () => {
                     gameState.flags.hasBowl = true;
@@ -69,7 +71,7 @@ export function openFoodBowlScene() {
                     scene.appendChild(toast);
                     setTimeout(() => toast.remove(), 1300);
 
-                    showDialog('你拿起食盆，翻过来看了看盆底——上面有一个浅浅的镂空花纹，像是被反复摩擦留下的痕迹。');
+                    showDialog('你拿起食盆，翻过来看了看盆底——上面有一个浅浅的镂空花纹，像是被反复摩擦留下的痕迹，你把食盆放进了背包。');
                 });
                 scene.appendChild(bowl);
             }
@@ -337,6 +339,7 @@ function confirmSymbol(symbol, scene) {
     scene.querySelectorAll('.painting-symbol-reveal').forEach(el => el.remove());
 
     if (gameState.flags.paintingStep >= 4) {
+        scene.querySelectorAll('.painting-bowl-indicator, .painting-zone, .painting-progress-hud, .painting-guide-tip').forEach(el => el.remove());
         setTimeout(() => {
             gameState.flags.paintingPuzzleSolved = true;
             saveGame();
@@ -348,9 +351,9 @@ function confirmSymbol(symbol, scene) {
                 const scene2 = document.getElementById('painting-scene');
                 if (scene2) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得主人的信'; scene2.appendChild(t); setTimeout(() => t.remove(), 1300); }
                 showDialog('你获得了主人写给朵朵的信。\n\n"朵朵，\n\n每天上午十点，我把她的早饭端到阳台，她总是先不吃，坐在仙人掌旁边，等那道光爬过来，才低头吃第一口。\n\n我不知道她在等什么。也许是影子，也许是什么只有她看得见的东西。\n\n我把一些东西藏在了那道光照不到的地方。\n\n——主人"', () => {
-                    showDialog('先闻味道（鱼）→爪子确认（爪印）→铃铛→球……\n\n这个顺序……好像可以用在什么地方。', () => {
-                        collectMemoryFragment(2);
-                    });
+                        collectMemoryFragment(2, () => {
+                            updateInventory();
+                        });
                 });
             });
         }, 600);

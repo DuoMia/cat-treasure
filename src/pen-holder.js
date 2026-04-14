@@ -2,6 +2,7 @@
 
 import { gameState, saveGame } from './state.js';
 import { showDialog } from './ui.js';
+import { imgCoordsToContainer } from './scene-hotspot.js';
 
 let isHolding = false;
 let shakeCount = 0;
@@ -46,6 +47,14 @@ export function setupPenHolderInteraction() {
         console.error('❌ 找不到笔筒元素！');
         return;
     }
+
+    // 动态定位热区（room.jpg 1200×800）
+    const roomScene = document.getElementById('room-scene') || document.getElementById('game-container');
+    const penPos = imgCoordsToContainer(roomScene, 1200, 800, 0.62, 0.60, 0.07, 0.10);
+    penHolderHotspot.style.left   = penPos.left;
+    penHolderHotspot.style.top    = penPos.top;
+    penHolderHotspot.style.width  = penPos.width;
+    penHolderHotspot.style.height = penPos.height;
 
     const MIN_DRAG = 20;
     const SHAKE_DIST = 35;

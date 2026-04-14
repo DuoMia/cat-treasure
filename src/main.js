@@ -35,6 +35,11 @@ initHotspotCallbacks(createRoomHotspots, interactSofa);
 installGestureLock();
 
 // 移动端：给所有返回按钮绑定 touchend，消除 300ms 延迟，滑动不触发
+function isUIOpen() {
+    return !document.getElementById('dialog-box').classList.contains('hidden') ||
+           !document.getElementById('choice-box').classList.contains('hidden');
+}
+
 document.querySelectorAll('.scene-back-btn').forEach(btn => {
     let _tx = 0, _ty = 0;
     btn.addEventListener('touchstart', (e) => {
@@ -45,10 +50,14 @@ document.querySelectorAll('.scene-back-btn').forEach(btn => {
         const dx = e.changedTouches[0].clientX - _tx;
         const dy = e.changedTouches[0].clientY - _ty;
         if (dx * dx + dy * dy > 64) return;
+        if (isUIOpen()) { e.preventDefault(); e.stopPropagation(); return; }
         e.preventDefault();
         e.stopPropagation();
         if (typeof btn.onclick === 'function') btn.onclick(e);
     }, { passive: false });
+    btn.addEventListener('click', (e) => {
+        if (isUIOpen()) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
 });
 
 let _listenersSetup = false;

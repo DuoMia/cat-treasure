@@ -13,8 +13,8 @@ export const PUZZLES = {
     brickOrder: ['moon', 'sun', 'wave', 'star'],
     // 画框食盆区域顺序
     bowlOrder: ['morning', 'noon', 'evening', 'night'],
-    // 玩具箱图案锁顺序：球→鱼→铃铛→爪
-    toyLockOrder: ['ball', 'fish', 'bell', 'paw'],
+    // 玩具箱图案锁顺序：球→鱼→爪→铃铛
+    toyLockOrder: ['ball', 'fish', 'paw', 'bell'],
 };
 
 // ===================== 谜题常量 =====================
@@ -44,10 +44,10 @@ export const BOWL_ZONES = [
 export const BRICK_LABELS = { moon: '🌙', sun: '☀️', wave: '🌊', star: '⭐' };
 
 export const BRICK_POSITIONS = [
-    { key: 'star',  left: '18%', top: '76%' },
-    { key: 'sun',   left: '34%', top: '76%' },
-    { key: 'moon',  left: '50%', top: '76%' },
-    { key: 'wave',  left: '66%', top: '76%' },
+    { key: 'moon',  left: '21%', top: '78%' },
+    { key: 'sun',   left: '36%', top: '78%' },
+    { key: 'wave',  left: '52%', top: '78%' },
+    { key: 'star',  left: '68%', top: '78%' },
 ];
 
 // ===================== 热区位置 =====================

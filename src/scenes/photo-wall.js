@@ -31,18 +31,26 @@ export function openPhotoWallScene() {
         bindPhotoClick(photo3, '2026年，朵朵5岁了，最爱在下午趴在阳台那盆开黄花的植物旁边打盹。\n\n照片背面写着："老猫时光"。');
 
         const scene = document.getElementById('photo-wall-scene');
+
+        // 照片热区动态定位（photo_wall.jpg 800×600）
+        const PHOTO_COORDS = [
+            { el: photo1, ix: 0.08, iy: 0.15, iw: 0.22, ih: 0.55 },
+            { el: photo2, ix: 0.39, iy: 0.15, iw: 0.22, ih: 0.55 },
+            { el: photo3, ix: 0.70, iy: 0.15, iw: 0.22, ih: 0.55 },
+        ];
+        PHOTO_COORDS.forEach(({ el, ix, iy, iw, ih }) => {
+            const p = imgCoordsToContainer(scene, 800, 600, ix, iy, iw, ih);
+            el.style.left = p.left; el.style.top = p.top;
+            el.style.width = p.width; el.style.height = p.height;
+        });
         if (!gameState.flags.stickyNotes.includes('note3')) {
             const note = document.createElement('div');
             note.className = 'sticky-note-hotspot';
             // right:5% bottom:10% width:12% height:10% → left:83% top:80%
-            const pos = imgCoordsToContainer(scene, 800, 600, 0.83, 0.80, 0.12, 0.10);
-            note.style.cssText = `position:absolute;left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};cursor:pointer;`;
+            const pos = imgCoordsToContainer(scene, 800, 600, 0.83, 0.80, 0, 0);
+            note.style.cssText = `position:absolute;left:${pos.left};top:${pos.top};font-size:28px;cursor:pointer;z-index:210;`;
             note.title = '便利贴';
             note.textContent = '📝';
-            note.style.fontSize = '28px';
-            note.style.display = 'flex';
-            note.style.alignItems = 'center';
-            note.style.justifyContent = 'center';
             note.addEventListener('click', () => {
                 note.remove();
                 collectStickyNote('note3');

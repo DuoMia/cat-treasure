@@ -39,6 +39,17 @@ export function createRoomHotspots() {
         });
         hotspots.appendChild(note);
     }
+
+    // 两封信同时在背包时弹一次提示
+    if (
+        !gameState.flags.bothLettersHint &&
+        gameState.inventory.includes('朵朵的信') &&
+        gameState.inventory.includes('主人的信')
+    ) {
+        gameState.flags.bothLettersHint = true;
+        saveGame();
+        setTimeout(() => showDialog('两封信中的时间……会不会和时钟有关？'), 100);
+    }
 }
 
 const INTERACT_MAP = {
@@ -89,7 +100,11 @@ export function interactDoor() {
 export function interactWindow() {
     if (tickExploreAfterBite()) return;
     if (gameState.flags.hasDiary) {
-        openWindowScene();
+        if (gameState.flags.stickyNotes.includes('note2')) {
+            openBalconyScene();
+        } else {
+            openWindowScene();
+        }
     } else {
         trackObjectClick('window', (next) => {
             showDialog('你尝试打开窗户，但是窗户是锁死的，怎么也打不开。', next);
@@ -151,7 +166,7 @@ export function interactBookshelf() {
                 openBookshelfScene();
             });
         } else {
-            showDialog('书架上的一切都已经探索过了。', next);
+            openBookshelfScene();
         }
     });
 }
@@ -171,11 +186,11 @@ export function interactPainting() {
     if (tickExploreAfterBite()) return;
     trackObjectClick('painting', (next) => {
         if (gameState.flags.paintingPuzzleSolved) {
-            showDialog('画框已经打开过了，里面的信已经取走了。', next);
+            openPaintingPuzzle();
         } else if (!gameState.flags.hasDiary) {
-            showDialog('墙上挂着一幅画，画里是一片草地，朵朵最喜欢趴在这里晒太阳。', next);
+            showDialog('墙上挂着一幅画，画中是一个温馨的房间，暂时还不知道有没有用处。', next);
         } else if (!gameState.flags.hasBowl) {
-            showDialog('墙上挂着一幅画，草地上的光影很复杂……\n\n你总觉得画里藏着什么，但什么都看不出来。', next);
+            showDialog('墙上挂着一幅画，画中是一个温馨的房间……\n\n你总觉得画里藏着什么，但什么都看不出来。', next);
         } else {
             showDialog('你拿着食盆靠近画框，盆底的花纹在画面上投下奇怪的光影……', () => {
                 openPaintingPuzzle();
@@ -190,7 +205,7 @@ export function interactToyBox() {
         if (!gameState.flags.hasDiary) {
             showDialog('桌子下面好像有个小木箱，上面有个图案锁，暂时打不开。', next);
         } else if (gameState.flags.toyBoxSolved) {
-            showDialog('玩具箱已经打开了，朵朵的信已经取走了。', next);
+            openToyBoxScene();
         } else {
             showDialog('小木箱上有四个图案按钮：🐟 🐾 🔔 ⚽\n\n日记里好像写过朵朵玩玩具的顺序……', () => {
                 openToyBoxScene();

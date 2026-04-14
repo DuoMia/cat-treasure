@@ -395,10 +395,6 @@ body {
 
 #pen-holder-hotspot {
     position: absolute;
-    left: 62%;
-    top: 60%;
-    width: 7%;
-    height: 10%;
     z-index: 110;
     cursor: grab;
     user-select: none;
@@ -455,6 +451,16 @@ body {
 .debug-mode #pen-holder-hotspot {
     background: rgba(0, 255, 0, 0.5) !important;
     border: 3px solid lime !important;
+}
+
+.debug-mode #pen-image.fallen {
+    outline: 2px dashed lime !important;
+    outline-offset: 2px;
+}
+
+.debug-mode .photo-hotspot {
+    background: rgba(0, 200, 255, 0.3) !important;
+    border: 2px dashed cyan !important;
 }
 
 .debug-mode .painting-zone {
@@ -1398,10 +1404,6 @@ body {
 
 #sofa-corner-cat {
     position: absolute;
-    right: 28%;
-    top: 50%;
-    width: 14%;
-    height: auto;
     z-index: 205;
     pointer-events: auto;
     cursor: pointer;
@@ -1412,10 +1414,6 @@ body {
 
 #sofa-corner-bump {
     position: absolute;
-    right: 30%;
-    top: 58%;
-    width: 9%;
-    height: 12%;
     z-index: 203;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -1423,22 +1421,25 @@ body {
 
 #sofa-corner-scratch {
     position: absolute;
-    left: 30%;
-    top: 45%;
-    width: 25%;
-    height: 20%;
     z-index: 203;
     cursor: pointer;
+}
+
+.debug-mode #sofa-corner-bump,
+.debug-mode #sofa-corner-scratch {
+    background: rgba(255, 100, 0, 0.3) !important;
+    border: 2px dashed orange !important;
+}
+
+.debug-mode #sofa-corner-cat {
+    outline: 2px dashed orange !important;
+    outline-offset: 2px;
 }
 
 /* 抽屉特写场景（容器和返回按钮已由通用类覆盖） */
 
 #drawer-diary-hotspot {
     position: absolute;
-    left: 28%;
-    top: 45%;
-    width: 30%;
-    height: 30%;
     z-index: 203;
     cursor: pointer;
 }
@@ -1808,7 +1809,7 @@ body {
 /* 单个槽位：书架空格 */
 .jigsaw-slot {
     width: 52px;
-    height: 200px;
+    height: 195px;
     border: 1px dashed rgba(200,160,80,0.35);
     border-radius: 2px;
     background: rgba(10,5,2,0.5);
@@ -1880,7 +1881,7 @@ body {
 /* 书脊碎片 */
 .jigsaw-piece {
     width: 52px;
-    height: 200px;
+    height: 195px;
     cursor: grab;
     border-radius: 2px;
     transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
@@ -1910,8 +1911,6 @@ body {
 
 #food-bowl-record-hotspot {
     position: absolute;
-    left: 49%; top: 43%;
-    width: 35%; height: 37%;
     cursor: pointer;
     border: none;
     background: none;
@@ -2244,16 +2243,37 @@ body.debug-mode #food-bowl-record-hotspot {
     box-shadow: 0 8px 32px rgba(0,0,0,0.6);
 }
 
-/* 出口标记 */
+/* 出口标记：贴在棋盘底边外侧 */
 .klotski-exit-mark {
     position: absolute;
-    background: rgba(240,192,64,0.07);
-    border: 2px dashed rgba(240,192,64,0.45);
+    height: 28px;
+    background: rgba(240,192,64,0.12);
+    border: 2px solid rgba(240,192,64,0.6);
     border-top: none;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 10px 10px;
     box-sizing: border-box;
     pointer-events: none;
-    z-index: 1;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.klotski-exit-mark::after {
+    content: '▼ 出口';
+    color: rgba(240,192,64,0.9);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+/* 棋盘底边缺口遮罩 */
+.klotski-gap-mask {
+    position: absolute;
+    bottom: -1px;
+    height: 3px;
+    background: rgba(0,0,0,0.5);
+    pointer-events: none;
+    z-index: 5;
 }
 
 /* 方块通用 */
@@ -2310,6 +2330,7 @@ body.debug-mode #food-bowl-record-hotspot {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: 20px;
 }
 
 #klotski-reset {
