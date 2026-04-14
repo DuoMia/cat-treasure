@@ -94,6 +94,7 @@ function setupBalconyHotspots() {
     pawprint.addEventListener('click', () => {
         showDialog('一串小小的爪印，从窗边延伸出去，好像去过好几个地方……');
     });
+    pawprint.addEventListener('touchend', (e) => { e.preventDefault(); showDialog('一串小小的爪印，从窗边延伸出去，好像去过好几个地方……'); }, { passive: false });
     scene.appendChild(pawprint);
 
     if (clockTime === '10') {
@@ -102,11 +103,13 @@ function setupBalconyHotspots() {
         const c1Pos = bPos(scene, '8%', '78%', '18%', '8%');
         crack1.style.cssText = `left:${c1Pos.left};top:${c1Pos.top};width:${c1Pos.width};height:${c1Pos.height};cursor:pointer;`;
         crack1.title = '仙人掌影子末端的砖缝';
-        crack1.addEventListener('click', () => {
+        const onCrack1 = () => {
             gameState.flags.balconyClue1 = true;
             saveGame();
             showDialog('你蹲下来，从砖缝里抽出一张卷起的纸条。\n\n"她总是等黑暗散尽，才去追那道光，最后蜷在星星落下的地方睡着。"');
-        });
+        };
+        crack1.addEventListener('click', onCrack1);
+        crack1.addEventListener('touchend', (e) => { e.preventDefault(); onCrack1(); }, { passive: false });
         scene.appendChild(crack1);
     }
 
@@ -116,11 +119,13 @@ function setupBalconyHotspots() {
         const c2Pos = bPos(scene, '74%', '78%', '18%', '8%');
         crack2.style.cssText = `left:${c2Pos.left};top:${c2Pos.top};width:${c2Pos.width};height:${c2Pos.height};cursor:pointer;`;
         crack2.title = '绿植影子末端的砖缝';
-        crack2.addEventListener('click', () => {
+        const onCrack2 = () => {
             gameState.flags.balconyClue2 = true;
             saveGame();
             showDialog('你蹲下来，从砖缝里抽出一张卷起的纸条。\n\n"光跑得比她快，一头扎进了海里。"');
-        });
+        };
+        crack2.addEventListener('click', onCrack2);
+        crack2.addEventListener('touchend', (e) => { e.preventDefault(); onCrack2(); }, { passive: false });
         scene.appendChild(crack2);
     }
 
@@ -132,7 +137,7 @@ function setupBalconyHotspots() {
         const basePos = bPos(scene, '48%', '68%', '14%', '8%');
         base.style.cssText = `left:${basePos.left};top:${basePos.top};width:${basePos.width};height:${basePos.height};cursor:pointer;`;
         base.title = '地板上弹开的底座';
-        base.addEventListener('click', () => {
+        const onBase = () => {
             showDialog('地板上有一道弹开的缝隙，里面压着一个防水袋，里面有一封信。', () => {
                 gameState.flags.hasLetter = true;
                 gameState.inventory.push('信');
@@ -146,7 +151,9 @@ function setupBalconyHotspots() {
                     });
                 });
             });
-        });
+        };
+        base.addEventListener('click', onBase);
+        base.addEventListener('touchend', (e) => { e.preventDefault(); onBase(); }, { passive: false });
         scene.appendChild(base);
     }
 }
@@ -161,6 +168,7 @@ function showBalconyBricks(scene) {
         const brickPos = bPos(scene, b.left, b.top, '6%', '6%');
         brick.style.cssText = `left:${brickPos.left};top:${brickPos.top};width:${brickPos.width};height:${brickPos.height};cursor:pointer;`;
         brick.addEventListener('click', () => handleBrickClick(b.key));
+        brick.addEventListener('touchend', (e) => { e.preventDefault(); handleBrickClick(b.key); }, { passive: false });
         scene.appendChild(brick);
     });
 }

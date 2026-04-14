@@ -55,7 +55,7 @@ export function openFoodBowlScene() {
                 bowl.id = 'food-bowl-pickup';
                 const pos = imgCoordsToContainer(scene, 1200, 800, parsePct('25%'), parsePct('45%'), parsePct('20%'), parsePct('25%'));
                 bowl.style.cssText = `left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};`;
-                bowl.addEventListener('click', () => {
+                const onBowlTap = () => {
                     gameState.flags.hasBowl = true;
                     saveGame();
                     bowl.remove();
@@ -72,7 +72,9 @@ export function openFoodBowlScene() {
                     setTimeout(() => toast.remove(), 1300);
 
                     showDialog('你拿起食盆，翻过来看了看盆底——上面有一个浅浅的镂空花纹，像是被反复摩擦留下的痕迹，你把食盆放进了背包。');
-                });
+                };
+                bowl.addEventListener('click', onBowlTap);
+                bowl.addEventListener('touchend', (e) => { e.preventDefault(); onBowlTap(); }, { passive: false });
                 scene.appendChild(bowl);
             }
         }

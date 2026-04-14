@@ -434,7 +434,8 @@ function setupToyLock(scene, onUnlock) {
         const pos = imgCoordsToContainer(scene, 1200, 800, parsePct(z.left), parsePct(z.top), parsePct(z.width), parsePct(z.height));
         zone.style.cssText = `position:absolute;left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};cursor:pointer;border-radius:8px;`;
 
-        zone.addEventListener('click', () => {
+        const handleTap = (e) => {
+            e.preventDefault();
             if (z.id === TOY_LOCK_ORDER[step]) {
                 zone.classList.add('toy-lock-zone-correct');
                 step++;
@@ -445,12 +446,13 @@ function setupToyLock(scene, onUnlock) {
                     }, 500);
                 }
             } else {
-                // 错误：文案提示，清空已点亮状态
                 step = 0;
                 scene.querySelectorAll('.toy-lock-zone').forEach(el => el.classList.remove('toy-lock-zone-correct'));
                 showDialog('顺序不对，再想想……');
             }
-        });
+        };
+        zone.addEventListener('click', handleTap);
+        zone.addEventListener('touchend', handleTap, { passive: false });
 
         scene.appendChild(zone);
     });
