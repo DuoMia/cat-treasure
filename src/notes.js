@@ -5,6 +5,32 @@ import { STICKY_NOTE_TEXTS, MEMORY_FRAGMENT_TEXTS } from './data.js';
 import { showDialog, showEnding } from './ui.js';
 import { updateInventory } from './ui.js';
 
+/** 创建可点击便利贴元素，移动端 touchend + click 双绑定 */
+export function createStickyNoteEl(noteId, cssText, onCollect) {
+    const note = document.createElement('div');
+    note.textContent = '📝';
+    note.style.cssText = cssText + ';cursor:pointer;';
+    let _tx = 0, _ty = 0;
+    note.addEventListener('touchstart', (e) => {
+        _tx = e.touches[0].clientX; _ty = e.touches[0].clientY;
+    }, { passive: true });
+    note.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - _tx;
+        const dy = e.changedTouches[0].clientY - _ty;
+        if (dx * dx + dy * dy > 64) return;
+        e.preventDefault();
+        e.stopPropagation();
+        note.remove();
+        onCollect();
+    }, { passive: false });
+    note.addEventListener('click', (e) => {
+        e.stopPropagation();
+        note.remove();
+        onCollect();
+    });
+    return note;
+}
+
 function checkTrueEnding() {
     if (gameState.flags.memoryFragments.length >= 5 && gameState.flags.stickyNotes.length >= 5) {
         showEnding('treasure');

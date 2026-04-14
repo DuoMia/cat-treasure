@@ -23,7 +23,8 @@
       "Bash(awk 'NR>=1990 && NR<=2000' style.css)",
       "Bash(awk 'NR>=2025 && NR<=2075' style.css)",
       "Bash(awk 'NR>=720 && NR<=760' style.css)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(sort -k5 -rh)"
     ]
   }
 }

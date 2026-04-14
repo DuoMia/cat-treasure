@@ -3,7 +3,7 @@
 import { gameState } from '../state.js';
 import { sceneManager } from '../scene-manager.js';
 import { showDialog, showChoices } from '../ui.js';
-import { collectStickyNote } from '../notes.js';
+import { collectStickyNote, createStickyNoteEl } from '../notes.js';
 import { openBalconyScene } from './balcony.js';
 
 export function openWindowScene() {
@@ -26,28 +26,8 @@ export function openWindowScene() {
         const scene = document.getElementById('window-scene');
 
         if (!scene.querySelector('.sticky-note-hotspot')) {
-            const note = document.createElement('div');
+            const note = createStickyNoteEl('note2', 'position:absolute;left:30%;top:8%;font-size:28px;z-index:210;', () => collectStickyNote('note2'));
             note.className = 'sticky-note-hotspot';
-            note.style.cssText = 'position:absolute;left:30%;top:8%;font-size:28px;cursor:pointer;z-index:210;';
-            note.textContent = '📝';
-            note.addEventListener('click', (e) => {
-                e.stopPropagation();
-                note.remove();
-                collectStickyNote('note2');
-            });
-            let _ntx = 0, _nty = 0;
-            note.addEventListener('touchstart', (e) => {
-                _ntx = e.touches[0].clientX; _nty = e.touches[0].clientY;
-            }, { passive: true });
-            note.addEventListener('touchend', (e) => {
-                const dx = e.changedTouches[0].clientX - _ntx;
-                const dy = e.changedTouches[0].clientY - _nty;
-                if (dx * dx + dy * dy > 64) return;
-                e.preventDefault();
-                e.stopPropagation();
-                note.remove();
-                collectStickyNote('note2');
-            }, { passive: false });
             scene.appendChild(note);
         }
 

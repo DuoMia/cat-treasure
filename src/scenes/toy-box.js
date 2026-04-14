@@ -18,7 +18,7 @@
 import { gameState, saveGame } from '../state.js';
 import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
-import { collectStickyNote, collectMemoryFragment } from '../notes.js';
+import { collectStickyNote, collectMemoryFragment, createStickyNoteEl } from '../notes.js';
 import { PUZZLES } from '../data.js';
 import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
 
@@ -402,11 +402,8 @@ function onWin() {
                 // 在玩具箱场景生成可点击便利贴
                 const scene = document.getElementById('toy-box-scene');
                 if (!gameState.flags.stickyNotes.includes('note5') && scene && !scene.querySelector('#sticky-note5')) {
-                    const note = document.createElement('div');
+                    const note = createStickyNoteEl('note5', 'position:absolute;right:6%;top:12%;font-size:28px;z-index:220;', () => collectStickyNote('note5'));
                     note.id = 'sticky-note5';
-                    note.textContent = '📝';
-                    note.style.cssText = 'position:absolute;right:6%;top:12%;font-size:28px;cursor:pointer;z-index:220;';
-                    note.addEventListener('click', () => { note.remove(); collectStickyNote('note5'); });
                     scene.appendChild(note);
                 }
                 collectMemoryFragment(3);
@@ -469,11 +466,8 @@ export function openToyBoxScene() {
 
         if (gameState.flags.toyBoxSolved) {
             if (!gameState.flags.stickyNotes.includes('note5') && !scene.querySelector('#sticky-note5')) {
-                const note = document.createElement('div');
+                const note = createStickyNoteEl('note5', 'position:absolute;right:6%;top:12%;font-size:28px;z-index:220;', () => collectStickyNote('note5'));
                 note.id = 'sticky-note5';
-                note.textContent = '📝';
-                note.style.cssText = 'position:absolute;right:6%;top:12%;font-size:28px;cursor:pointer;z-index:220;';
-                note.addEventListener('click', () => { note.remove(); collectStickyNote('note5'); });
                 scene.appendChild(note);
             }
             return;

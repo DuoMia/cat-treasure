@@ -42,10 +42,10 @@
         <!-- 游戏画面 -->
         <div id="game-play" class="hidden">
             <div id="room-scene">
-                <img id="room-image" src="room.jpg" alt="房间" onerror="this.style.display='none'; document.getElementById('fallback-scene').style.display='flex';">
-                <img id="pen-holder-image" src="pen_holder.png" alt="笔筒" class="hidden">
+                <img id="room-image" src="assets/room.jpg" alt="房间" onerror="this.style.display='none'; document.getElementById('fallback-scene').style.display='flex';">
+                <img id="pen-holder-image" src="assets/pen_holder.png" alt="笔筒" class="hidden">
                 <div id="pen-holder-hotspot" class="hidden"></div>
-                <img id="pen-image" src="pen.png" alt="钢笔" class="hidden">
+                <img id="pen-image" src="assets/pen.png" alt="钢笔" class="hidden">
                 <div id="fallback-scene" class="hidden">
                     <div class="fallback-content">
                         <div class="instruction">请将图片文件命名为 room.jpg 放置在项目目录中</div>
@@ -59,14 +59,14 @@
                         </div>
                     </div>
                 </div>
-                <img id="cat-image" src="cat.jpg" alt="朵朵" class="hidden">
+                <img id="cat-image" src="assets/cat.jpg" alt="朵朵" class="hidden">
                 <div id="hotspots"></div>
             </div>
 
             <!-- 沙发角落场景（全屏覆盖，在 room-scene 外） -->
             <div id="sofa-corner-scene" class="hidden scene-container">
-                <img id="sofa-corner-image" src="sofa_corner.jpg" alt="沙发角落" class="scene-image">
-                <img id="sofa-corner-cat" src="cat.jpg" alt="朵朵">
+                <img id="sofa-corner-image" src="assets/sofa_corner.jpg" alt="沙发角落" class="scene-image">
+                <img id="sofa-corner-cat" src="assets/cat.jpg" alt="朵朵">
                 <div id="sofa-corner-bump"></div>
                 <div id="sofa-corner-scratch" class="hidden"></div>
                 <button id="sofa-corner-back" class="scene-back-btn" onclick="closeSofaCornerScene()">← 返回</button>
@@ -74,14 +74,14 @@
 
             <!-- 抽屉特写场景 -->
             <div id="drawer-scene" class="hidden scene-container">
-                <img id="drawer-image" src="drawer.jpg" alt="抽屉内部" class="scene-image">
+                <img id="drawer-image" src="assets/drawer.jpg" alt="抽屉内部" class="scene-image">
                 <div id="drawer-diary-hotspot"></div>
                 <button id="drawer-scene-back" class="scene-back-btn" onclick="closeDrawerScene()">← 返回</button>
             </div>
 
             <!-- 窗户特写场景 -->
             <div id="window-scene" class="hidden scene-container">
-                <img id="window-close-image" src="window_close.jpg" alt="窗户特写" class="scene-image">
+                <img id="window-close-image" src="assets/window_close.jpg" alt="窗户特写" class="scene-image">
                 <button id="window-scene-back" class="scene-back-btn" onclick="closeWindowScene()">← 返回</button>
             </div>
 
@@ -111,7 +111,7 @@
 
             <!-- 照片墙特写场景 -->
             <div id="photo-wall-scene" class="hidden scene-container">
-                <img id="photo-wall-image" src="photo_wall.jpg" alt="照片墙" class="scene-image">
+                <img id="photo-wall-image" src="assets/photo_wall.jpg" alt="照片墙" class="scene-image">
                 <div id="photo-wall-photo1" class="photo-hotspot"></div>
                 <div id="photo-wall-photo2" class="photo-hotspot"></div>
                 <div id="photo-wall-photo3" class="photo-hotspot"></div>
@@ -120,7 +120,7 @@
 
             <!-- 书架场景 -->
             <div id="bookshelf-scene" class="hidden scene-container" style="background:#2c1a0e;">
-                <img id="bookshelf-image" src="bookshelf.jpg" alt="书架" class="scene-image">
+                <img id="bookshelf-image" src="assets/bookshelf.jpg" alt="书架" class="scene-image">
                 <!-- 书本谜题 UI -->
                 <div id="bookshelf-puzzle-ui">
                     <div class="book-puzzle-label">📚 书架谜题</div>
@@ -131,25 +131,25 @@
 
             <!-- 阳台场景 -->
             <div id="balcony-scene" class="hidden scene-container" style="background:#87ceeb;">
-                <img id="balcony-image" src="balcony.jpg" alt="阳台" class="scene-image">
+                <img id="balcony-image" src="assets/balcony.jpg" alt="阳台" class="scene-image">
                 <button id="balcony-back" class="scene-back-btn" onclick="closeBalconyScene()">← 返回</button>
             </div>
 
             <!-- 食盆场景 -->
             <div id="food-bowl-scene" class="hidden scene-container" style="background:#2c1a0e;">
-                <img id="food-bowl-image" src="food_bowl.jpg" alt="食盆" class="scene-image">
+                <img id="food-bowl-image" src="assets/food_bowl.jpg" alt="食盆" class="scene-image">
                 <button id="food-bowl-back" class="scene-back-btn" onclick="closeFoodBowlScene()">← 返回</button>
             </div>
 
             <!-- 画框谜题场景 -->
             <div id="painting-scene" class="hidden scene-container" style="background:#1a1a2e;">
-                <img id="painting-image" src="painting.jpg" alt="画框" class="scene-image">
+                <img id="painting-image" src="assets/painting.jpg" alt="画框" class="scene-image">
                 <button id="painting-back" class="scene-back-btn" onclick="closePaintingScene()">← 返回</button>
             </div>
 
             <!-- 玩具箱场景 -->
             <div id="toy-box-scene" class="hidden scene-container" style="background:#1a1208;">
-                <img id="toy-box-image" src="toy_box.jpg" alt="玩具箱" class="scene-image">
+                <img id="toy-box-image" src="assets/toy_box.jpg" alt="玩具箱" class="scene-image">
                 <button id="toy-box-back" class="scene-back-btn" onclick="closeToyBoxScene()">← 返回</button>
             </div>
 

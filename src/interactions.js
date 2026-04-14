@@ -3,7 +3,7 @@
 import { gameState, saveGame } from './state.js';
 import { showDialog, showChoices, openPasswordModal, openDrawerModal, showEnding, updateInventory } from './ui.js';
 import { trackObjectClick, tickExploreAfterBite, clearHotspots, createHotspot } from './hotspots.js';
-import { collectStickyNote } from './notes.js';
+import { collectStickyNote, createStickyNoteEl } from './notes.js';
 import { ROOM_HOTSPOTS } from './data.js';
 import {
     openSofaCornerScene,
@@ -27,16 +27,8 @@ export function createRoomHotspots() {
     // 便利贴1：桌子旁
     if (!gameState.flags.stickyNotes.includes('note1')) {
         const hotspots = document.getElementById('hotspots');
-        const note = document.createElement('div');
+        const note = createStickyNoteEl('note1', 'position:absolute;left:53%;top:65%;font-size:24px;z-index:15;user-select:none;', () => collectStickyNote('note1'));
         note.id = 'sticky-note-1';
-        note.style.cssText = 'position:absolute;left:53%;top:65%;font-size:24px;cursor:pointer;z-index:15;user-select:none;';
-        note.textContent = '📝';
-        note.title = '便利贴';
-        note.addEventListener('click', (e) => {
-            e.stopPropagation();
-            note.remove();
-            collectStickyNote('note1');
-        });
         hotspots.appendChild(note);
     }
 

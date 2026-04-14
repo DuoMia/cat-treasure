@@ -4,7 +4,7 @@ import { gameState, saveGame } from '../state.js';
 import { sceneManager } from '../scene-manager.js';
 import { showDialog } from '../ui.js';
 import { setTapHandler } from '../utils.js';
-import { collectStickyNote } from '../notes.js';
+import { collectStickyNote, createStickyNoteEl } from '../notes.js';
 import { imgCoordsToContainer } from '../scene-hotspot.js';
 
 let _pendingPhotoWallHint = null;
@@ -44,17 +44,9 @@ export function openPhotoWallScene() {
             el.style.width = p.width; el.style.height = p.height;
         });
         if (!gameState.flags.stickyNotes.includes('note3')) {
-            const note = document.createElement('div');
-            note.className = 'sticky-note-hotspot';
-            // right:5% bottom:10% width:12% height:10% → left:83% top:80%
             const pos = imgCoordsToContainer(scene, 800, 600, 0.83, 0.80, 0, 0);
-            note.style.cssText = `position:absolute;left:${pos.left};top:${pos.top};font-size:28px;cursor:pointer;z-index:210;`;
-            note.title = '便利贴';
-            note.textContent = '📝';
-            note.addEventListener('click', () => {
-                note.remove();
-                collectStickyNote('note3');
-            });
+            const note = createStickyNoteEl('note3', `position:absolute;left:${pos.left};top:${pos.top};font-size:28px;z-index:210;`, () => collectStickyNote('note3'));
+            note.className = 'sticky-note-hotspot';
             scene.appendChild(note);
         }
     });

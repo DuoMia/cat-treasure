@@ -453,7 +453,7 @@ export function openMapModal() {
         modal.innerHTML = `
             <div class="map-modal-content">
                 <div class="map-modal-title">📜 朵朵的房间地图</div>
-                <img src="map.jpg" alt="房间地图" class="map-modal-img">
+                <img src="assets/map.jpg" alt="房间地图" class="map-modal-img">
                 <button class="map-modal-close" onclick="document.getElementById('map-modal').classList.add('hidden')">关闭</button>
             </div>`;
         document.getElementById('game-container').appendChild(modal);

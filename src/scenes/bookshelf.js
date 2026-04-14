@@ -3,7 +3,7 @@
 import { gameState, saveGame } from '../state.js';
 import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
-import { collectStickyNote, collectMemoryFragment } from '../notes.js';
+import { collectStickyNote, collectMemoryFragment, createStickyNoteEl } from '../notes.js';
 import { PUZZLES, MUSIC_BOX_PHASES } from '../data.js';
 import { lockPortraitDrag, unlockPortraitDrag } from '../utils.js';
 import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
@@ -47,7 +47,7 @@ function startMouseDrag(seg, clientX, clientY) {
     mouseDragClone = document.createElement('div');
     mouseDragClone.className = 'jigsaw-piece jigsaw-drag-clone';
     mouseDragClone.style.cssText = `
-        background-image: url('catbook.jpg');
+        background-image: url('assets/catbook.jpg');
         background-size: 260px 195px;
         background-position: -${seg.bgX}px 0px;
         background-repeat: no-repeat;
@@ -110,7 +110,7 @@ function makePieceEl(seg) {
     el.className = 'jigsaw-piece';
     el.dataset.segId = seg.id;
     el.style.cssText = `
-        background-image: url('catbook.jpg');
+        background-image: url('assets/catbook.jpg');
         background-size: 260px 195px;
         background-position: -${seg.bgX}px 0px;
         background-repeat: no-repeat;
@@ -225,11 +225,8 @@ function checkJigsawSolution() {
                 showDialog('你获得了朵朵的项圈。\n\n2021.08.29……那是朵朵来家的日子。', () => {
                     // 在书架场景生成可点击便利贴
                     if (!gameState.flags.stickyNotes.includes('note4') && !scene.querySelector('#sticky-note4')) {
-                        const note = document.createElement('div');
+                        const note = createStickyNoteEl('note4', 'position:absolute;left:6%;top:12%;font-size:28px;z-index:210;', () => collectStickyNote('note4'));
                         note.id = 'sticky-note4';
-                        note.textContent = '📝';
-                        note.style.cssText = 'position:absolute;left:6%;top:12%;font-size:28px;cursor:pointer;z-index:210;';
-                        note.addEventListener('click', () => { note.remove(); collectStickyNote('note4'); });
                         scene.appendChild(note);
                     }
                     scene.querySelectorAll('.jigsaw-overlay, .jigsaw-slots, .jigsaw-tray, .jigsaw-label').forEach(el => el.remove());
@@ -541,11 +538,8 @@ export function openBookshelfScene() {
             // 便利贴未收集时重新显示
             const scene = document.getElementById('bookshelf-scene');
             if (!gameState.flags.stickyNotes.includes('note4') && !scene.querySelector('#sticky-note4')) {
-                const note = document.createElement('div');
+                const note = createStickyNoteEl('note4', 'position:absolute;left:6%;top:12%;font-size:28px;z-index:210;', () => collectStickyNote('note4'));
                 note.id = 'sticky-note4';
-                note.textContent = '📝';
-                note.style.cssText = 'position:absolute;left:6%;top:12%;font-size:28px;cursor:pointer;z-index:210;';
-                note.addEventListener('click', () => { note.remove(); collectStickyNote('note4'); });
                 scene.appendChild(note);
             }
         }

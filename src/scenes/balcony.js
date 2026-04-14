@@ -20,11 +20,11 @@ export function openBalconyScene() {
         const balconyImg = document.getElementById('balcony-image');
         const ct = gameState.flags.clockTime;
         if (ct === '10') {
-            balconyImg.src = 'balcony_10.jpg';
+            balconyImg.src = 'assets/balcony_10.jpg';
         } else if (ct === '15') {
-            balconyImg.src = 'balcony_15.jpg';
+            balconyImg.src = 'assets/balcony_15.jpg';
         } else {
-            balconyImg.src = 'balcony.jpg';
+            balconyImg.src = 'assets/balcony.jpg';
         }
 
         const isFirstVisit = !gameState.flags.balconySeen;
