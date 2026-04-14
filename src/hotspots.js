@@ -16,13 +16,55 @@ export function clearHotspots() {
     document.getElementById('hotspots').innerHTML = '';
 }
 
+// room.jpg 原始尺寸 1200×800（比例 3:2）
+const IMG_W = 1200, IMG_H = 800;
+
+/**
+ * 将图片内容坐标系（相对于图片本身的百分比）转换为容器坐标系百分比。
+ * 图片以 object-fit:cover / object-position:center 渲染，
+ * 根据容器与图片的宽高比决定裁剪方向。
+ */
+function imgToContainerPct(ix, iy, iw, ih) {
+    const container = document.getElementById('hotspots');
+    const cw = container.offsetWidth  || window.innerWidth;
+    const ch = container.offsetHeight || window.innerHeight;
+
+    const scaleX = cw / IMG_W;
+    const scaleY = ch / IMG_H;
+    const scale  = Math.max(scaleX, scaleY); // cover 取较大缩放
+
+    const renderedW = IMG_W * scale;
+    const renderedH = IMG_H * scale;
+    const offsetX   = (cw - renderedW) / 2; // 负值 = 图片超出容器
+    const offsetY   = (ch - renderedH) / 2;
+
+    // 图片内百分比 → 像素 → 容器百分比
+    const toContainerX = (pct) => (offsetX + pct * renderedW) / cw * 100 + '%';
+    const toContainerY = (pct) => (offsetY + pct * renderedH) / ch * 100 + '%';
+    const toContainerW = (pct) => (pct * renderedW / cw * 100) + '%';
+    const toContainerH = (pct) => (pct * renderedH / ch * 100) + '%';
+
+    return {
+        left:   toContainerX(ix),
+        top:    toContainerY(iy),
+        width:  toContainerW(iw),
+        height: toContainerH(ih),
+    };
+}
+
+/** 解析百分比字符串为 0~1 小数 */
+function parsePct(s) { return parseFloat(s) / 100; }
+
 export function createHotspot(id, label, x, y, width, height, onClick) {
     const hotspot = document.createElement('div');
     hotspot.className = 'hotspot';
-    hotspot.style.cssText = `left:${x};top:${y};width:${width};height:${height};z-index:100;`;
     hotspot.dataset.id = id;
     hotspot.dataset.label = label;
     hotspot.title = label;
+
+    // 将图片坐标系百分比转换为容器坐标系百分比
+    const pos = imgToContainerPct(parsePct(x), parsePct(y), parsePct(width), parsePct(height));
+    hotspot.style.cssText = `left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};z-index:100;`;
 
     const handler = function(e) {
         if (!document.getElementById('dialog-box').classList.contains('hidden')) return;

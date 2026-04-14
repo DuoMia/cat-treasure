@@ -256,6 +256,17 @@ function startGame(isRestart = false) {
             )
         );
     }
+
+    // PC 端窗口 resize 时重建热区，保持坐标与图片对齐
+    let _resizeTimer = null;
+    window.addEventListener('resize', () => {
+        clearTimeout(_resizeTimer);
+        _resizeTimer = setTimeout(() => {
+            if (document.getElementById('hotspots').children.length > 0) {
+                createRoomHotspots();
+            }
+        }, 150);
+    });
 }
 
 // ===================== 重新开始 =====================
