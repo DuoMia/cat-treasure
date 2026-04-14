@@ -20,6 +20,7 @@ import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
 import { collectStickyNote, collectMemoryFragment } from '../notes.js';
 import { PUZZLES } from '../data.js';
+import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
 
 const TOY_LOCK_ORDER = PUZZLES.toyLockOrder;
 
@@ -399,10 +400,10 @@ function onWin() {
 // ── 图案锁谜题 ────────────────────────────────────────────────────
 // 热区坐标（占位，调试模式下可见，按需调整）
 const TOY_LOCK_ZONES = [
-    { id: 'fish', left: '34.5%', top: '62%', width: '5.6%', height: '10%' },
-    { id: 'paw',  left: '43%', top: '62%', width: '5.6%', height: '10%' },
-    { id: 'bell', left: '51.5%', top: '62%', width: '5.6%', height: '10%' },
-    { id: 'ball', left: '60%', top: '62%', width: '5.6%', height: '10%' },
+    { id: 'fish', left: '34.8%', top: '58.6%', width: '5.6%', height: '7.5%' },
+    { id: 'paw',  left: '43%', top: '58.6%', width: '5.6%', height: '7.5%' },
+    { id: 'bell', left: '51.5%', top: '58.6%', width: '5.6%', height: '7.5%' },
+    { id: 'ball', left: '59.8%', top: '58.6%', width: '5.6%', height: '7.5%' },
 ];
 
 function setupToyLock(scene, onUnlock) {
@@ -414,7 +415,9 @@ function setupToyLock(scene, onUnlock) {
         const zone = document.createElement('div');
         zone.className = 'toy-lock-zone';
         zone.dataset.id = z.id;
-        zone.style.cssText = `position:absolute;left:${z.left};top:${z.top};width:${z.width};height:${z.height};cursor:pointer;border-radius:8px;`;
+
+        const pos = imgCoordsToContainer(scene, 1200, 800, parsePct(z.left), parsePct(z.top), parsePct(z.width), parsePct(z.height));
+        zone.style.cssText = `position:absolute;left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};cursor:pointer;border-radius:8px;`;
 
         zone.addEventListener('click', () => {
             if (z.id === TOY_LOCK_ORDER[step]) {

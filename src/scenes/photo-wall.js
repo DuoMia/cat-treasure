@@ -5,6 +5,7 @@ import { sceneManager } from '../scene-manager.js';
 import { showDialog } from '../ui.js';
 import { setTapHandler } from '../utils.js';
 import { collectStickyNote } from '../notes.js';
+import { imgCoordsToContainer } from '../scene-hotspot.js';
 
 let _pendingPhotoWallHint = null;
 
@@ -33,7 +34,9 @@ export function openPhotoWallScene() {
         if (!gameState.flags.stickyNotes.includes('note3')) {
             const note = document.createElement('div');
             note.className = 'sticky-note-hotspot';
-            note.style.cssText = 'position:absolute;right:5%;bottom:10%;width:12%;height:10%;cursor:pointer;';
+            // right:5% bottom:10% width:12% height:10% → left:83% top:80%
+            const pos = imgCoordsToContainer(scene, 800, 600, 0.83, 0.80, 0.12, 0.10);
+            note.style.cssText = `position:absolute;left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};cursor:pointer;`;
             note.title = '便利贴';
             note.textContent = '📝';
             note.style.fontSize = '28px';

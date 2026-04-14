@@ -5,6 +5,13 @@ import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
 import { collectStickyNote, collectMemoryFragment } from '../notes.js';
 import { PUZZLES, BRICK_POSITIONS } from '../data.js';
+import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
+
+const IMG_W = 1200, IMG_H = 800;
+
+function bPos(scene, left, top, width, height) {
+    return imgCoordsToContainer(scene, IMG_W, IMG_H, parsePct(left), parsePct(top), parsePct(width), parsePct(height));
+}
 
 const BRICK_ORDER = PUZZLES.brickOrder;
 
@@ -66,7 +73,8 @@ function setupBalconyHotspots() {
 
     const pawprint = document.createElement('div');
     pawprint.className = 'balcony-hotspot paw-trail';
-    pawprint.style.cssText = 'left:20%;top:55%;width:55%;height:12%;';
+    const pawPos = bPos(scene, '20%', '55%', '55%', '12%');
+    pawprint.style.cssText = `left:${pawPos.left};top:${pawPos.top};width:${pawPos.width};height:${pawPos.height};`;
     pawprint.title = '爪印';
     pawprint.addEventListener('click', () => {
         showDialog('一串小小的爪印，从窗边延伸出去，好像去过好几个地方……');
@@ -76,7 +84,8 @@ function setupBalconyHotspots() {
     if (clockTime === '10') {
         const crack1 = document.createElement('div');
         crack1.className = 'balcony-hotspot';
-        crack1.style.cssText = 'left:8%;top:78%;width:18%;height:8%;cursor:pointer;';
+        const c1Pos = bPos(scene, '8%', '78%', '18%', '8%');
+        crack1.style.cssText = `left:${c1Pos.left};top:${c1Pos.top};width:${c1Pos.width};height:${c1Pos.height};cursor:pointer;`;
         crack1.title = '仙人掌影子末端的砖缝';
         crack1.addEventListener('click', () => {
             gameState.flags.balconyClue1 = true;
@@ -89,7 +98,8 @@ function setupBalconyHotspots() {
     if (clockTime === '15') {
         const crack2 = document.createElement('div');
         crack2.className = 'balcony-hotspot';
-        crack2.style.cssText = 'left:74%;top:78%;width:18%;height:8%;cursor:pointer;';
+        const c2Pos = bPos(scene, '74%', '78%', '18%', '8%');
+        crack2.style.cssText = `left:${c2Pos.left};top:${c2Pos.top};width:${c2Pos.width};height:${c2Pos.height};cursor:pointer;`;
         crack2.title = '绿植影子末端的砖缝';
         crack2.addEventListener('click', () => {
             gameState.flags.balconyClue2 = true;
@@ -104,7 +114,8 @@ function setupBalconyHotspots() {
     } else if (!gameState.flags.hasLetter) {
         const base = document.createElement('div');
         base.className = 'balcony-hotspot';
-        base.style.cssText = 'left:48%;top:68%;width:14%;height:8%;cursor:pointer;';
+        const basePos = bPos(scene, '48%', '68%', '14%', '8%');
+        base.style.cssText = `left:${basePos.left};top:${basePos.top};width:${basePos.width};height:${basePos.height};cursor:pointer;`;
         base.title = '地板上弹开的底座';
         base.addEventListener('click', () => {
             showDialog('地板上有一道弹开的缝隙，里面压着一个防水袋，里面有一封信。', () => {
@@ -144,7 +155,8 @@ function showBalconyBricks(scene) {
         const brick = document.createElement('div');
         brick.className = 'balcony-brick balcony-hotspot';
         brick.dataset.brickKey = b.key;
-        brick.style.cssText = `left:${b.left};top:${b.top};width:6%;height:6%;cursor:pointer;`;
+        const brickPos = bPos(scene, b.left, b.top, '6%', '6%');
+        brick.style.cssText = `left:${brickPos.left};top:${brickPos.top};width:${brickPos.width};height:${brickPos.height};cursor:pointer;`;
         brick.addEventListener('click', () => handleBrickClick(b.key));
         scene.appendChild(brick);
     });

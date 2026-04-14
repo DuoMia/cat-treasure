@@ -6,6 +6,7 @@ import { showDialog, updateInventory } from '../ui.js';
 import { collectStickyNote, collectMemoryFragment } from '../notes.js';
 import { PUZZLES, MUSIC_BOX_PHASES } from '../data.js';
 import { lockPortraitDrag, unlockPortraitDrag } from '../utils.js';
+import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
 
 /** 竖屏时将视口水平对准目标百分比位置 */
 function scrollToX(pct) {
@@ -569,7 +570,8 @@ function setupMusicBoxHotspots() {
         btn.id = p.id;
         btn.dataset.phase = p.key;
         btn.dataset.idx = idx;
-        btn.style.cssText = `left:${p.x};top:${p.y};`;
+        const pos = imgCoordsToContainer(scene, 1200, 800, parsePct(p.x), parsePct(p.y), 0.06, 0.05);
+        btn.style.cssText = `left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};transform:none;`;
         btn.innerHTML = `<span class="music-btn-label">${p.label}</span>`;
         let touchHandled = false;
         btn.addEventListener('touchstart', (e) => {

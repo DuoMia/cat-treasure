@@ -6,6 +6,7 @@ import { showDialog, updateInventory } from '../ui.js';
 import { collectMemoryFragment } from '../notes.js';
 import { PUZZLES, BOWL_ZONES, PAINTING_HINTS } from '../data.js';
 import { isMobileDevice } from '../utils.js';
+import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
 
 const BOWL_ORDER = PUZZLES.bowlOrder;
 
@@ -50,7 +51,8 @@ export function openFoodBowlScene() {
             if (!scene.querySelector('#food-bowl-pickup')) {
                 const bowl = document.createElement('div');
                 bowl.id = 'food-bowl-pickup';
-                bowl.style.cssText = 'left:25%;top:50%;width:20%;height:25%;';
+                const pos = imgCoordsToContainer(scene, 1200, 800, parsePct('25%'), parsePct('50%'), parsePct('20%'), parsePct('25%'));
+                bowl.style.cssText = `left:${pos.left};top:${pos.top};width:${pos.width};height:${pos.height};`;
                 bowl.addEventListener('click', () => {
                     gameState.flags.hasBowl = true;
                     saveGame();
