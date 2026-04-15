@@ -281,7 +281,9 @@ export function submitPassword() {
         gameState.flags.solvedPassword = true;
         saveGame();
         showDialog('你在密码锁上输入了正确密码：clock。噶哒一声，盒子打开了，里面有一张折叠的纸条，还有一张手绘的房间地图。', () => {
-            showDialog('地图上用细细的笔迹标注了五个位置，每个位置旁边画着一个小小的便利贴图案。\n\n主人把什么东西藏在了这五个地方……');
+            showDialog('纸条上写着：\n"抽屉里藏着朵朵的秘密\n\n她陪我走过的岁月，是第一个数字。\n她留在这里的印记，是第二个数字。\n她最爱的那些小东西，是第三个数字。\n\n三把钥匙，从大到小。"', () => {
+                showDialog('地图上用细细的笔迹标注了五个位置，每个位置旁边画着一个小小的便利贴图案。\n\n主人把什么东西藏在了这五个地方……');
+            });
         });
         if (!gameState.inventory.includes('铁盒纸条')) {
             gameState.flags.hasNote = true;
