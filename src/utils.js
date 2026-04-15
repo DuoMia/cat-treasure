@@ -26,11 +26,12 @@ export function centerViewport() {
     container.style.left = -((containerW - screenW) / 2) + 'px';
 }
 
-/** 显示拖动提示（竖屏时） */
+/** 显示拖动提示（竖屏时，仅首次展示） */
+let _dragHintShown = false;
 export function showDragHint() {
     if (window.innerWidth >= window.innerHeight) return;
-    const existing = document.getElementById('drag-hint');
-    if (existing) existing.remove();
+    if (_dragHintShown) return;
+    _dragHintShown = true;
     const hint = document.createElement('div');
     hint.id = 'drag-hint';
     hint.textContent = '← 左右滑动查看完整画面 →';
@@ -39,29 +40,46 @@ export function showDragHint() {
 
 /** 移动端触摸点击绑定：手指抬起且未滑动才触发，阻止冒泡到 game-play */
 export function setTapHandler(el, handler, once) {
+    // 清除旧监听，防止多次调用累积
+    if (el._tapCleanup) el._tapCleanup();
+
     let _tx = 0, _ty = 0;
     const registeredAt = Date.now();
-    const opts = once ? { passive: true, once: true } : { passive: true };
-    el.addEventListener('touchstart', function(e) {
+
+    function onTouchStart(e) {
         _tx = e.touches[0].clientX;
         _ty = e.touches[0].clientY;
-    }, opts);
-    el.addEventListener('touchend', function(e) {
+    }
+    function onTouchEnd(e) {
         if (Date.now() - registeredAt < 300) return;
         e.stopPropagation();
         const dx = e.changedTouches[0].clientX - _tx;
         const dy = e.changedTouches[0].clientY - _ty;
         if (dx * dx + dy * dy > 64) return;
+        if (once) cleanup();
         handler(e);
-    }, once ? { once: true } : {});
+    }
+    function onClickOnce(e) {
+        cleanup();
+        handler(e);
+    }
+
+    function cleanup() {
+        el.removeEventListener('touchstart', onTouchStart);
+        el.removeEventListener('touchend', onTouchEnd);
+        if (once) el.removeEventListener('click', onClickOnce);
+        el._tapCleanup = null;
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd);
     if (once) {
-        el.addEventListener('click', function fn(e) {
-            el.removeEventListener('click', fn);
-            handler(e);
-        });
+        el.addEventListener('click', onClickOnce);
     } else {
         el.onclick = handler;
     }
+
+    el._tapCleanup = cleanup;
 }
 
 /** 竖屏时将容器滚动，使指定百分比位置（0-100）出现在屏幕中央 */
