@@ -19,6 +19,34 @@ let _cleanupDocListeners = null;
 
 export function isHoldingPen() { return isHolding; }
 
+// room.jpg 1200×800，contain 模式下动态定位笔筒图片和钢笔图片
+export function positionPenElements() {
+    const roomScene = document.getElementById('room-scene') || document.getElementById('game-container');
+    if (!roomScene) return;
+
+    const penHolderImage = document.getElementById('pen-holder-image');
+    const penImage = document.getElementById('pen-image');
+
+    if (penHolderImage && !penHolderImage.classList.contains('hidden')) {
+        const p = imgCoordsToContainer(roomScene, 1200, 800, 0.61, 0.60, 0.06, 0.12, 'contain');
+        penHolderImage.style.left   = p.left;
+        penHolderImage.style.top    = p.top;
+        penHolderImage.style.width  = p.width;
+        penHolderImage.style.height = 'auto';
+    }
+
+    if (penImage && !penImage.classList.contains('hidden')) {
+        const fallen = penImage.classList.contains('fallen');
+        const p = fallen
+            ? imgCoordsToContainer(roomScene, 1200, 800, 0.67, 0.74, 0.09, 0.06, 'contain')
+            : imgCoordsToContainer(roomScene, 1200, 800, 0.66, 0.71, 0.09, 0.06, 'contain');
+        penImage.style.left   = p.left;
+        penImage.style.top    = p.top;
+        penImage.style.width  = p.width;
+        penImage.style.height = 'auto';
+    }
+}
+
 export function resetPenHolder() {
     penHolderInteractionSetup = false;
     shakeCount = 0;
@@ -50,11 +78,13 @@ export function setupPenHolderInteraction() {
 
     // 动态定位热区（room.jpg 1200×800）
     const roomScene = document.getElementById('room-scene') || document.getElementById('game-container');
-    const penPos = imgCoordsToContainer(roomScene, 1200, 800, 0.62, 0.60, 0.07, 0.10);
+    const penPos = imgCoordsToContainer(roomScene, 1200, 800, 0.62, 0.60, 0.07, 0.10, 'contain');
     penHolderHotspot.style.left   = penPos.left;
     penHolderHotspot.style.top    = penPos.top;
     penHolderHotspot.style.width  = penPos.width;
     penHolderHotspot.style.height = penPos.height;
+
+    positionPenElements();
 
     const MIN_DRAG = 20;
     const SHAKE_DIST = 35;
@@ -218,6 +248,7 @@ function shakePenHolder() {
             document.getElementById('pen-holder-hotspot').classList.add('hidden');
             penImage.classList.remove('hidden');
             penImage.classList.add('fallen');
+            positionPenElements();
             showDialog('你用力摇晃笔筒，钢笔从里面掉了出来，落在了地上！');
         }, 600);
     } else {

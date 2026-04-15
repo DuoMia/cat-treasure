@@ -2,7 +2,7 @@
 
 import { gameState, saveGame } from './state.js';
 import { STICKY_NOTE_TEXTS, MEMORY_FRAGMENT_TEXTS } from './data.js';
-import { showDialog, showEnding } from './ui.js';
+import { showDialog } from './ui.js';
 import { updateInventory } from './ui.js';
 
 /** 创建可点击便利贴元素，移动端 touchend + click 双绑定 */
@@ -33,7 +33,12 @@ export function createStickyNoteEl(noteId, cssText, onCollect) {
 
 function checkTrueEnding() {
     if (gameState.flags.memoryFragments.length >= 5 && gameState.flags.stickyNotes.length >= 5) {
-        showEnding('treasure');
+        if (gameState.flags.trueEndingUnlocked) return;
+        gameState.flags.trueEndingUnlocked = true;
+        saveGame();
+        showDialog('如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我五年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人', () => {
+            showDialog('你握着这些记忆，心里涌起一股说不清的情绪。\n\n时钟……一切线索都指向那里。');
+        });
     }
 }
 
@@ -45,15 +50,7 @@ export function collectMemoryFragment(index, onDone) {
     const count = gameState.flags.memoryFragments.length;
     showDialog(`✨ 记忆碎片（${count}/5）：\n\n"${MEMORY_FRAGMENT_TEXTS[index]}"`, () => {
         if (count >= 5) {
-            if (!gameState.inventory.includes('钥匙')) {
-                gameState.inventory.push('钥匙');
-                updateInventory();
-            }
-            showDialog('五块记忆碎片全部拼合……\n\n你感到房间里有什么东西悄悄变了。\n\n一把钥匙从某处滑落到你手中——那是离开这里的钥匙。', () => {
-                const balconyScene = document.getElementById('balcony-scene');
-                if (balconyScene && !balconyScene.classList.contains('hidden')) {
-                    balconyScene.classList.add('hidden');
-                }
+            showDialog('五块记忆碎片全部拼合……\n\n你感到房间里有什么东西悄悄变了。\n\n朵朵留下的一切，终于在这一刻完整了。', () => {
                 onDone?.();
                 checkTrueEnding();
             });

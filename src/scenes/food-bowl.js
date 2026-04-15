@@ -352,7 +352,7 @@ function confirmSymbol(symbol, scene) {
                 updateInventory();
                 const scene2 = document.getElementById('painting-scene');
                 if (scene2) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得主人的信'; scene2.appendChild(t); setTimeout(() => t.remove(), 1300); }
-                showDialog('你获得了主人写给朵朵的信。\n\n"朵朵，\n\n每天上午十点，我把她的早饭端到阳台，她总是先不吃，坐在仙人掌旁边，等那道光爬过来，才低头吃第一口。\n\n我不知道她在等什么。也许是影子，也许是什么只有她看得见的东西。\n\n我把一些东西藏在了那道光照不到的地方。\n\n——主人"', () => {
+                showDialog('你获得了主人写给朵朵的信。\n\n"朵朵，\n\n每天上午十点，我把她的早饭端到阳台，她总是先不吃，坐在仙人掌旁边，等那道光爬过来，才低头吃第一口。\n\n我不知道她在等什么。也许是影子，也许是什么只有她看得见的东西。\n\n我把一些东西藏在了那道影子的尽头。\n\n——主人"', () => {
                         collectMemoryFragment(2, () => {
                             updateInventory();
                         });

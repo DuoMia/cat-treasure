@@ -252,9 +252,9 @@ body {
     }
 
     #room-image {
-        object-fit: cover;
-        width: 100vw;
-        height: 100vh;
+        object-fit: contain;
+        width: 100%;
+        height: 100%;
     }
 }
 
@@ -342,13 +342,19 @@ body {
     height: 100%;
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1209;
 }
 
 #room-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
+    display: block;
+    flex-shrink: 0;
 }
 
 #cat-image {
@@ -365,10 +371,6 @@ body {
 
 #pen-image {
     position: absolute;
-    left: 68%;
-    top: 73%;
-    width: 8%;
-    height: auto;
     z-index: 50;
     pointer-events: none;
     animation: fadeIn 0.5s ease;
@@ -376,17 +378,11 @@ body {
 }
 
 #pen-image.fallen {
-    left: 69%;
-    top: 76%;
     transform: rotate(25deg);
 }
 
 #pen-holder-image {
     position: absolute;
-    left: 63%;
-    top: 62%;
-    width: 5%;
-    height: auto;
     z-index: 60;
     pointer-events: none;
     transition: transform 0.1s ease;
@@ -1470,7 +1466,19 @@ body {
 
 /* clock-scene-back 已由 scene-back-btn 覆盖 *//* 窗户特写场景（容器和返回按钮已由通用类覆盖） */
 
-/* 照片墙特写场景（容器和返回按钮已由通用类覆盖） */
+/* 照片墙特写场景 */
+#photo-wall-scene {
+    background: #1a1209;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#photo-wall-scene .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
 
 .photo-hotspot {
     position: absolute;
@@ -1478,25 +1486,11 @@ body {
     z-index: 205;
 }
 
-#photo-wall-photo1 {
-    left: 10%;
-    top: 15%;
-    width: 22%;
-    height: 55%;
-}
-
-#photo-wall-photo2 {
-    left: 38%;
-    top: 15%;
-    width: 22%;
-    height: 55%;
-}
-
+/* 初始隐藏，由 JS imgCoordsToContainer 动态定位后显示 */
+#photo-wall-photo1,
+#photo-wall-photo2,
 #photo-wall-photo3 {
-    left: 66%;
-    top: 15%;
-    width: 22%;
-    height: 55%;
+    visibility: hidden;
 }
 
 /* 抽屉密码弹窗 */
@@ -1669,6 +1663,33 @@ body {
 
 /* ===================== 阳台场景 ===================== */
 /* 容器已由 scene-container 覆盖 */
+
+#balcony-scene {
+    background: #87ceeb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#balcony-scene .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+/* ===================== 窗户场景 ===================== */
+#window-scene {
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#window-scene .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
 
 /* 爪印样式 */
 .balcony-hotspot {

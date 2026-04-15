@@ -2,7 +2,7 @@
 
 import { gameState, saveGame } from '../state.js';
 import { sceneManager } from '../scene-manager.js';
-import { showDialog } from '../ui.js';
+import { showDialog, showEnding } from '../ui.js';
 
 export function openClockScene() {
     sceneManager.open('clock-scene', () => {
@@ -73,6 +73,22 @@ function initClockFace() {
     }
 
     updateClockHands();
+
+    // 真结局解锁后，显示翻转时钟的热区
+    const wrapper = document.getElementById('clock-face-wrapper');
+    const existingFlip = wrapper.querySelector('#clock-flip-btn');
+    if (existingFlip) existingFlip.remove();
+
+    if (gameState.flags.trueEndingUnlocked) {
+        const flipBtn = document.createElement('div');
+        flipBtn.id = 'clock-flip-btn';
+        flipBtn.textContent = '时钟背面好像有什么东西……';
+        flipBtn.style.cssText = 'margin-top:16px;color:#c8a96e;font-size:14px;cursor:pointer;text-align:center;text-decoration:underline;';
+        const onFlip = () => showEnding('treasure');
+        flipBtn.addEventListener('click', onFlip);
+        flipBtn.addEventListener('touchend', (e) => { e.preventDefault(); onFlip(); }, { passive: false });
+        wrapper.appendChild(flipBtn);
+    }
 }
 
 function updateClockHands() {

@@ -61,27 +61,24 @@ const INTERACT_MAP = {
 
 export function interactDoor() {
     if (tickExploreAfterBite()) return;
-    if (gameState.inventory.includes('钥匙')) {
-        showDialog(
-            '你手握钥匙站在门前。\n\n但你停下来了——这个房间里，还有很多东西没搞清楚。朵朵为什么躲在沙发角落？那张纸条说的三把钥匙是什么意思？主人去哪里了？\n\n要就这样离开，还是把一切都弄明白？',
-            () => showChoices([
-                {
-                    text: '🚪 直接开门出去',
-                    callback: () => {
-                        showDialog(
-                            '你拿着钥匙，赶紧到门口试了试，果然是房门钥匙，你按耐不住兴奋的心情，赶紧走出大门，却只觉得一阵头晕目眩，昏了过去。\n\n昏迷时，你做了一个梦，梦里朵朵一直在说"猫咪神藏"，你不知道什么时候才能醒来。',
-                            () => showEnding('cycle')
-                        );
-                    }
-                },
-                {
-                    text: '🔍 还有些事没搞清楚，再看看',
-                    callback: () => {
-                        showDialog('你把钥匙收好，转身回到房间。\n\n答案就在这里，你能感觉到。', () => createRoomHotspots());
-                    }
+    if (gameState.inventory.includes('钥匙') || gameState.inventory.includes('备用钥匙')) {
+        showChoices([
+            {
+                text: '🚪 开门出去',
+                callback: () => {
+                    showDialog(
+                        '你拿着钥匙，赶紧到门口试了试，果然是房门钥匙，你按耐不住兴奋的心情，赶紧走出大门，却只觉得一阵头晕目眩，昏了过去。\n\n昏迷时，你做了一个梦，梦里朵朵一直在说"猫咪神藏"，你不知道什么时候才能醒来。',
+                        () => showEnding('cycle')
+                    );
                 }
-            ])
-        );
+            },
+            {
+                text: '🔍 再看看',
+                callback: () => {
+                    showDialog('你把钥匙收好，转身回到房间。\n\n答案就在这里，你能感觉到。', () => createRoomHotspots());
+                }
+            }
+        ]);
     } else {
         trackObjectClick('door', (next) => {
             showDialog('你尝试打开门，但是门被锁住了。需要找到钥匙才能打开。', next);
@@ -97,6 +94,10 @@ export function interactWindow() {
         } else {
             openWindowScene();
         }
+    } else if (gameState.flags.hasNote && !gameState.flags.drawerOpened) {
+        trackObjectClick('window', (next) => {
+            showDialog('窗户是锁死的……但你现在满脑子都是抽屉上的密码锁。\n\n先去解开抽屉吧。', next);
+        });
     } else {
         trackObjectClick('window', (next) => {
             showDialog('你尝试打开窗户，但是窗户是锁死的，怎么也打不开。', next);
@@ -147,7 +148,9 @@ export function interactToys() {
 export function interactBookshelf() {
     if (tickExploreAfterBite()) return;
     trackObjectClick('bookshelf', (next) => {
-        if (!gameState.flags.hasDiary) {
+        if (gameState.flags.hasNote && !gameState.flags.drawerOpened) {
+            showDialog('书架上有个精致的音乐盒……但你脑子里一直想着那张纸条上的数字。\n\n先去解开抽屉的密码锁吧。', next);
+        } else if (!gameState.flags.hasDiary) {
             showDialog('书架上摆满了书，还有一些小摆件。角落里有个精致的音乐盒，盒盖上落了一层薄薄的灰尘，好像很久没人碰过了。', next);
         } else if (!gameState.flags.bookPuzzleSolved) {
             showDialog('日记里提到过书架……5本书，按朵朵样子排好。', () => {
@@ -166,7 +169,9 @@ export function interactBookshelf() {
 export function interactFoodBowl() {
     if (tickExploreAfterBite()) return;
     trackObjectClick('food-bowl', (next) => {
-        if (!gameState.flags.hasDiary) {
+        if (gameState.flags.hasNote && !gameState.flags.drawerOpened) {
+            showDialog('食盆旁边贴着一张喂食记录卡……但你现在满脑子都是抽屉上的密码锁。\n\n先去解开抽屉吧。', next);
+        } else if (!gameState.flags.hasDiary) {
             showDialog('沙发旁边放着朵朵的食盆，盆边贴着一张喂食记录卡。', next);
         } else {
             openFoodBowlScene();
@@ -179,6 +184,8 @@ export function interactPainting() {
     trackObjectClick('painting', (next) => {
         if (gameState.flags.paintingPuzzleSolved) {
             openPaintingPuzzle();
+        } else if (gameState.flags.hasNote && !gameState.flags.drawerOpened) {
+            showDialog('墙上挂着一幅画，画中是一个温馨的房间……但你现在满脑子都是抽屉上的密码锁。\n\n先去解开抽屉吧。', next);
         } else if (!gameState.flags.hasDiary) {
             showDialog('墙上挂着一幅画，画中是一个温馨的房间，暂时还不知道有没有用处。', next);
         } else if (!gameState.flags.hasBowl) {
@@ -194,7 +201,9 @@ export function interactPainting() {
 export function interactToyBox() {
     if (tickExploreAfterBite()) return;
     trackObjectClick('toy-box', (next) => {
-        if (!gameState.flags.hasDiary) {
+        if (gameState.flags.hasNote && !gameState.flags.drawerOpened) {
+            showDialog('桌子下面有个小木箱，上面有个图案锁……但你现在满脑子都是抽屉上的密码锁。\n\n先去解开抽屉吧。', next);
+        } else if (!gameState.flags.hasDiary) {
             showDialog('桌子下面好像有个小木箱，上面有个图案锁，暂时打不开。', next);
         } else if (gameState.flags.toyBoxSolved) {
             openToyBoxScene();

@@ -39,12 +39,13 @@ export function openPhotoWallScene() {
             { el: photo3, ix: 0.70, iy: 0.15, iw: 0.22, ih: 0.55 },
         ];
         PHOTO_COORDS.forEach(({ el, ix, iy, iw, ih }) => {
-            const p = imgCoordsToContainer(scene, 800, 600, ix, iy, iw, ih);
+            const p = imgCoordsToContainer(scene, 800, 600, ix, iy, iw, ih, 'contain');
             el.style.left = p.left; el.style.top = p.top;
             el.style.width = p.width; el.style.height = p.height;
+            el.style.visibility = 'visible';
         });
         if (!gameState.flags.stickyNotes.includes('note3')) {
-            const pos = imgCoordsToContainer(scene, 800, 600, 0.83, 0.80, 0, 0);
+            const pos = imgCoordsToContainer(scene, 800, 600, 0.83, 0.80, 0, 0, 'contain');
             const note = createStickyNoteEl('note3', `position:absolute;left:${pos.left};top:${pos.top};font-size:28px;z-index:210;`, () => collectStickyNote('note3'));
             note.className = 'sticky-note-hotspot';
             scene.appendChild(note);

@@ -42,6 +42,8 @@ const INITIAL_FLAGS = {
     clockTime: null,
     balconyClue1: false,
     balconyClue2: false,
+    balconyNote1: false,
+    balconyNote2: false,
     balconyBrickStep: 0,
     balconyBrickSolved: false,
     stickyNotes: [],

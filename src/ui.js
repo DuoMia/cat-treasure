@@ -145,7 +145,12 @@ export function updateInventory() {
     gameState.inventory.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'inventory-item';
-        itemDiv.innerHTML = `${item}`;
+        if (item === '阳台纸条') {
+            const count = (gameState.flags.balconyClue1 ? 1 : 0) + (gameState.flags.balconyClue2 ? 1 : 0);
+            itemDiv.innerHTML = `阳台纸条 ${count}/2`;
+        } else {
+            itemDiv.innerHTML = `${item}`;
+        }
         itemDiv.style.cursor = 'pointer';
         itemDiv.onclick = () => handleItemClick(item);
         inventoryItems.appendChild(itemDiv);
@@ -161,7 +166,7 @@ function handleItemClick(item) {
 
     if (item === '铁盒' && !gameState.flags.solvedPassword) {
         showDialog(
-            '突然你注意到了盒子底部有一个猫咪抱着手又咬又踢的图案，有点眼熟，你看向被朵朵咬过的左手，不看不知道，五排数量不规则的圆孔牙印和五排断断续续的爪子道道出现在你的眼前，这朵朵，也太野蛮了！\n\n等等，正好5排？你看向朵朵留下的痕迹，又看向铁盒上的五位密码，突然有一个念头闪过，不会吧？这痕迹越看越像某种密码，要不试试？\n\n（五排痕迹分别为：-.-.；.-..；---；-.-.；-.-）',
+            '突然你注意到了盒子底部有一个猫咪抱着手又咬又踢的图案，有点眼熟，你看向被朵朵咬过的左手，不看不知道，五排数量不规则的圆孔牙印和五排断断续续的抓痕出现在你的眼前，这朵朵，也太野蛮了！\n\n等等，正好5排？你看向朵朵留下的痕迹，又看向铁盒上的五位密码，突然有一个念头闪过，不会吧？这痕迹越看越像某种密码，要不试试？\n\n（五排痕迹分别为：-.-.；.-..；---；-.-.；-.-）',
             () => {
                 openPasswordModal();
             }
@@ -174,10 +179,10 @@ function handleItemClick(item) {
     } else if (item === '钥匙') {
         showDialog('你有一把钥匙，可以用来开门。');
     } else if (item === '铁盒') {
-        showDialog('盒子已经打开了，里面的钥匙已经取出来了。');
+        showDialog('盒子已经打开了，里面的东西已经取出来了。');
     } else if (item === '地图') {
         openMapModal();
-    } else if (item === '纸条') {
+    } else if (item === '铁盒纸条') {
         showDialog('纸条上写着：\n"抽屉里藏着朵朵的秘密\n\n她陪我走过的岁月，是第一个数字。\n她留在这里的印记，是第二个数字。\n她最爱的那些小东西，是第三个数字。\n\n三把钥匙，从大到小。"');
     } else if (item === '音乐盒纸条') {
         showDialog('"那天下午，她第一次跳上窗台，坐在那里望了很久。我没有打扰她。"');
@@ -186,12 +191,21 @@ function handleItemClick(item) {
     } else if (item === '项圈') {
         showDialog('朵朵的项圈，上面刻着她的名字。\n\n项圈上刻着 2021.08.29，那是朵朵来家的日子。');
     } else if (item === '主人的信') {
-        showDialog('"朵朵，\n\n每天上午十点，我把她的早饭端到阳台，她总是先不吃，坐在仙人掌旁边，等那道光爬过来，才低头吃第一口。\n\n我不知道她在等什么。也许是影子，也许是什么只有她看得见的东西。\n\n我把一些东西藏在了那道光照不到的地方。\n\n——主人"');
+        showDialog('"朵朵，\n\n每天上午十点，我把她的早饭端到阳台，她总是先不吃，坐在仙人掌旁边，等那道光爬过来，才低头吃第一口。\n\n我不知道她在等什么。也许是影子，也许是什么只有她看得见的东西。\n\n我把一些东西藏在了那道影子的尽头。\n\n——主人"');
     } else if (item === '朵朵的信') {
-        showDialog('"喵——\n\n你找到这里了。我知道你会来的。\n\n每天下午三点，我会跑到阳台，把玩具推到绿植旁边，等那道橙色的光把影子拉得很长很长。\n\n那是我最喜欢的时候。主人总是站在门口看着我，不说话。\n\n去那里看看吧。\n\n——朵朵 🐾"');
+        showDialog('"喵——\n\n你找到这里了。我知道你会来的。\n\n每天下午三点，我会跑到阳台，把玩具推到绿植旁边，等那道橙色的光把影子拉得很长很长。\n\n那是我最喜欢的时候。主人总是站在门口看着我，不说话。\n\n我把宝贝埋在了影子的尽头，去那里看看吧。\n\n——朵朵 🐾"');
+    } else if (item === '备用钥匙') {
+        showDialog('主人藏在阳台底座里的备用钥匙，可以开家门。');
+    } else if (item === '阳台的信') {
+        showDialog('"备用钥匙放在这里，防止哪天钥匙丢了进不了门。这把钥匙能开家门。\n\n——主人"');
+    } else if (item === '阳台纸条') {
+        const lines = [];
+        if (gameState.flags.balconyClue1) lines.push('【纸条一】"她总是身披银色，蜷在星光落下的地方睡着。"');
+        if (gameState.flags.balconyClue2) lines.push('【纸条二】"阳光跑得比她快，一头扎进了海里。"');
+        showDialog(`阳台纸条（${lines.length}/2）\n\n${lines.join('\n\n')}`);
     } else if (item === '食盆') {
         showDialog('底部有猫爪样式的镂空花纹，应该可以用在哪里。');
-    } else if (item === '信') {
+    } else if (item === '阳台的信') {
         showDialog('"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我四年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"');
     } else if (item.startsWith('便利贴')) {
         const count = gameState.flags.stickyNotes.length;
@@ -260,9 +274,9 @@ export function submitPassword() {
         showDialog('你在密码锁上输入了正确密码：clock。噶哒一声，盒子打开了，里面有一张折叠的纸条，还有一张手绘的房间地图。', () => {
             showDialog('地图上用细细的笔迹标注了五个位置，每个位置旁边画着一个小小的便利贴图案。\n\n主人把什么东西藏在了这五个地方……');
         });
-        if (!gameState.inventory.includes('纸条')) {
+        if (!gameState.inventory.includes('铁盒纸条')) {
             gameState.flags.hasNote = true;
-            gameState.inventory.push('纸条');
+            gameState.inventory.push('铁盒纸条');
         }
         if (!gameState.inventory.includes('地图')) {
             gameState.flags.hasMap = true;
@@ -325,16 +339,20 @@ export function showHelp() {
         if (!inv.includes('钢笔')) {
             hint = '朵朵刚才从桌子那边跑过来——桌上的笔筒好像被碰歪了，仔细看看？';
         } else {
-            hint = '你有了钢笔。沙发下面好像有什么东西，试着去沙发那边看看。';
+            hint = '你有了钢笔。沙发角落好像有什么东西，试着去沙发那边看看。';
         }
     } else if (!f.solvedPassword) {
         hint = '你找到了一个铁盒，五位字母密码锁。看看铁盒底部的图案，再对照一下手上朵朵留下的咬痕和抓痕——那些断断续续的点和线，像不像某种密码？答案是一个和时间有关的单词。';
-    } else if (!f.bookPuzzleSolved) {
+    } else if (!f.drawerOpened) {
         if (!f.hasNote) {
             hint = '铁盒打开了，里面有钥匙和一张纸条，先把纸条拿出来看看。';
         } else {
-            hint = '书架上有一本书的书脊好像被拆散了，试着把碎片拼回原来的样子？';
+            hint = '纸条上写着三条线索，对照房间里的东西仔细想想……抽屉上有把数字密码锁，试着算出那个三位数。';
         }
+    } else if (!f.hasDiary) {
+        hint = '抽屉打开了，里面有朵朵的日记，拿起来看看。';
+    } else if (!f.bookPuzzleSolved) {
+        hint = '书架上摆着5本书，日记里提到过按朵朵的样子排好——试着把书按正确顺序摆放。';
     } else if (!f.foodBowlSeen) {
         hint = '书架格子打开了，你找到了项圈和音乐盒。先别急着弄音乐盒——沙发旁边有个食盆，去看看。';
     } else if (!f.hasBowl) {
@@ -349,16 +367,10 @@ export function showHelp() {
         hint = '玩具箱打开了！里面应该有朵朵留下的东西，看看里面。';
     } else if (!f.musicBoxSolved) {
         hint = '书架上还有个音乐盒没解开，它会先播放一段旋律，你来复现——仔细听，再按相同的顺序敲击按钮。';
-    } else if (!f.hasDiary) {
-        if (!f.drawerOpened) {
-            hint = '音乐盒解开了，里面有一张纸条。纸条上有三条线索，对照房间里的东西仔细想想……';
-        } else {
-            hint = '抽屉打开了，里面有朵朵的日记，拿起来看看。';
-        }
     } else if (!f.balconySeen) {
         hint = '你看了日记。日记里提到朵朵每天都凝视着某个方向——去窗户那边看看。';
-    } else if (!f.balconyClue1 || !f.balconyClue2) {
-        const got = (f.balconyClue1 ? 1 : 0) + (f.balconyClue2 ? 1 : 0);
+    } else if (!f.balconyNote1 || !f.balconyNote2) {
+        const got = (f.balconyNote1 ? 1 : 0) + (f.balconyNote2 ? 1 : 0);
         hint = `阳台上有两张纸条藏在影子里（已找到 ${got}/2）。试着在时钟上拨到上午10点或下午3点，阳台的影子位置会不一样。`;
     } else if (!f.balconyBrickSolved) {
         hint = '两张纸条都找到了！地板上四块刻着符号的砖，按两张纸条描述的顺序踩下去。';
@@ -420,7 +432,7 @@ export function showEnding(type) {
         document.getElementById('game-play').classList.add('hidden');
         document.getElementById('ending-screen').classList.remove('hidden');
         document.getElementById('ending-title').innerHTML = '结局：轮回';
-        document.getElementById('ending-text').innerHTML = '你拿着钥匙，赶紧到门口试了试，果然是房门钥匙，你按耐不住兴奋的心情，赶紧走出大门，却只觉得一阵头晕目眩，昏了过去。<br><br>昏迷时，你做了一个梦，梦里朵朵一直在说"猫咪神藏"，你不知道什么时候才能醒来。';
+        document.getElementById('ending-text').innerHTML = '你拿着钥匙，赶紧到门口试了试，果然是房门钥匙，你按耐不住兴奋的心情，赶紧走出大门，却只觉得一阵头晕目眩，昏了过去。<br><br>昏迷时，你做了一个梦，梦里朵朵一直在说"猫咪神藏"，你不知道什么时候才能醒来。<br><br><span style="opacity:0.6;font-size:0.9em;">好像还有什么真相没有揭开……</span>';
         return;
     }
 

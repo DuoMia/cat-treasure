@@ -10,7 +10,7 @@ export const PUZZLES = {
     // 音乐盒正确顺序：初来乍到(A) → 慵懒少女(B) → 老猫时光(C)
     musicBoxOrder: ['A', 'B', 'C'],
     // 阳台砖块顺序
-    brickOrder: ['moon', 'sun', 'wave', 'star'],
+    brickOrder: ['moon', 'star', 'sun', 'wave'],
     // 画框食盆区域顺序
     bowlOrder: ['morning', 'noon', 'evening', 'night'],
     // 玩具箱图案锁顺序：球→鱼→爪→铃铛
@@ -44,10 +44,10 @@ export const BOWL_ZONES = [
 export const BRICK_LABELS = { moon: '🌙', sun: '☀️', wave: '🌊', star: '⭐' };
 
 export const BRICK_POSITIONS = [
-    { key: 'moon',  left: '18.7%', top: '83.1%' },
-    { key: 'sun',   left: '33.7%', top: '83.1%' },
-    { key: 'wave',  left: '59.7%', top: '83.1%' },
-    { key: 'star',  left: '74.7%', top: '83.1%' },
+    { key: 'moon',  left: '18.6%', top: '83.1%' },
+    { key: 'sun',   left: '33.6%', top: '83.1%' },
+    { key: 'wave',  left: '59.6%', top: '83.1%' },
+    { key: 'star',  left: '74.6%', top: '83.1%' },
 ];
 
 // ===================== 热区位置 =====================

@@ -21,8 +21,8 @@ const IMG_W = 1200, IMG_H = 800;
 
 /**
  * 将图片内容坐标系（相对于图片本身的百分比）转换为容器坐标系百分比。
- * 图片以 object-fit:cover / object-position:center 渲染，
- * 根据容器与图片的宽高比决定裁剪方向。
+ * 图片以 object-fit:contain / object-position:center 渲染，
+ * 图片完整显示在容器内，两侧或上下留黑边。
  */
 function imgToContainerPct(ix, iy, iw, ih) {
     const container = document.getElementById('hotspots');
@@ -31,11 +31,11 @@ function imgToContainerPct(ix, iy, iw, ih) {
 
     const scaleX = cw / IMG_W;
     const scaleY = ch / IMG_H;
-    const scale  = Math.max(scaleX, scaleY); // cover 取较大缩放
+    const scale  = Math.min(scaleX, scaleY); // contain 取较小缩放
 
     const renderedW = IMG_W * scale;
     const renderedH = IMG_H * scale;
-    const offsetX   = (cw - renderedW) / 2; // 负值 = 图片超出容器
+    const offsetX   = (cw - renderedW) / 2; // 正值 = 两侧黑边
     const offsetY   = (ch - renderedH) / 2;
 
     // 图片内百分比 → 像素 → 容器百分比

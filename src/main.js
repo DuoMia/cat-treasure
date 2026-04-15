@@ -4,7 +4,7 @@ import { gameState, loadGame, deleteSave, resetGameState, hasSave } from './stat
 import { isMobileDevice, centerViewport, showDragHint, setupPortraitDrag } from './utils.js';
 import { showDialog, showChoices, handleDialogClick, resetDialog, updateInventory, toggleInventory, showHelp, showEnding, toggleDebugMode, openPasswordModal, closePasswordModal, submitPassword, openDrawerModal, closeDrawerModal, submitDrawerPassword } from './ui.js';
 import { initHotspotCallbacks } from './hotspots.js';
-import { setupPenHolderInteraction, isHoldingPen, resetPenHolder } from './pen-holder.js';
+import { setupPenHolderInteraction, isHoldingPen, resetPenHolder, positionPenElements } from './pen-holder.js';
 import { collectStickyNote, collectMemoryFragment } from './notes.js';
 import { sceneManager } from './scene-manager.js';
 import { installGestureLock } from './gesture-lock.js';
@@ -86,6 +86,7 @@ function startGame(isRestart = false) {
             if (!gameState.inventory.includes('钢笔')) {
                 document.getElementById('pen-image').classList.remove('hidden');
                 document.getElementById('pen-image').classList.add('fallen');
+                setTimeout(() => positionPenElements(), 0);
             }
         }
     }
@@ -154,6 +155,9 @@ function startGame(isRestart = false) {
                 e.stopPropagation();
                 e.preventDefault();
                 handleDialogClick();
+                return;
+            }
+            if (dialogOpen && e.target.closest('#dialog-box')) {
                 return;
             }
             if (choiceOpen && !e.target.closest('#choice-box')) {
@@ -266,16 +270,19 @@ function startGame(isRestart = false) {
         );
     }
 
-    // PC 端窗口 resize 时重建热区，保持坐标与图片对齐
+    // 窗口 resize / 屏幕旋转时重建热区，保持坐标与图片对齐
     let _resizeTimer = null;
-    window.addEventListener('resize', () => {
+    const _rebuildHotspots = () => {
         clearTimeout(_resizeTimer);
         _resizeTimer = setTimeout(() => {
             if (document.getElementById('hotspots').children.length > 0) {
                 createRoomHotspots();
             }
+            positionPenElements();
         }, 150);
-    });
+    };
+    window.addEventListener('resize', _rebuildHotspots);
+    window.addEventListener('orientationchange', () => setTimeout(_rebuildHotspots, 300));
 }
 
 // ===================== 重新开始 =====================
