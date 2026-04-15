@@ -719,6 +719,10 @@ body.debug-mode #food-bowl-pickup {
     #password-input {
         font-size: 20px;
     }
+
+    #debug-toggle {
+        display: none !important;
+    }
 }
 
 /* 防止iOS橡皮筋效果 */
@@ -790,10 +794,6 @@ body {
 
     .item-icon {
         font-size: 18px;
-    }
-
-    #debug-toggle {
-        display: none !important;
     }
 
     .scene-back-btn {
