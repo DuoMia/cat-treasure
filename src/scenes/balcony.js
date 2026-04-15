@@ -111,7 +111,7 @@ function setupBalconyHotspots() {
             saveGame();
             updateInventory();
             crack1.remove();
-            showDialog('你蹲下来，从砖缝里抽出一张卷起的纸条。\n\n"她总是等黑暗散尽，才去追那颗最亮的星，蜷在星光落下的地方睡着。"');
+            showDialog('你蹲下来，从砖缝里抽出一张卷起的纸条。\n\n"她总是身披银色，蜷在星光落下的地方睡着。"');
         };
         crack1.addEventListener('click', onCrack1);
         crack1.addEventListener('touchend', (e) => { e.preventDefault(); onCrack1(); }, { passive: false });

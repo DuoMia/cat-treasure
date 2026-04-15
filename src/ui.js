@@ -257,6 +257,15 @@ export function openPasswordModal() {
     document.getElementById('password-modal').classList.remove('hidden');
     document.getElementById('password-input').value = '';
     document.getElementById('password-input').focus();
+    document.getElementById('morse-hint-rows').classList.add('hidden');
+    document.getElementById('morse-hint-arrow').textContent = '▶ 点击查看';
+}
+
+export function toggleMorseHint() {
+    const rows = document.getElementById('morse-hint-rows');
+    const arrow = document.getElementById('morse-hint-arrow');
+    const hidden = rows.classList.toggle('hidden');
+    arrow.textContent = hidden ? '▶ 点击查看' : '▼ 收起';
 }
 
 export function closePasswordModal() {
@@ -334,7 +343,7 @@ export function showHelp() {
     let hint = '';
 
     if (!f.wasBitten) {
-        hint = '试着四处看看，房间里有什么不寻常的地方？沙发那边好像有动静……';
+        hint = '试着四处看看，房间里有什么不寻常的地方？';
     } else if (!f.hasBox) {
         if (!inv.includes('钢笔')) {
             hint = '朵朵刚才从桌子那边跑过来——桌上的笔筒好像被碰歪了，仔细看看？';

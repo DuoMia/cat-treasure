@@ -2,7 +2,7 @@
 
 import { gameState, loadGame, deleteSave, resetGameState, hasSave } from './state.js';
 import { isMobileDevice, centerViewport, showDragHint, setupPortraitDrag } from './utils.js';
-import { showDialog, showChoices, handleDialogClick, resetDialog, updateInventory, toggleInventory, showHelp, showEnding, toggleDebugMode, openPasswordModal, closePasswordModal, submitPassword, openDrawerModal, closeDrawerModal, submitDrawerPassword } from './ui.js';
+import { showDialog, showChoices, handleDialogClick, resetDialog, updateInventory, toggleInventory, showHelp, showEnding, toggleDebugMode, openPasswordModal, closePasswordModal, submitPassword, toggleMorseHint, openDrawerModal, closeDrawerModal, submitDrawerPassword } from './ui.js';
 import { initHotspotCallbacks } from './hotspots.js';
 import { setupPenHolderInteraction, isHoldingPen, resetPenHolder, positionPenElements } from './pen-holder.js';
 import { collectStickyNote, collectMemoryFragment } from './notes.js';
@@ -158,6 +158,7 @@ function startGame(isRestart = false) {
                 return;
             }
             if (dialogOpen && e.target.closest('#dialog-box')) {
+                e.preventDefault();
                 return;
             }
             if (choiceOpen && !e.target.closest('#choice-box')) {
@@ -170,13 +171,16 @@ function startGame(isRestart = false) {
 
         // 对话框本身绑定点击/触摸
         const dialogBox = document.getElementById('dialog-box');
+        let _dialogLastTouch = 0;
         dialogBox.addEventListener('click', function(e) {
+            if (Date.now() - _dialogLastTouch < 500) return;
             e.stopPropagation();
             handleDialogClick();
         });
         dialogBox.addEventListener('touchend', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            _dialogLastTouch = Date.now();
             handleDialogClick();
         }, { passive: false });
 
@@ -184,6 +188,7 @@ function startGame(isRestart = false) {
             if (e.target.closest('.scene-back-btn')) return;
             const dialogBox = document.getElementById('dialog-box');
             if (!dialogBox.classList.contains('hidden')) {
+                if (e.target.closest('#dialog-box')) return;
                 handleDialogClick();
                 return;
             }
@@ -326,6 +331,7 @@ export {
     openPasswordModal,
     closePasswordModal,
     submitPassword,
+    toggleMorseHint,
     openDrawerModal,
     closeDrawerModal,
     submitDrawerPassword,

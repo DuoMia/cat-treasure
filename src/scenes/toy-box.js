@@ -467,6 +467,7 @@ export function openToyBoxScene() {
         const scene = document.getElementById('toy-box-scene');
 
         if (gameState.flags.toyBoxSolved) {
+            scene.querySelector('#klotski-wrapper')?.remove();
             if (!gameState.flags.stickyNotes.includes('note5') && !scene.querySelector('#sticky-note5')) {
                 const note = createStickyNoteEl('note5', 'position:absolute;right:6%;top:12%;font-size:28px;z-index:220;', () => collectStickyNote('note5'));
                 note.id = 'sticky-note5';

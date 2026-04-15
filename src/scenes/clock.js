@@ -82,7 +82,7 @@ function initClockFace() {
     if (gameState.flags.trueEndingUnlocked) {
         const flipBtn = document.createElement('div');
         flipBtn.id = 'clock-flip-btn';
-        flipBtn.textContent = '时钟背面好像有什么东西……';
+        flipBtn.textContent = '时钟背面好像有什么东西';
         flipBtn.style.cssText = 'margin-top:16px;color:#c8a96e;font-size:14px;cursor:pointer;text-align:center;text-decoration:underline;';
         const onFlip = () => showEnding('treasure');
         flipBtn.addEventListener('click', onFlip);

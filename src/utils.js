@@ -40,12 +40,14 @@ export function showDragHint() {
 /** 移动端触摸点击绑定：手指抬起且未滑动才触发，阻止冒泡到 game-play */
 export function setTapHandler(el, handler, once) {
     let _tx = 0, _ty = 0;
+    const registeredAt = Date.now();
     const opts = once ? { passive: true, once: true } : { passive: true };
     el.addEventListener('touchstart', function(e) {
         _tx = e.touches[0].clientX;
         _ty = e.touches[0].clientY;
     }, opts);
     el.addEventListener('touchend', function(e) {
+        if (Date.now() - registeredAt < 300) return;
         e.stopPropagation();
         const dx = e.changedTouches[0].clientX - _tx;
         const dy = e.changedTouches[0].clientY - _ty;
