@@ -305,7 +305,7 @@ function setupBookPuzzleHotspots() {
 
 // ── Simon Says 音乐盒 ──────────────────────────────────────────
 const NOTE_FREQS = { A: 330, B: 440, C: 550 };
-const ROUND_LENGTHS = [1, 1, 1, 1];
+const ROUND_LENGTHS = [2, 3, 4, 5];
 
 let simonSequence = [];
 let simonRound = 0;
