@@ -80,6 +80,10 @@ body {
         touch-action: none;
     }
 
+    #room-image {
+        object-fit: cover;
+    }
+
     /* 标题页单独铺满视口，不跟着容器拉宽 */
     #title-screen {
         position: fixed;
@@ -1676,9 +1680,11 @@ body {
 
 @media (orientation: portrait) and (max-width: 768px) {
     #balcony-scene .scene-image {
-        width: auto;
-        height: 100dvh;
-        max-width: 100%;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        max-width: unset;
     }
 }
 
