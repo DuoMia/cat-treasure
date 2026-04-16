@@ -527,6 +527,13 @@ export function openBookshelfScene() {
             simonRound = 0;
             simonLitButtons = 0;
             simonPlaying = false;
+            // 便利贴未收集时重新显示（拼图已解但音乐盒未解的状态）
+            const scene = document.getElementById('bookshelf-scene');
+            if (!gameState.flags.stickyNotes.includes('note4') && !scene.querySelector('#sticky-note4')) {
+                const note = createStickyNoteEl('note4', 'position:absolute;left:6%;top:12%;font-size:28px;z-index:210;', () => collectStickyNote('note4'));
+                note.id = 'sticky-note4';
+                scene.appendChild(note);
+            }
             showDialog('音乐盒上有三个按钮，各代表一个音阶。\n\n它会先播放一段旋律，你来复现——主人常哼给朵朵听的那几个音。', () => {
                 setupMusicBoxHotspots();
                 startSimonRound();

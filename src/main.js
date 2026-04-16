@@ -2,7 +2,7 @@
 
 import { gameState, loadGame, deleteSave, resetGameState, hasSave } from './state.js';
 import { isMobileDevice, centerViewport, showDragHint, setupPortraitDrag } from './utils.js';
-import { showDialog, showChoices, handleDialogClick, resetDialog, updateInventory, toggleInventory, showHelp, showEnding, toggleDebugMode, openPasswordModal, closePasswordModal, submitPassword, toggleMorseHint, openDrawerModal, closeDrawerModal, submitDrawerPassword } from './ui.js';
+import { showDialog, showChoices, handleDialogClick, resetDialog, updateInventory, toggleInventory, showHelp, showEnding, toggleDebugMode, openPasswordModal, closePasswordModal, submitPassword, toggleMorseHint, toggleMorseAnswer, openDrawerModal, closeDrawerModal, submitDrawerPassword } from './ui.js';
 import { initHotspotCallbacks } from './hotspots.js';
 import { setupPenHolderInteraction, isHoldingPen, resetPenHolder, positionPenElements } from './pen-holder.js';
 import { collectStickyNote, collectMemoryFragment } from './notes.js';
@@ -332,6 +332,7 @@ export {
     closePasswordModal,
     submitPassword,
     toggleMorseHint,
+    toggleMorseAnswer,
     openDrawerModal,
     closeDrawerModal,
     submitDrawerPassword,

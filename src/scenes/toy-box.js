@@ -488,6 +488,12 @@ export function openToyBoxScene() {
             return;
         }
 
+        // 便利贴未收集时重新显示（图案锁已解但华容道未解的状态）
+        if (!gameState.flags.stickyNotes.includes('note5') && !scene.querySelector('#sticky-note5')) {
+            const note = createStickyNoteEl('note5', 'position:absolute;right:6%;top:12%;font-size:28px;z-index:220;', () => collectStickyNote('note5'));
+            note.id = 'sticky-note5';
+            scene.appendChild(note);
+        }
         if (!scene.querySelector('#klotski-wrapper')) buildBoardDOM(scene);
         initPuzzle();
         requestAnimationFrame(() => renderBoard());

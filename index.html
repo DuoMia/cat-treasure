@@ -179,13 +179,14 @@
             <div class="password-content">
                 <h3>输入密码</h3>
                 <div class="morse-hint">
-                    <div class="morse-hint-title" id="morse-hint-toggle" onclick="toggleMorseHint()" style="cursor:pointer;">朵朵留下的痕迹 <span id="morse-hint-arrow">▶ 点击查看</span></div>
-                    <div class="morse-rows hidden" id="morse-hint-rows">
-                        <div class="morse-row"><span class="morse-code">-.-.</span><span class="morse-letter">C</span></div>
-                        <div class="morse-row"><span class="morse-code">.-..</span><span class="morse-letter">L</span></div>
-                        <div class="morse-row"><span class="morse-code">---</span><span class="morse-letter">O</span></div>
-                        <div class="morse-row"><span class="morse-code">-.-.</span><span class="morse-letter">C</span></div>
-                        <div class="morse-row"><span class="morse-code">-.-</span><span class="morse-letter">K</span></div>
+                    <div class="morse-hint-title">朵朵留下的痕迹</div>
+                    <div class="morse-rows" id="morse-hint-rows">
+                        <div class="morse-row"><span class="morse-code">-.-.</span><span class="morse-letter hidden">C</span></div>
+                        <div class="morse-row"><span class="morse-code">.-..</span><span class="morse-letter hidden">L</span></div>
+                        <div class="morse-row"><span class="morse-code">---</span><span class="morse-letter hidden">O</span></div>
+                        <div class="morse-row"><span class="morse-code">-.-.</span><span class="morse-letter hidden">C</span></div>
+                        <div class="morse-row"><span class="morse-code">-.-</span><span class="morse-letter hidden">K</span></div>
+                        <button id="morse-answer-btn" onclick="toggleMorseAnswer()" style="margin-top:8px;font-size:12px;padding:4px 10px;cursor:pointer;">点击展开密码</button>
                     </div>
                 </div>
                 <input type="text" id="password-input" maxlength="5" placeholder="_____">

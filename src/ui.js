@@ -257,8 +257,10 @@ export function openPasswordModal() {
     document.getElementById('password-modal').classList.remove('hidden');
     document.getElementById('password-input').value = '';
     document.getElementById('password-input').focus();
-    document.getElementById('morse-hint-rows').classList.add('hidden');
-    document.getElementById('morse-hint-arrow').textContent = '▶ 点击查看';
+    // 重置密码字母为隐藏状态
+    document.querySelectorAll('#morse-hint-rows .morse-letter').forEach(el => el.classList.add('hidden'));
+    const btn = document.getElementById('morse-answer-btn');
+    if (btn) btn.textContent = '点击展开密码';
 }
 
 export function toggleMorseHint() {
@@ -266,6 +268,14 @@ export function toggleMorseHint() {
     const arrow = document.getElementById('morse-hint-arrow');
     const hidden = rows.classList.toggle('hidden');
     arrow.textContent = hidden ? '▶ 点击查看' : '▼ 收起';
+}
+
+export function toggleMorseAnswer() {
+    const letters = document.querySelectorAll('#morse-hint-rows .morse-letter');
+    const btn = document.getElementById('morse-answer-btn');
+    const isHidden = letters[0]?.classList.contains('hidden');
+    letters.forEach(el => el.classList.toggle('hidden', !isHidden));
+    btn.textContent = isHidden ? '隐藏密码' : '点击展开密码';
 }
 
 export function closePasswordModal() {
@@ -427,7 +437,7 @@ function openAlbumScene() {
 
         const footer = document.createElement('div');
         footer.className = 'album-footer';
-        footer.textContent = '🐾 朵朵 2022—2026 🐾';
+        footer.textContent = '🐾 朵朵 2021—2026 🐾';
         content.appendChild(footer);
     }, { skipCenterViewport: true });
 }

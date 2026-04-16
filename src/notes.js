@@ -67,11 +67,13 @@ export function allFragmentsCollected() {
 export function collectStickyNote(id) {
     if (gameState.flags.stickyNotes.includes(id)) return;
     gameState.flags.stickyNotes.push(id);
-    saveGame();
-    updateInventory();
     const count = gameState.flags.stickyNotes.length;
     if (count >= 5) {
         gameState.flags.albumUnlocked = true;
+    }
+    saveGame();
+    updateInventory();
+    if (count >= 5) {
         showDialog(`你收集了所有5张便利贴！\n\n"${STICKY_NOTE_TEXTS[id]}"\n\n记忆相册已解锁，可以在物品栏中查看。`, () => {
             checkTrueEnding();
         });
