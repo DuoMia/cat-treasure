@@ -156,7 +156,33 @@ export function updateInventory() {
         inventoryItems.appendChild(itemDiv);
     });
 
+    pulseInventoryButton();
     saveGame();
+}
+
+function pulseInventoryButton() {
+    const btn = document.getElementById('inventory-toggle');
+    if (!btn) return;
+    const isFirst = !gameState.flags.shownBackpackHint;
+    if (isFirst) {
+        gameState.flags.shownBackpackHint = true;
+        saveGame();
+        showBackpackHintToast();
+    }
+    btn.classList.remove('inventory-pulse');
+    void btn.offsetWidth;
+    btn.classList.add('inventory-pulse');
+    btn.addEventListener('animationend', () => btn.classList.remove('inventory-pulse'), { once: true });
+}
+
+function showBackpackHintToast() {
+    document.getElementById('backpack-hint-toast')?.remove();
+    const toast = document.createElement('div');
+    toast.id = 'backpack-hint-toast';
+    toast.className = 'pickup-toast pickup-toast--hint';
+    toast.textContent = '物品已存入背包 🎒 →';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2200);
 }
 
 function handleItemClick(item) {
@@ -304,6 +330,11 @@ export function submitPassword() {
             gameState.inventory.push('地图');
         }
         updateInventory();
+        const _t = document.createElement('div');
+        _t.className = 'pickup-toast';
+        _t.textContent = '✓ 获得铁盒纸条 + 地图';
+        document.body.appendChild(_t);
+        setTimeout(() => _t.remove(), 1600);
     } else {
         showDialog('密码错误，请再试一次');
         input.value = '';

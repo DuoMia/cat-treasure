@@ -220,7 +220,7 @@ function checkJigsawSolution() {
                     saveGame();
                     updateInventory();
                     const sceneEl = document.getElementById('bookshelf-scene');
-                    if (sceneEl) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得项圈'; sceneEl.appendChild(t); setTimeout(() => t.remove(), 1300); }
+                    if (sceneEl) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得项圈'; document.body.appendChild(t); setTimeout(() => t.remove(), 1300); }
                 }
                 showDialog('你获得了朵朵的项圈。\n\n2021.08.29……那是朵朵来家的日子。', () => {
                     // 在书架场景生成可点击便利贴
@@ -492,7 +492,7 @@ function handleMusicBoxBtn(key) {
                         saveGame();
                         updateInventory();
                         const sceneEl = document.getElementById('bookshelf-scene');
-                        if (sceneEl) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得音乐盒纸条'; sceneEl.appendChild(t); setTimeout(() => t.remove(), 1300); }
+                        if (sceneEl) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得音乐盒纸条'; document.body.appendChild(t); setTimeout(() => t.remove(), 1300); }
                     }
                     showDialog('你轻轻合上音乐盒，心里有什么东西悄悄松动了。', () => {
                         collectMemoryFragment(1);

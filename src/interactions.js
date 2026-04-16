@@ -232,6 +232,11 @@ export function interactTable() {
         gameState.inventory.push('钢笔');
         saveGame();
         updateInventory();
+        const _t = document.createElement('div');
+        _t.className = 'pickup-toast';
+        _t.textContent = '✓ 获得钢笔';
+        document.body.appendChild(_t);
+        setTimeout(() => _t.remove(), 1300);
     } else if (gameState.inventory.includes('钢笔')) {
         trackObjectClick('table');
         showDialog('桌子上已经没有什么有用的东西了。');

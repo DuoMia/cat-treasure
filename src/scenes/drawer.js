@@ -24,7 +24,7 @@ export function openDrawerScene() {
                         gameState.inventory.push('日记');
                         updateInventory();
                         const scene = document.getElementById('drawer-scene');
-                        if (scene) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得日记'; scene.appendChild(t); setTimeout(() => t.remove(), 1300); }
+                        if (scene) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得日记'; document.body.appendChild(t); setTimeout(() => t.remove(), 1300); }
                     }
                     showDialog('日记已拾取，可以在背包里随时查看。', () => {
                         showDialog('房间好像有了些变化，再去探索一下。');

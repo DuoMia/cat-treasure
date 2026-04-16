@@ -13,6 +13,7 @@ const INITIAL_FLAGS = {
     lookAroundCount: 0,
     hasNote: false,
     hasDiary: false,
+    shownBackpackHint: false,
     drawerOpened: false,
     shownDrawerLockHint: false,
     memoryFragments: [],
