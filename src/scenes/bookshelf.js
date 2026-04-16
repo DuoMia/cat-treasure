@@ -5,7 +5,7 @@ import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
 import { collectStickyNote, collectMemoryFragment, createStickyNoteEl } from '../notes.js';
 import { PUZZLES, MUSIC_BOX_PHASES } from '../data.js';
-import { lockPortraitDrag, unlockPortraitDrag } from '../utils.js';
+import { lockPortraitDrag, unlockPortraitDrag, showPickupToast } from '../utils.js';
 import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
 
 /** 竖屏时将视口水平对准目标百分比位置 */
@@ -219,8 +219,7 @@ function checkJigsawSolution() {
                     gameState.inventory.push('项圈');
                     saveGame();
                     updateInventory();
-                    const sceneEl = document.getElementById('bookshelf-scene');
-                    if (sceneEl) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得项圈'; document.body.appendChild(t); setTimeout(() => t.remove(), 1300); }
+                    showPickupToast('✓ 获得项圈');
                 }
                 showDialog('你获得了朵朵的项圈。\n\n2021.08.29……那是朵朵来家的日子。', () => {
                     // 在书架场景生成可点击便利贴
@@ -292,12 +291,6 @@ function setupBookPuzzleHotspots() {
         document.addEventListener('mouseup', onMouseUp);
     };
     scene.addEventListener('mousedown', scene._jigsawMouseDown, true);
-
-    // 临时调试：document 级别捕获所有 mousedown
-    document._jigsawDebug = (e) => {
-        console.log('[jigsaw-debug] mousedown target:', e.target, 'classes:', e.target.className, 'coords:', e.clientX, e.clientY);
-    };
-    document.addEventListener('mousedown', document._jigsawDebug, true);
 
     const hint = document.getElementById('book-puzzle-hint');
     if (hint) hint.textContent = '拖拽书脊图案，拼出朵朵走路的样子';
@@ -491,8 +484,7 @@ function handleMusicBoxBtn(key) {
                         gameState.inventory.push('音乐盒纸条');
                         saveGame();
                         updateInventory();
-                        const sceneEl = document.getElementById('bookshelf-scene');
-                        if (sceneEl) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得音乐盒纸条'; document.body.appendChild(t); setTimeout(() => t.remove(), 1300); }
+                        showPickupToast('✓ 获得音乐盒纸条');
                     }
                     showDialog('你轻轻合上音乐盒，心里有什么东西悄悄松动了。', () => {
                         collectMemoryFragment(1);
@@ -591,5 +583,10 @@ function setupMusicBoxHotspots() {
 }
 
 export function closeBookshelfScene() {
+    const scene = document.getElementById('bookshelf-scene');
+    if (scene?._jigsawMouseDown) {
+        scene.removeEventListener('mousedown', scene._jigsawMouseDown, true);
+        scene._jigsawMouseDown = null;
+    }
     sceneManager.closeToRoom();
 }

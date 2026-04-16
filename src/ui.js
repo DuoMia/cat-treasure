@@ -5,6 +5,7 @@ import { STICKY_NOTE_TEXTS, MEMORY_FRAGMENT_TEXTS, ROOM_HOTSPOTS, ENDING_ACTS, P
 import { sceneManager } from './scene-manager.js';
 import { clearHotspots, createHotspot } from './hotspots.js';
 import { collectStickyNote, collectMemoryFragment, allFragmentsCollected } from './notes.js';
+import { showPickupToast } from './utils.js';
 
 // 打字机效果变量
 let typewriterTimeout = null;
@@ -231,8 +232,6 @@ function handleItemClick(item) {
         showDialog(`阳台纸条（${lines.length}/2）\n\n${lines.join('\n\n')}`);
     } else if (item === '食盆') {
         showDialog('底部有猫爪样式的镂空花纹，应该可以用在哪里。');
-    } else if (item === '阳台的信') {
-        showDialog('"如果你找到了这里，说明你已经理解了朵朵的心意。\n\n她陪了我四年，是我最好的朋友。我离开的时候，她一定很难过，所以我把最重要的东西留给了她，也留给了你。\n\n时钟里藏着我们的秘密，那是朵朵神藏的最后一块拼图。\n\n——主人"');
     } else if (item.startsWith('便利贴')) {
         const count = gameState.flags.stickyNotes.length;
         if (gameState.flags.albumUnlocked) {
@@ -330,11 +329,7 @@ export function submitPassword() {
             gameState.inventory.push('地图');
         }
         updateInventory();
-        const _t = document.createElement('div');
-        _t.className = 'pickup-toast';
-        _t.textContent = '✓ 获得铁盒纸条 + 地图';
-        document.body.appendChild(_t);
-        setTimeout(() => _t.remove(), 1600);
+        showPickupToast('✓ 获得铁盒纸条 + 地图', 1600);
     } else {
         showDialog('密码错误，请再试一次');
         input.value = '';

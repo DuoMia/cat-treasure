@@ -120,26 +120,6 @@ function startGame(isRestart = false) {
 
     document.getElementById('inventory-toggle').onclick = toggleInventory;
 
-    // 全局拦截：对话框或选项框开着时，阻止所有其他元素的点击/触摸
-    function blockWhenOverlay(e) {
-        if (e.target.closest('.scene-back-btn')) return;
-        const dialogBox = document.getElementById('dialog-box');
-        const choiceBox = document.getElementById('choice-box');
-        const dialogOpen = !dialogBox.classList.contains('hidden');
-        const choiceOpen = !choiceBox.classList.contains('hidden');
-        if (dialogOpen && !e.target.closest('#dialog-box')) {
-            e.stopPropagation();
-            e.preventDefault();
-            handleDialogClick();
-            return;
-        }
-        if (choiceOpen && !e.target.closest('#choice-box')) {
-            e.stopPropagation();
-            e.preventDefault();
-        }
-    }
-    document.getElementById('inventory-toggle').onclick = toggleInventory;
-
     if (!_listenersSetup) {
         _listenersSetup = true;
 

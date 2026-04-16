@@ -4,6 +4,7 @@ import { gameState, saveGame } from '../state.js';
 import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
 import { imgCoordsToContainer } from '../scene-hotspot.js';
+import { showPickupToast } from '../utils.js';
 
 export function openDrawerScene() {
     sceneManager.open('drawer-scene', () => {
@@ -23,8 +24,7 @@ export function openDrawerScene() {
                     if (!gameState.inventory.includes('日记')) {
                         gameState.inventory.push('日记');
                         updateInventory();
-                        const scene = document.getElementById('drawer-scene');
-                        if (scene) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得日记'; document.body.appendChild(t); setTimeout(() => t.remove(), 1300); }
+                        showPickupToast('✓ 获得日记');
                     }
                     showDialog('日记已拾取，可以在背包里随时查看。', () => {
                         showDialog('房间好像有了些变化，再去探索一下。');

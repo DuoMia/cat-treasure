@@ -11,7 +11,16 @@ function getVH() {
     return window.visualViewport?.height ?? window.innerHeight;
 }
 
-// 竖屏拖动锁：书本拖拽期间禁止画面横移
+/** 物品拾取浮动提示 */
+export function showPickupToast(text, duration = 1300) {
+    const t = document.createElement('div');
+    t.className = 'pickup-toast';
+    t.textContent = text;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), duration);
+}
+
+/** 竖屏拖动锁：书本拖拽期间禁止画面横移 */
 let _portraitDragLocked = false;
 export function lockPortraitDrag()   { _portraitDragLocked = true;  }
 export function unlockPortraitDrag() { _portraitDragLocked = false; }

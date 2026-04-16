@@ -21,6 +21,7 @@ import { showDialog, updateInventory } from '../ui.js';
 import { collectStickyNote, collectMemoryFragment, createStickyNoteEl } from '../notes.js';
 import { PUZZLES } from '../data.js';
 import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
+import { showPickupToast } from '../utils.js';
 
 const TOY_LOCK_ORDER = PUZZLES.toyLockOrder;
 
@@ -392,8 +393,7 @@ function onWin() {
             gameState.inventory.push('朵朵的信');
             saveGame();
             updateInventory();
-            const scene = document.getElementById('toy-box-scene');
-            if (scene) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得朵朵的信'; document.body.appendChild(t); setTimeout(() => t.remove(), 1300); }
+            showPickupToast('✓ 获得朵朵的信');
             showDialog('你获得了朵朵的信。\n\n爪印排列成文字：\n\n"喵——\n\n你找到这里了。我知道你会来的。\n\n每天下午三点，我会跑到阳台，把玩具推到绿植旁边，等那道橙色的光把影子拉得很长很长。\n\n那是我最喜欢的时候。主人总是站在门口看着我，不说话。\n\n我把宝贝埋在了影子的尽头，去那里看看吧。\n\n——朵朵 🐾"', () => {
                 if (!gameState.flags.balconyClue2) {
                     gameState.flags.balconyClue2 = true;
@@ -532,10 +532,18 @@ function buildBoardDOM(scene) {
             requestAnimationFrame(() => renderBoard());
         }
     };
+    const onOrientationChange = () => setTimeout(onResize, 300);
     window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', () => setTimeout(onResize, 300));
+    window.addEventListener('orientationchange', onOrientationChange);
+    // 保存引用供 close 时清理
+    scene._toyBoxResizeCleanup = () => {
+        window.removeEventListener('resize', onResize);
+        window.removeEventListener('orientationchange', onOrientationChange);
+    };
 }
 
 export function closeToyBoxScene() {
+    const scene = document.getElementById('toy-box-scene');
+    if (scene?._toyBoxResizeCleanup) { scene._toyBoxResizeCleanup(); scene._toyBoxResizeCleanup = null; }
     sceneManager.closeToRoom();
 }

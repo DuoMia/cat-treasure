@@ -6,6 +6,7 @@ import { showDialog, updateInventory } from '../ui.js';
 import { collectMemoryFragment } from '../notes.js';
 import { PUZZLES, BRICK_POSITIONS } from '../data.js';
 import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
+import { showPickupToast } from '../utils.js';
 
 const IMG_W = 1200, IMG_H = 800;
 
@@ -110,11 +111,7 @@ function setupBalconyHotspots() {
             if (!gameState.inventory.includes('阳台纸条')) gameState.inventory.push('阳台纸条');
             saveGame();
             updateInventory();
-            const _t1 = document.createElement('div');
-            _t1.className = 'pickup-toast';
-            _t1.textContent = '✓ 获得阳台纸条';
-            document.body.appendChild(_t1);
-            setTimeout(() => _t1.remove(), 1300);
+            showPickupToast('✓ 获得阳台纸条');
             crack1.remove();
             showDialog('你蹲下来，从砖缝里抽出一张卷起的纸条。\n\n"她总是身披银色，蜷在星光落下的地方睡着。"');
         };
@@ -136,11 +133,7 @@ function setupBalconyHotspots() {
             if (!gameState.inventory.includes('阳台纸条')) gameState.inventory.push('阳台纸条');
             saveGame();
             updateInventory();
-            const _t2 = document.createElement('div');
-            _t2.className = 'pickup-toast';
-            _t2.textContent = '✓ 获得阳台纸条';
-            document.body.appendChild(_t2);
-            setTimeout(() => _t2.remove(), 1300);
+            showPickupToast('✓ 获得阳台纸条');
             crack2.remove();
             showDialog('你蹲下来，从砖缝里抽出一张卷起的纸条。\n\n"阳光跑得比她快，一头扎进了海里。"');
         };
@@ -164,10 +157,7 @@ function setupBalconyHotspots() {
                 if (!gameState.inventory.includes('备用钥匙')) gameState.inventory.push('备用钥匙');
                 saveGame();
                 updateInventory();
-                const scene = document.getElementById('balcony-scene');
-                if (scene) {
-                    const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得阳台的信 + 备用钥匙'; document.body.appendChild(t); setTimeout(() => t.remove(), 1600);
-                }
+                showPickupToast('✓ 获得阳台的信 + 备用钥匙', 1600);
                 showDialog('你获得了一封信和一把备用钥匙。\n\n信上写着：\n"备用钥匙放在这里，防止哪天钥匙丢了进不了门。这把钥匙能开家门。\n\n——主人"', () => {
                     collectMemoryFragment(4);
                 });

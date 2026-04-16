@@ -48,7 +48,9 @@ const INITIAL_FLAGS = {
     balconyBrickStep: 0,
     balconyBrickSolved: false,
     stickyNotes: [],
-    albumUnlocked: false
+    albumUnlocked: false,
+    trueEndingUnlocked: false,
+    hasMap: false
 };
 
 export const gameState = {

@@ -5,7 +5,7 @@ import { sceneManager } from '../scene-manager.js';
 import { showDialog, updateInventory } from '../ui.js';
 import { collectMemoryFragment } from '../notes.js';
 import { PUZZLES, BOWL_ZONES, PAINTING_HINTS } from '../data.js';
-import { isMobileDevice } from '../utils.js';
+import { isMobileDevice, showPickupToast } from '../utils.js';
 import { imgCoordsToContainer, parsePct } from '../scene-hotspot.js';
 
 const BOWL_ORDER = PUZZLES.bowlOrder;
@@ -64,12 +64,7 @@ export function openFoodBowlScene() {
                         updateInventory();
                     }
                     // 拾取浮动提示
-                    const toast = document.createElement('div');
-                    toast.className = 'pickup-toast';
-                    toast.style.top = '42%';
-                    toast.textContent = '✓ 获得食盆';
-                    document.body.appendChild(toast);
-                    setTimeout(() => toast.remove(), 1300);
+                    showPickupToast('✓ 获得食盆');
 
                     showDialog('你拿起食盆，翻过来看了看盆底——上面有一个浅浅的镂空花纹，像是被反复摩擦留下的痕迹，你把食盆放进了背包。');
                 };
@@ -82,6 +77,8 @@ export function openFoodBowlScene() {
 }
 
 export function closeFoodBowlScene() {
+    const scene = document.getElementById('food-bowl-scene');
+    if (scene?._cleanupOverlay) { scene._cleanupOverlay(); scene._cleanupOverlay = null; }
     sceneManager.closeToRoom();
 }
 
@@ -347,11 +344,12 @@ function confirmSymbol(symbol, scene) {
             saveGame();
             showDialog('咔哒——画框从墙上弹开了一条缝，里面夹着一封信！', () => {
                 gameState.flags.hasOwnerLetter = true;
-                gameState.inventory.push('主人的信');
+                if (!gameState.inventory.includes('主人的信')) {
+                    gameState.inventory.push('主人的信');
+                }
                 saveGame();
                 updateInventory();
-                const scene2 = document.getElementById('painting-scene');
-                if (scene2) { const t = document.createElement('div'); t.className = 'pickup-toast'; t.textContent = '✓ 获得主人的信'; document.body.appendChild(t); setTimeout(() => t.remove(), 1300); }
+                showPickupToast('✓ 获得主人的信');
                 showDialog('你获得了主人写给朵朵的信。\n\n"朵朵，\n\n每天上午十点，我把她的早饭端到阳台，她总是先不吃，坐在仙人掌旁边，等那道光爬过来，才低头吃第一口。\n\n我不知道她在等什么。也许是影子，也许是什么只有她看得见的东西。\n\n我把一些东西藏在了那道影子的尽头。\n\n——主人"', () => {
                         collectMemoryFragment(2, () => {
                             updateInventory();
